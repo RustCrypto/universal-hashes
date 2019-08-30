@@ -1,2 +1,5 @@
 [workspace]
-members = []
+members = [
+    "poly1305",
+    "polyval"
+]

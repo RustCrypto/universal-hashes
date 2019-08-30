@@ -10,6 +10,12 @@ security reviews.
 
 **USE AT YOUR OWN RISK.**
 
+## Crates
+| Name | Crates.io | Documentation |
+| ---- | :--------:| :------------:|
+| `poly1305` | [![crates.io](https://img.shields.io/crates/v/poly1305.svg)](https://crates.io/crates/poly1305) | [![Documentation](https://docs.rs/poly1305/badge.svg)](https://docs.rs/poly1305) |
+| `polyval`  | [![crates.io](https://img.shields.io/crates/v/polyval.svg)](https://crates.io/crates/poly1305)  | [![Documentation](https://docs.rs/polyval/badge.svg)](https://docs.rs/polyval) |
+
 ### Minimum Supported Rust Version
 All crates in this repository support Rust 1.36 or higher. In future minimum
 supported Rust version can be changed, but it will be done with the minor
