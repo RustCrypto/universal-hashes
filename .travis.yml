@@ -6,7 +6,7 @@ rust:
   - nightly
 
 script:
-  - cargo test --all --release
+  - cargo test --all --exclude polyval --release
   - cargo test --all --all-features --release
 
 env:
@@ -22,12 +22,22 @@ matrix:
     - name: "Rust: 1.36.0"
       rust: 1.36.0
       env: {} # clear `-D warnings` above; allow warnings
+
+    # polyval presently needs either RUSTFLAGS or non-default features
+    - name: "Rust: 1.32.0 (polyval)"
+      rust: 1.32.0
+      script: ./test_polyval.sh
+    - name: "Rust: stable (polyval)"
+      rust: stable
+      script: ./test_polyval.sh
+
+    # no_std build
     - name: "Rust: stable (thumbv7em-none-eabihf)"
       rust: stable
       install:
         - rustup target add thumbv7em-none-eabihf
       script:
-        - cargo build --all --target thumbv7em-none-eabihf --release
+        - cargo build --all --exclude polyval --target thumbv7em-none-eabihf --release
     - name: rustfmt
       rust: stable
       install:
