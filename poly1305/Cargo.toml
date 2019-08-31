@@ -5,7 +5,7 @@ authors = ["RustCrypto Developers"]
 license = "MIT OR Apache-2.0"
 description = "The Poly1305 universal hash function and message authentication code"
 documentation = "https://docs.rs/poly1305"
-repository = "https://github.com/RustCrypto/MACs"
+repository = "https://github.com/RustCrypto/universal-hashes"
 keywords = ["crypto", "mac", "umac", "universal-hashing"]
 categories = ["cryptography", "no-std"]
 readme = "README.md"
@@ -20,4 +20,4 @@ crypto-mac = { version = "0.7", features = ["dev"] }
 
 [badges]
 maintenance = { status = "experimental" }
-travis-ci = { repository = "RustCrypto/hashes" }
+travis-ci = { repository = "RustCrypto/universal-hashes" }

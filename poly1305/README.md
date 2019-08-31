@@ -47,8 +47,8 @@ dual licensed as above, without any additional terms or conditions.
 [license-image]: https://img.shields.io/badge/license-Apache2.0/MIT-blue.svg
 [rustc-image]: https://img.shields.io/badge/rustc-1.34+-blue.svg
 [maintenance-image]: https://img.shields.io/badge/maintenance-experimental-blue.svg
-[build-image]: https://travis-ci.org/RustCrypto/MACs.svg?branch=master
-[build-link]: https://travis-ci.org/RustCrypto/MACs
+[build-image]: https://travis-ci.com/RustCrypto/universal-hashes.svg?branch=master
+[build-link]: https://travis-ci.com/RustCrypto/universal-hashes
 
 [//]: # (general links)
 
