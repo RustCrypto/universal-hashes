@@ -1,5 +1,3 @@
-extern crate poly1305;
-
 use poly1305::{Poly1305, KEY_SIZE};
 use std::iter::repeat;
 

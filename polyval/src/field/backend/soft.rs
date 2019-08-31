@@ -6,10 +6,9 @@
 // See: <https://bearssl.org/gitweb/?p=BearSSL;a=blob;f=src/hash/ghash_ctmul64.c>
 
 use super::Backend;
-use byteorder::{ByteOrder, LE};
-use core::ops::BitXor;
-use field::clmul::{self, Clmul};
-use Block;
+use crate::field::clmul::{self, Clmul};
+use crate::Block;
+use core::{convert::TryInto, ops::BitXor};
 
 /// 2 x `u64` values emulating an XMM register
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
@@ -17,18 +16,17 @@ pub struct U64x2([u64; 2]);
 
 impl From<Block> for U64x2 {
     fn from(bytes: Block) -> U64x2 {
-        let mut u64x2 = [0u64; 2];
-        LE::read_u64_into(&bytes, &mut u64x2);
-        U64x2(u64x2)
+        U64x2([
+            u64::from_le_bytes(bytes[..8].try_into().unwrap()),
+            u64::from_le_bytes(bytes[8..].try_into().unwrap()),
+        ])
     }
 }
 
 impl From<U64x2> for Block {
     fn from(u64x2: U64x2) -> Block {
         let x: u128 = u64x2.into();
-        let mut result = Block::default();
-        LE::write_u128(&mut result, x);
-        result
+        x.to_le_bytes()
     }
 }
 

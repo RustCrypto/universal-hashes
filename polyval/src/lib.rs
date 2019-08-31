@@ -13,7 +13,7 @@
 //!
 //! ## Requirements
 //!
-//! - Rust 1.32.0 or newer
+//! - Rust 1.34.0 or newer
 //! - `RUSTFLAGS` with `-Ctarget-cpu` and `-Ctarget-feature`:
 //!   - x86(-64) CPU: `target-cpu=sandybridge` or newer
 //!   - SSE2 + SSE4.1: `target-feature=+sse2,+sse4.1`
@@ -45,12 +45,9 @@
 
 #![no_std]
 #![doc(html_logo_url = "https://raw.githubusercontent.com/RustCrypto/meta/master/logo_small.png")]
-#![deny(missing_docs)]
+#![warn(missing_docs, rust_2018_idioms)]
 
-// TODO: replace with `u64::from_le_bytes`/`u128::to_le_bytes` in libcore (1.32+)
-#[cfg(feature = "insecure-soft")]
-extern crate byteorder;
-pub extern crate subtle;
+pub use subtle;
 
 pub mod field;
 pub mod tag;

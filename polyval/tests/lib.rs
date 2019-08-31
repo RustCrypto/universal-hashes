@@ -1,6 +1,5 @@
 #[macro_use]
 extern crate hex_literal;
-extern crate polyval;
 
 use polyval::{Block, Polyval};
 

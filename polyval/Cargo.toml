@@ -12,9 +12,9 @@ repository = "https://github.com/RustCrypto/MACs"
 readme = "README.md"
 keywords = ["aes-gcm-siv", "crypto", "universal-hashing"]
 categories = ["cryptography", "no-std"]
+edition = "2018"
 
 [dependencies]
-byteorder = { version = "1", optional = true, default-features = false }
 subtle = { version = "2", default-features = false }
 
 [dev-dependencies]
@@ -22,7 +22,7 @@ crypto-mac = { version = "0.7", features = ["dev"] }
 hex-literal = "0.1"
 
 [features]
-insecure-soft = ["byteorder"]
+insecure-soft = []
 
 [badges]
 maintenance = { status = "experimental" }

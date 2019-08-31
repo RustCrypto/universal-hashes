@@ -9,9 +9,9 @@ repository = "https://github.com/RustCrypto/MACs"
 keywords = ["crypto", "mac", "umac", "universal-hashing"]
 categories = ["cryptography", "no-std"]
 readme = "README.md"
+edition = "2018"
 
 [dependencies]
-byteorder = { version = "1", default-features = false }
 subtle = { version = "2", default-features = false }
 zeroize = { version = "0.9", optional = true, default-features = false }
 

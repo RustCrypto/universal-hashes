@@ -1,7 +1,7 @@
 //! POLYVAL authentication tags
 
+use crate::Block;
 use subtle::{Choice, ConstantTimeEq};
-use Block;
 
 /// POLYVAL authentication tags
 pub struct Tag(Block);

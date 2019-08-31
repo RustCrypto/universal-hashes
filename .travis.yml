@@ -19,13 +19,13 @@ matrix:
     - rust: nightly
   fast_finish: true
   include:
-    - name: "Rust: 1.36.0"
-      rust: 1.36.0
+    - name: "Rust: 1.34.0"
+      rust: 1.34.0
       env: {} # clear `-D warnings` above; allow warnings
 
     # polyval presently needs either RUSTFLAGS or non-default features
     - name: "Rust: 1.32.0 (polyval)"
-      rust: 1.32.0
+      rust: 1.34.0
       script: ./test_polyval.sh
     - name: "Rust: stable (polyval)"
       rust: stable
@@ -38,6 +38,9 @@ matrix:
         - rustup target add thumbv7em-none-eabihf
       script:
         - cargo build --all --exclude polyval --target thumbv7em-none-eabihf --release
+    - name "Rust: nightly (benches)"
+      rust: nightly
+      script: cargo build --all-features --benches
     - name: rustfmt
       rust: stable
       install:

@@ -3,7 +3,7 @@
 [![crate][crate-image]][crate-link]
 [![Docs][docs-image]][docs-link]
 ![Apache2/MIT licensed][license-image]
-![MSRV][rustc-image]
+![Rust Version][rustc-image]
 ![Maintenance Status: Experimental][maintenance-image]
 [![Build Status][build-image]][build-link]
 
@@ -45,7 +45,7 @@ dual licensed as above, without any additional terms or conditions.
 [docs-image]: https://docs.rs/poly1305/badge.svg
 [docs-link]: https://docs.rs/poly1305/
 [license-image]: https://img.shields.io/badge/license-Apache2.0/MIT-blue.svg
-[rustc-image]: https://img.shields.io/badge/rustc-1.27+-blue.svg
+[rustc-image]: https://img.shields.io/badge/rustc-1.34+-blue.svg
 [maintenance-image]: https://img.shields.io/badge/maintenance-experimental-blue.svg
 [build-image]: https://travis-ci.org/RustCrypto/MACs.svg?branch=master
 [build-link]: https://travis-ci.org/RustCrypto/MACs
