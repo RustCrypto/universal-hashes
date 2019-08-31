@@ -8,7 +8,7 @@ POLYVAL is a GHASH-like universal hash over GF(2^128) useful for constructing
 a Message Authentication Code (MAC)
 """
 documentation = "https://docs.rs/polyval"
-repository = "https://github.com/RustCrypto/MACs"
+repository = "https://github.com/RustCrypto/universal-hashes"
 readme = "README.md"
 keywords = ["aes-gcm-siv", "crypto", "universal-hashing"]
 categories = ["cryptography", "no-std"]
@@ -26,7 +26,7 @@ insecure-soft = []
 
 [badges]
 maintenance = { status = "experimental" }
-travis-ci = { repository = "RustCrypto/hashes" }
+travis-ci = { repository = "RustCrypto/universal-hashes" }
 
 [package.metadata.docs.rs]
 all-features = true

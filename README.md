@@ -1,5 +1,5 @@
 # RustCrypto: Universal Hash Functions
-[![Build Status](https://travis-ci.org/RustCrypto/universal-hashes.svg?branch=master)](https://travis-ci.org/RustCrypto/universal-hashes) [![dependency status](https://deps.rs/repo/github/RustCrypto/universal-hashes/status.svg)](https://deps.rs/repo/github/universal-hashes/stream-ciphers)
+[![Build Status](https://travis-ci.com/RustCrypto/universal-hashes.svg?branch=master)](https://travis-ci.com/RustCrypto/universal-hashes) [![dependency status](https://deps.rs/repo/github/RustCrypto/universal-hashes/status.svg)](https://deps.rs/repo/github/universal-hashes/stream-ciphers)
 
 Collection of [Universal Hash Functions][1] written in pure Rust.
 
