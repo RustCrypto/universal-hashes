@@ -1,10 +1,7 @@
 #![feature(test)]
-#[macro_use]
-extern crate crypto_mac;
-extern crate polyval;
 
 use crypto_mac::generic_array::{typenum::U16, GenericArray};
-use crypto_mac::MacResult;
+use crypto_mac::{bench, MacResult};
 use polyval::{Block, Polyval};
 use std::{cmp::min, convert::TryInto};
 

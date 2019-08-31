@@ -14,17 +14,11 @@
 
 #![no_std]
 #![doc(html_logo_url = "https://raw.githubusercontent.com/RustCrypto/meta/master/logo_small.png")]
-#![deny(missing_docs)]
+#![warn(missing_docs, rust_2018_idioms)]
 
-// TODO: replace with `u32::{from_le_bytes, to_le_bytes}` in libcore (1.32+)
-extern crate byteorder;
-pub extern crate subtle;
+pub use subtle;
 
-#[cfg(feature = "zeroize")]
-extern crate zeroize;
-
-use byteorder::{ByteOrder, LE};
-use core::cmp::min;
+use core::{cmp::min, convert::TryInto};
 use subtle::{Choice, ConstantTimeEq};
 #[cfg(feature = "zeroize")]
 use zeroize::Zeroize;
@@ -68,16 +62,16 @@ impl Poly1305 {
         };
 
         // r &= 0xffffffc0ffffffc0ffffffc0fffffff
-        poly.r[0] = (LE::read_u32(&key[0..4])) & 0x3ff_ffff;
-        poly.r[1] = (LE::read_u32(&key[3..7]) >> 2) & 0x3ff_ff03;
-        poly.r[2] = (LE::read_u32(&key[6..10]) >> 4) & 0x3ff_c0ff;
-        poly.r[3] = (LE::read_u32(&key[9..13]) >> 6) & 0x3f0_3fff;
-        poly.r[4] = (LE::read_u32(&key[12..16]) >> 8) & 0x00f_ffff;
+        poly.r[0] = (u32::from_le_bytes(key[0..4].try_into().unwrap())) & 0x3ff_ffff;
+        poly.r[1] = (u32::from_le_bytes(key[3..7].try_into().unwrap()) >> 2) & 0x3ff_ff03;
+        poly.r[2] = (u32::from_le_bytes(key[6..10].try_into().unwrap()) >> 4) & 0x3ff_c0ff;
+        poly.r[3] = (u32::from_le_bytes(key[9..13].try_into().unwrap()) >> 6) & 0x3f0_3fff;
+        poly.r[4] = (u32::from_le_bytes(key[12..16].try_into().unwrap()) >> 8) & 0x00f_ffff;
 
-        poly.pad[0] = LE::read_u32(&key[16..20]);
-        poly.pad[1] = LE::read_u32(&key[20..24]);
-        poly.pad[2] = LE::read_u32(&key[24..28]);
-        poly.pad[3] = LE::read_u32(&key[28..32]);
+        poly.pad[0] = u32::from_le_bytes(key[16..20].try_into().unwrap());
+        poly.pad[1] = u32::from_le_bytes(key[20..24].try_into().unwrap());
+        poly.pad[2] = u32::from_le_bytes(key[24..28].try_into().unwrap());
+        poly.pad[3] = u32::from_le_bytes(key[28..32].try_into().unwrap());
 
         poly
     }
@@ -236,10 +230,10 @@ impl Poly1305 {
         h3 = f as u32;
 
         let mut tag = Block::default();
-        LE::write_u32(&mut tag[0..4], h0);
-        LE::write_u32(&mut tag[4..8], h1);
-        LE::write_u32(&mut tag[8..12], h2);
-        LE::write_u32(&mut tag[12..16], h3);
+        tag[0..4].copy_from_slice(&h0.to_le_bytes());
+        tag[4..8].copy_from_slice(&h1.to_le_bytes());
+        tag[8..12].copy_from_slice(&h2.to_le_bytes());
+        tag[12..16].copy_from_slice(&h3.to_le_bytes());
 
         Tag::new(tag)
     }
@@ -266,11 +260,11 @@ impl Poly1305 {
         let mut h4 = self.h[4];
 
         // h += m
-        h0 += (LE::read_u32(&self.buffer[0..4])) & 0x3ff_ffff;
-        h1 += (LE::read_u32(&self.buffer[3..7]) >> 2) & 0x3ff_ffff;
-        h2 += (LE::read_u32(&self.buffer[6..10]) >> 4) & 0x3ff_ffff;
-        h3 += (LE::read_u32(&self.buffer[9..13]) >> 6) & 0x3ff_ffff;
-        h4 += (LE::read_u32(&self.buffer[12..16]) >> 8) | hibit;
+        h0 += (u32::from_le_bytes(self.buffer[0..4].try_into().unwrap())) & 0x3ff_ffff;
+        h1 += (u32::from_le_bytes(self.buffer[3..7].try_into().unwrap()) >> 2) & 0x3ff_ffff;
+        h2 += (u32::from_le_bytes(self.buffer[6..10].try_into().unwrap()) >> 4) & 0x3ff_ffff;
+        h3 += (u32::from_le_bytes(self.buffer[9..13].try_into().unwrap()) >> 6) & 0x3ff_ffff;
+        h4 += (u32::from_le_bytes(self.buffer[12..16].try_into().unwrap()) >> 8) | hibit;
 
         // h *= r
         let d0 = (u64::from(h0) * u64::from(r0))

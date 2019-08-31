@@ -1,14 +1,11 @@
 #![feature(test)]
-#[macro_use]
-extern crate crypto_mac;
-extern crate poly1305;
 
 use crypto_mac::generic_array::{
     typenum::{U16, U32},
     GenericArray,
 };
-use crypto_mac::MacResult;
-use poly1305::{Poly1305, Block};
+use crypto_mac::{MacResult, bench};
+use poly1305::{Block, Poly1305};
 use std::convert::TryInto;
 
 bench!(Poly1305Mac);

@@ -12,8 +12,8 @@ mod pclmulqdq;
 mod soft;
 
 use super::clmul::Clmul;
+use crate::Block;
 use core::ops::BitXor;
-use Block;
 
 #[cfg(not(any(
     all(

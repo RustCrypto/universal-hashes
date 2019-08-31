@@ -10,9 +10,11 @@ use core::arch::x86::*;
 use core::arch::x86_64::*;
 
 use super::Backend;
+use crate::{
+    field::clmul::{self, Clmul},
+    Block,
+};
 use core::ops::BitXor;
-use field::clmul::{self, Clmul};
-use Block;
 
 /// Wrapper for `__m128i` - a 128-bit XMM register (SSE2)
 #[repr(align(16))]
