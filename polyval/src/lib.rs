@@ -47,22 +47,16 @@
 #![doc(html_logo_url = "https://raw.githubusercontent.com/RustCrypto/meta/master/logo_small.png")]
 #![warn(missing_docs, rust_2018_idioms)]
 
-pub use subtle;
-
 pub mod field;
-pub mod tag;
 
-use self::field::Element;
-pub use self::tag::Tag;
+pub use universal_hash;
+
+use core::convert::TryInto;
+use universal_hash::generic_array::{typenum::U16, GenericArray};
+use universal_hash::{Output, UniversalHash};
 
 // TODO(tarcieri): runtime selection of CLMUL vs soft backend when both are available
-use self::field::backend::M128i;
-
-/// Size of a POLYVAL block (128-bits)
-pub const BLOCK_SIZE: usize = 16;
-
-/// POLYVAL blocks (16-bytes)
-pub type Block = [u8; BLOCK_SIZE];
+use field::backend::M128i;
 
 /// **POLYVAL**: GHASH-like universal hash over GF(2^128).
 #[allow(non_snake_case)]
@@ -70,54 +64,37 @@ pub type Block = [u8; BLOCK_SIZE];
 #[repr(align(16))]
 pub struct Polyval {
     /// GF(2^128) field element input blocks are multiplied by
-    H: Element<M128i>,
+    H: field::Element<M128i>,
 
     /// Field element representing the computed universal hash
-    S: Element<M128i>,
+    S: field::Element<M128i>,
 }
 
-impl Polyval {
+impl UniversalHash for Polyval {
+    type KeySize = U16;
+    type OutputSize = U16;
+
     /// Initialize POLYVAL with the given `H` field element
-    pub fn new(h: Block) -> Self {
+    fn new(h: &GenericArray<u8, U16>) -> Self {
         Self {
-            H: Element::from_bytes(h),
-            S: Element::from_bytes(Block::default()),
+            H: field::Element::from_bytes(h.as_slice().try_into().unwrap()),
+            S: field::Element::default(),
         }
     }
 
     /// Input a field element `X` to be authenticated into POLYVAL.
-    pub fn input_block(&mut self, x: Block) {
-        // "The sum of any two elements in the field is the result of XORing them."
-        // -- RFC 8452 Section 3
-        let sum = self.S + Element::from_bytes(x);
-        self.S = sum * self.H;
+    fn update_block(&mut self, x: &GenericArray<u8, U16>) {
+        let x = field::Element::from_bytes(x.as_slice().try_into().unwrap());
+        self.S = (self.S + x) * self.H;
     }
 
-    /// Input data into POLYVAL, first padding it to the block size
-    /// ala the `right_pad_to_multiple_of_16_bytes()` function described in
-    /// RFC 8452 Section 4:
-    /// <https://tools.ietf.org/html/rfc8452#section-4>
-    pub fn input_padded(&mut self, data: &[u8]) {
-        for chunk in data.chunks(BLOCK_SIZE) {
-            if chunk.len() == BLOCK_SIZE {
-                // TODO(tarcieri): replace with `TryInto` in Rust 1.34+
-                self.input_block(unsafe { *(chunk.as_ptr() as *const Block) });
-            } else {
-                let mut padded_block = [0u8; BLOCK_SIZE];
-                padded_block[..chunk.len()].copy_from_slice(chunk);
-                self.input_block(padded_block);
-            }
-        }
-    }
-
-    /// Process input blocks in a chained manner
-    pub fn chain_block(mut self, x: Block) -> Self {
-        self.input_block(x);
-        self
+    /// Reset internal state
+    fn reset(&mut self) {
+        self.S = field::Element::default();
     }
 
     /// Get POLYVAL result (i.e. computed `S` field element)
-    pub fn result(self) -> Tag {
-        Tag::new(self.S.to_bytes())
+    fn result(self) -> Output<U16> {
+        Output::new(GenericArray::from(self.S.to_bytes()))
     }
 }

@@ -6,8 +6,10 @@
 // See: <https://bearssl.org/gitweb/?p=BearSSL;a=blob;f=src/hash/ghash_ctmul64.c>
 
 use super::Backend;
-use crate::field::clmul::{self, Clmul};
-use crate::Block;
+use crate::field::{
+    clmul::{self, Clmul},
+    Block,
+};
 use core::{convert::TryInto, ops::BitXor};
 
 /// 2 x `u64` values emulating an XMM register

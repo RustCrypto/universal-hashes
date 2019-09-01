@@ -12,7 +12,7 @@ mod pclmulqdq;
 mod soft;
 
 use super::clmul::Clmul;
-use crate::Block;
+use super::Block;
 use core::ops::BitXor;
 
 #[cfg(not(any(
