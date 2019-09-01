@@ -14,15 +14,17 @@
 //!
 //! [RFC 8452 Section 3]: https://tools.ietf.org/html/rfc8452#section-3
 
-pub mod backend;
-pub mod clmul;
+pub(crate) mod backend;
+mod clmul;
 
 use self::backend::Backend;
-use super::Block;
 use core::ops::{Add, Mul};
 
 /// Size of GF(2^128) in bytes (16-bytes).
 pub const FIELD_SIZE: usize = 16;
+
+/// POLYVAL field element bytestrings (16-bytes)
+pub type Block = [u8; FIELD_SIZE];
 
 /// Mask value used when performing Montgomery fast reduction.
 /// This corresponds to POLYVAL's polynomial with the highest bit unset.
@@ -32,7 +34,7 @@ const MASK: u128 = 1 << 127 | 1 << 126 | 1 << 121 | 1;
 
 /// POLYVAL field element.
 #[derive(Copy, Clone)]
-pub(crate) struct Element<B: Backend>(B);
+pub struct Element<B: Backend>(B);
 
 impl<B: Backend> Element<B> {
     /// Load a `FieldElement` from its bytestring representation.
@@ -54,6 +56,12 @@ impl<B: Backend> Element<B> {
         let c = mask.clmul(b, 0x01);
         let d = b.shuffle() ^ c;
         Element(d)
+    }
+}
+
+impl<B: Backend> Default for Element<B> {
+    fn default() -> Self {
+        Self::from_bytes(Block::default())
     }
 }
 

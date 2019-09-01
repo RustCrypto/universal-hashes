@@ -10,8 +10,8 @@ use core::arch::x86::*;
 use core::arch::x86_64::*;
 
 use super::Backend;
-use crate::{
-    field::clmul::{self, Clmul},
+use crate::field::{
+    clmul::{self, Clmul},
     Block,
 };
 use core::ops::BitXor;
