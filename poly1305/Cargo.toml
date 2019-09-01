@@ -12,11 +12,12 @@ readme = "README.md"
 edition = "2018"
 
 [dependencies]
-subtle = { version = "2", default-features = false }
-zeroize = { version = "0.9", optional = true, default-features = false }
+universal-hash = { version = "0.2", default-features = false }
+zeroize = { version = "0.10", optional = true, default-features = false }
 
-[dev-dependencies]
-crypto-mac = { version = "0.7", features = ["dev"] }
+[features]
+default = []
+std = ["universal-hash/std"]
 
 [badges]
 maintenance = { status = "experimental" }

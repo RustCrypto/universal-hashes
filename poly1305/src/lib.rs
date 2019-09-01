@@ -16,10 +16,14 @@
 #![doc(html_logo_url = "https://raw.githubusercontent.com/RustCrypto/meta/master/logo_small.png")]
 #![warn(missing_docs, rust_2018_idioms)]
 
-pub use subtle;
+pub use universal_hash;
 
 use core::{cmp::min, convert::TryInto};
-use subtle::{Choice, ConstantTimeEq};
+use universal_hash::generic_array::{
+    typenum::{U16, U32},
+    GenericArray,
+};
+use universal_hash::{Output, UniversalHash};
 #[cfg(feature = "zeroize")]
 use zeroize::Zeroize;
 
@@ -50,9 +54,12 @@ pub struct Poly1305 {
     buffer: Block,
 }
 
-impl Poly1305 {
+impl UniversalHash for Poly1305 {
+    type KeySize = U32;
+    type OutputSize = U16;
+
     /// Initialize Poly1305 with the given key
-    pub fn new(key: &Key) -> Poly1305 {
+    fn new(key: &GenericArray<u8, U32>) -> Poly1305 {
         let mut poly = Poly1305 {
             r: [0u32; 5],
             h: [0u32; 5],
@@ -77,67 +84,20 @@ impl Poly1305 {
     }
 
     /// Input data into the Poly1305 universal hash function
-    pub fn input(&mut self, data: &[u8]) {
-        let mut m = data;
-
-        if self.leftover > 0 {
-            let want = min(16 - self.leftover, m.len());
-
-            for (i, byte) in m.iter().cloned().enumerate().take(want) {
-                self.buffer[self.leftover + i] = byte;
-            }
-
-            m = &m[want..];
-            self.leftover += want;
-
-            if self.leftover < BLOCK_SIZE {
-                return;
-            }
-
-            self.block(false);
-            self.leftover = 0;
-        }
-
-        while m.len() >= BLOCK_SIZE {
-            // TODO(tarcieri): avoid a copy here when `TryInto` is available (1.34+)
-            // We can avoid copying this data into the buffer, but do for now
-            // because it simplifies constant-time assessment.
-            self.buffer.copy_from_slice(&m[..BLOCK_SIZE]);
-            self.block(false);
-            m = &m[BLOCK_SIZE..];
-        }
-
-        self.buffer[..m.len()].copy_from_slice(m);
-        self.leftover = m.len();
+    fn update_block(&mut self, block: &GenericArray<u8, U16>) {
+        // TODO(tarcieri): pass block directly to `Poly1305::compute_block`
+        self.update(block.as_slice());
     }
 
-    /// Input data into Poly1305, first padding it to Poly1305's block size
-    /// ala the `pad16()` function described in RFC 8439 section 2.8.1:
-    /// <https://tools.ietf.org/html/rfc8439#section-2.8.1>
-    ///
-    /// This is primarily useful for implementing Salsa20 family authenticated
-    /// encryption constructions.
-    pub fn input_padded(&mut self, data: &[u8]) {
-        self.input(data);
-
-        // Pad associated data with `\0` if it's unaligned with the block size
-        let unaligned_len = data.len() % BLOCK_SIZE;
-
-        if unaligned_len != 0 {
-            let pad = Block::default();
-            let pad_len = BLOCK_SIZE - unaligned_len;
-            self.input(&pad[..pad_len]);
-        }
-    }
-
-    /// Process input messages in a chained manner
-    pub fn chain(mut self, data: &[u8]) -> Self {
-        self.input(data);
-        self
+    /// Reset internal state
+    fn reset(&mut self) {
+        self.h = Default::default();
+        self.buffer = Default::default();
+        self.leftover = 0;
     }
 
     /// Get the hashed output
-    pub fn result(mut self) -> Tag {
+    fn result(mut self) -> Output<U16> {
         if self.leftover > 0 {
             self.buffer[self.leftover] = 1;
 
@@ -145,7 +105,7 @@ impl Poly1305 {
                 self.buffer[i] = 0;
             }
 
-            self.block(true);
+            self.compute_block(true);
         }
 
         // fully carry h
@@ -229,17 +189,58 @@ impl Poly1305 {
         f = u64::from(h3) + u64::from(self.pad[3]) + (f >> 32);
         h3 = f as u32;
 
-        let mut tag = Block::default();
-        tag[0..4].copy_from_slice(&h0.to_le_bytes());
-        tag[4..8].copy_from_slice(&h1.to_le_bytes());
-        tag[8..12].copy_from_slice(&h2.to_le_bytes());
-        tag[12..16].copy_from_slice(&h3.to_le_bytes());
+        let mut output = GenericArray::default();
+        output[0..4].copy_from_slice(&h0.to_le_bytes());
+        output[4..8].copy_from_slice(&h1.to_le_bytes());
+        output[8..12].copy_from_slice(&h2.to_le_bytes());
+        output[12..16].copy_from_slice(&h3.to_le_bytes());
 
-        Tag::new(tag)
+        Output::new(output)
+    }
+}
+
+impl Poly1305 {
+    /// Input data into the Poly1305 universal hash function
+    pub fn update(&mut self, data: &[u8]) {
+        let mut m = data;
+
+        if self.leftover > 0 {
+            let want = min(16 - self.leftover, m.len());
+
+            for (i, byte) in m.iter().cloned().enumerate().take(want) {
+                self.buffer[self.leftover + i] = byte;
+            }
+
+            m = &m[want..];
+            self.leftover += want;
+
+            if self.leftover < BLOCK_SIZE {
+                return;
+            }
+
+            self.compute_block(false);
+            self.leftover = 0;
+        }
+
+        while m.len() >= BLOCK_SIZE {
+            // TODO(tarcieri): avoid copying data into the buffer here
+            self.buffer.copy_from_slice(&m[..BLOCK_SIZE]);
+            self.compute_block(false);
+            m = &m[BLOCK_SIZE..];
+        }
+
+        self.buffer[..m.len()].copy_from_slice(m);
+        self.leftover = m.len();
+    }
+
+    /// Process input messages in a chained manner
+    pub fn chain(mut self, data: &[u8]) -> Self {
+        self.update(data);
+        self
     }
 
     /// Compute a single block of Poly1305 using the internal buffer
-    fn block(&mut self, finished: bool) {
+    fn compute_block(&mut self, finished: bool) {
         let hibit = if finished { 0 } else { 1 << 24 };
 
         let r0 = self.r[0];
@@ -338,33 +339,5 @@ impl Drop for Poly1305 {
         self.h.zeroize();
         self.pad.zeroize();
         self.buffer.zeroize();
-    }
-}
-
-/// Poly1305 authentication tags
-pub struct Tag(Block);
-
-impl Tag {
-    /// Create a new Poly1305 authentication tag
-    fn new(tag: Block) -> Self {
-        Tag(tag)
-    }
-}
-
-impl AsRef<Block> for Tag {
-    fn as_ref(&self) -> &Block {
-        &self.0
-    }
-}
-
-impl ConstantTimeEq for Tag {
-    fn ct_eq(&self, other: &Self) -> Choice {
-        self.0.ct_eq(other.0.as_ref())
-    }
-}
-
-impl From<Tag> for Block {
-    fn from(tag: Tag) -> Block {
-        tag.0
     }
 }

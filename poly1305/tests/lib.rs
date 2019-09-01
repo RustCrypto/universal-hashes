@@ -1,4 +1,4 @@
-use poly1305::{Poly1305, KEY_SIZE};
+use poly1305::{universal_hash::UniversalHash, Poly1305, KEY_SIZE};
 use std::iter::repeat;
 
 #[test]
@@ -26,10 +26,10 @@ fn test_nacl_vector() {
         0xd9,
     ];
 
-    let result1 = Poly1305::new(&key).chain(&msg).result();
-    assert_eq!(&expected[..], result1.as_ref());
+    let result1 = Poly1305::new(key.as_ref().into()).chain(&msg).result();
+    assert_eq!(&expected[..], result1.into_bytes().as_slice());
 
-    let result2 = Poly1305::new(&key)
+    let result2 = Poly1305::new(key.as_ref().into())
         .chain(&msg[0..32])
         .chain(&msg[32..96])
         .chain(&msg[96..112])
@@ -43,7 +43,7 @@ fn test_nacl_vector() {
         .chain(&msg[130..131])
         .result();
 
-    assert_eq!(&expected[..], result2.as_ref());
+    assert_eq!(&expected[..], result2.into_bytes().as_slice());
 }
 
 #[test]
@@ -64,9 +64,11 @@ fn donna_self_test() {
         0x00,
     ];
 
-    let result = Poly1305::new(&wrap_key).chain(&wrap_msg).result();
+    let result = Poly1305::new(wrap_key.as_ref().into())
+        .chain(&wrap_msg)
+        .result();
 
-    assert_eq!(&wrap_mac[..], result.as_ref());
+    assert_eq!(&wrap_mac[..], result.into_bytes().as_slice());
 
     let total_key = [
         0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0xff, 0xfe, 0xfd, 0xfc, 0xfb, 0xfa, 0xf9, 0xff,
@@ -79,18 +81,18 @@ fn donna_self_test() {
         0x39,
     ];
 
-    let mut tpoly = Poly1305::new(&total_key);
+    let mut tpoly = Poly1305::new(total_key.as_ref().into());
 
     for i in 0..256 {
         let mut key = [0u8; KEY_SIZE];
         key.copy_from_slice(&repeat(i as u8).take(KEY_SIZE).collect::<Vec<_>>());
 
         let msg: Vec<u8> = repeat(i as u8).take(256).collect();
-        let tag = Poly1305::new(&key).chain(&msg[..i]).result();
-        tpoly.input(tag.as_ref());
+        let tag = Poly1305::new(key.as_ref().into()).chain(&msg[..i]).result();
+        tpoly.update(tag.into_bytes().as_slice());
     }
 
-    assert_eq!(&total_mac[..], tpoly.result().as_ref());
+    assert_eq!(&total_mac[..], tpoly.result().into_bytes().as_slice());
 }
 
 #[test]
@@ -104,8 +106,8 @@ fn test_tls_vectors() {
         0x07,
     ];
 
-    let result1 = Poly1305::new(&key).chain(&msg1).result();
-    assert_eq!(&expected1[..], result1.as_ref());
+    let result1 = Poly1305::new(key.as_ref().into()).chain(&msg1).result();
+    assert_eq!(&expected1[..], result1.into_bytes().as_slice());
 
     let msg2 = b"Hello world!";
     let expected2 = [
@@ -113,8 +115,8 @@ fn test_tls_vectors() {
         0xf0,
     ];
 
-    let result2 = Poly1305::new(&key).chain(&msg2[..]).result();
-    assert_eq!(&expected2[..], result2.as_ref());
+    let result2 = Poly1305::new(key.as_ref().into()).chain(&msg2[..]).result();
+    assert_eq!(&expected2[..], result2.into_bytes().as_slice());
 }
 
 #[test]
@@ -135,7 +137,7 @@ fn padded_input() {
         0xba,
     ];
 
-    let mut poly = Poly1305::new(&key);
-    poly.input_padded(&msg);
-    assert_eq!(&expected[..], poly.result().as_ref());
+    let mut poly = Poly1305::new(key.as_ref().into());
+    poly.update_padded(&msg);
+    assert_eq!(&expected[..], poly.result().into_bytes().as_slice());
 }

@@ -1,45 +1,29 @@
 #![feature(test)]
 
-use crypto_mac::generic_array::{
-    typenum::{U16, U32},
-    GenericArray,
-};
-use crypto_mac::{MacResult, bench};
-use poly1305::{Block, Poly1305};
-use std::convert::TryInto;
+extern crate test;
 
-bench!(Poly1305Mac);
+use poly1305::{Poly1305, universal_hash::UniversalHash};
+use test::Bencher;
 
-/// Poly1305 isn't a traditional MAC and for that reason doesn't impl the
-/// `crypto_mac::Mac` trait.
-///
-/// This type is a newtype that impls a pseudo-MAC to leverage the benchmark
-/// functionality.
-///
-/// This is just for benchmarking! Don't copy and paste this into your program
-/// unless you really know what you're doing!!!
-#[derive(Clone)]
-struct Poly1305Mac(Poly1305);
+// TODO(tarcieri): move this into the `universal-hash` crate
+macro_rules! bench {
+    ($name:ident, $bs:expr) => {
+        #[bench]
+        fn $name(b: &mut Bencher) {
+            let key = Default::default();
+            let mut m = Poly1305::new(&key);
+            let data = [0; $bs];
 
-impl Mac for Poly1305Mac {
-    type OutputSize = U16;
-    type KeySize = U32;
+            b.iter(|| {
+                m.update_padded(&data);
+            });
 
-    fn new(key: &GenericArray<u8, Self::KeySize>) -> Poly1305Mac {
-        let poly = Poly1305::new(key.as_slice().try_into().unwrap());
-        Poly1305Mac(poly)
-    }
-
-    fn input(&mut self, data: &[u8]) {
-        self.0.input(data);
-    }
-
-    fn reset(&mut self) {
-        unimplemented!();
-    }
-
-    fn result(self) -> MacResult<Self::OutputSize> {
-        let tag: Block = self.0.result().into();
-        MacResult::new(tag.into())
-    }
+            b.bytes = $bs;
+        }
+    };
 }
+
+bench!(bench1_10, 10);
+bench!(bench2_100, 100);
+bench!(bench3_1000, 1000);
+bench!(bench3_10000, 10000);
