@@ -77,14 +77,7 @@ impl<B: Backend> Mul for Element<B> {
     ///
     /// [RFC 8452 Section 3]: https://tools.ietf.org/html/rfc8452#section-3
     fn mul(self, rhs: Self) -> Self {
-        let t1 = self.0.clmul(rhs.0, 0x00);
-        let t2 = self.0.clmul(rhs.0, 0x01);
-        let t3 = self.0.clmul(rhs.0, 0x10);
-        let t4 = self.0.clmul(rhs.0, 0x11);
-        let t5 = t2 + t3;
-        let t6 = t4 + t5.shr64();
-        let t7 = (t1 + t5.shl64()).reduce();
-        Element(t6 + t7)
+        Element(self.0 * rhs.0)
     }
 }
 
