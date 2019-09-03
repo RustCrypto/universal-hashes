@@ -6,22 +6,19 @@
 // See: <https://bearssl.org/gitweb/?p=BearSSL;a=blob;f=src/hash/ghash_ctmul64.c>
 
 use super::Backend;
-use crate::field::{
-    clmul::{self, Clmul},
-    Block,
-};
-use core::{convert::TryInto, ops::BitXor};
+use crate::field::Block;
+use core::{convert::TryInto, ops::Add};
 
 /// 2 x `u64` values emulating an XMM register
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
-pub struct U64x2([u64; 2]);
+pub struct U64x2(u64, u64);
 
 impl From<Block> for U64x2 {
     fn from(bytes: Block) -> U64x2 {
-        U64x2([
+        U64x2(
             u64::from_le_bytes(bytes[..8].try_into().unwrap()),
             u64::from_le_bytes(bytes[8..].try_into().unwrap()),
-        ])
+        )
     }
 }
 
@@ -36,66 +33,63 @@ impl From<u128> for U64x2 {
     fn from(x: u128) -> U64x2 {
         let lo = (x & 0xFFFF_FFFFF) as u64;
         let hi = (x >> 64) as u64;
-        U64x2([lo, hi])
+        U64x2(lo, hi)
     }
 }
 
 impl From<U64x2> for u128 {
     fn from(u64x2: U64x2) -> u128 {
-        u128::from(u64x2.0[0]) | (u128::from(u64x2.0[1]) << 64)
+        u128::from(u64x2.0) | (u128::from(u64x2.1) << 64)
     }
 }
 
-impl BitXor for U64x2 {
+impl Add for U64x2 {
     type Output = Self;
 
-    fn bitxor(self, rhs: Self) -> Self::Output {
-        U64x2([self.0[0] ^ rhs.0[0], self.0[1] ^ rhs.0[1]])
-    }
-}
-
-impl Clmul for U64x2 {
-    fn clmul<I>(self, other: Self, imm: I) -> Self
-    where
-        I: Into<clmul::PseudoOp>,
-    {
-        let (a, b) = match imm.into() {
-            clmul::PseudoOp::PCLMULLQLQDQ => (self.0[0], other.0[0]),
-            clmul::PseudoOp::PCLMULHQLQDQ => (self.0[1], other.0[0]),
-            clmul::PseudoOp::PCLMULLQHQDQ => (self.0[0], other.0[1]),
-            clmul::PseudoOp::PCLMULHQHQDQ => (self.0[1], other.0[1]),
-        };
-
-        let mut result = [0u64; 2];
-
-        for i in 0..64 {
-            if b & (1 << i) != 0 {
-                result[1] ^= a;
-            }
-
-            result[0] >>= 1;
-
-            if result[1] & 1 != 0 {
-                result[0] ^= 1 << 63;
-            }
-
-            result[1] >>= 1;
-        }
-
-        U64x2(result)
+    /// Adds two POLYVAL field elements.
+    fn add(self, rhs: Self) -> Self {
+        U64x2(self.0 ^ rhs.0, self.1 ^ rhs.1)
     }
 }
 
 impl Backend for U64x2 {
+    fn clmul(self, other: Self, imm: u8) -> Self {
+        let (a, b) = match imm.into() {
+            0x00 => (self.0, other.0),
+            0x01 => (self.1, other.0),
+            0x10 => (self.0, other.1),
+            0x11 => (self.1, other.1),
+            _ => unreachable!(),
+        };
+
+        let mut result = U64x2(0, 0);
+
+        for i in 0..64 {
+            if b & (1 << i) != 0 {
+                result.1 ^= a;
+            }
+
+            result.0 >>= 1;
+
+            if result.1 & 1 != 0 {
+                result.0 ^= 1 << 63;
+            }
+
+            result.1 >>= 1;
+        }
+
+        result
+    }
+
     fn shuffle(self) -> Self {
-        U64x2([self.0[1], self.0[0]])
+        U64x2(self.1, self.0)
     }
 
     fn shl64(self) -> Self {
-        U64x2([0, self.0[0]])
+        U64x2(0, self.0)
     }
 
     fn shr64(self) -> Self {
-        U64x2([self.0[1], 0])
+        U64x2(self.1, 0)
     }
 }

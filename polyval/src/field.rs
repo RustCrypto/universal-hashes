@@ -14,8 +14,7 @@
 //!
 //! [RFC 8452 Section 3]: https://tools.ietf.org/html/rfc8452#section-3
 
-pub(crate) mod backend;
-mod clmul;
+pub mod backend;
 
 use self::backend::Backend;
 use core::ops::{Add, Mul};
@@ -25,12 +24,6 @@ pub const FIELD_SIZE: usize = 16;
 
 /// POLYVAL field element bytestrings (16-bytes)
 pub type Block = [u8; FIELD_SIZE];
-
-/// Mask value used when performing Montgomery fast reduction.
-/// This corresponds to POLYVAL's polynomial with the highest bit unset.
-///
-/// See: <https://crypto.stanford.edu/RealWorldCrypto/slides/gueron.pdf>
-const MASK: u128 = 1 << 127 | 1 << 126 | 1 << 121 | 1;
 
 /// POLYVAL field element.
 #[derive(Copy, Clone)]
@@ -45,17 +38,6 @@ impl<B: Backend> Element<B> {
     /// Serialize this `FieldElement` as a bytestring.
     pub fn to_bytes(self) -> Block {
         self.0.into()
-    }
-
-    /// Fast reduction modulo x^128 + x^127 + x^126 +x^121 + 1 (Gueron 2012)
-    /// Algorithm 4: "Montgomery reduction"
-    fn reduce(self) -> Self {
-        let mask = B::from(MASK);
-        let a = mask.clmul(self.0, 0x01);
-        let b = self.0.shuffle() ^ a;
-        let c = mask.clmul(b, 0x01);
-        let d = b.shuffle() ^ c;
-        Element(d)
     }
 }
 
@@ -77,7 +59,7 @@ impl<B: Backend> Add for Element<B> {
     ///
     /// [RFC 8452 Section 3]: https://tools.ietf.org/html/rfc8452#section-3
     fn add(self, rhs: Self) -> Self {
-        Element(self.0 ^ rhs.0)
+        Element(self.0 + rhs.0)
     }
 }
 
@@ -99,8 +81,10 @@ impl<B: Backend> Mul for Element<B> {
         let t2 = self.0.clmul(rhs.0, 0x01);
         let t3 = self.0.clmul(rhs.0, 0x10);
         let t4 = self.0.clmul(rhs.0, 0x11);
-        let t5 = t2 ^ t3;
-        Element(t4 ^ t5.shr64()) + Element(t1 ^ t5.shl64()).reduce()
+        let t5 = t2 + t3;
+        let t6 = t4 + t5.shr64();
+        let t7 = (t1 + t5.shl64()).reduce();
+        Element(t6 + t7)
     }
 }
 
