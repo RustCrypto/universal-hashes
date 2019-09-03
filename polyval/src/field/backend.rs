@@ -9,11 +9,10 @@
 mod pclmulqdq;
 
 #[cfg(feature = "insecure-soft")]
-mod soft;
+pub mod soft;
 
-use super::clmul::Clmul;
 use super::Block;
-use core::ops::BitXor;
+use core::ops::Add;
 
 #[cfg(not(any(
     all(
@@ -49,10 +48,25 @@ pub(crate) use self::pclmulqdq::M128i;
 ))]
 pub(crate) use self::soft::U64x2 as M128i;
 
-/// Trait representing the arithmetic operations we expect on the XMM registers
-pub trait Backend:
-    BitXor<Output = Self> + Clmul + Copy + From<Block> + Into<Block> + From<u128>
-{
+/// Field arithmetic backend
+pub trait Backend: Add<Output = Self> + Copy + From<Block> + Into<Block> + From<u128> {
+    /// Fast reduction modulo x^128 + x^127 + x^126 +x^121 + 1 (Gueron 2012)
+    /// Algorithm 4: "Montgomery reduction"
+    ///
+    /// See: <https://crypto.stanford.edu/RealWorldCrypto/slides/gueron.pdf>
+    fn reduce(self) -> Self {
+        // Mask value used when performing Montgomery fast reduction.
+        // This corresponds to POLYVAL's polynomial with the highest bit unset.
+        let mask = Self::from(1 << 127 | 1 << 126 | 1 << 121 | 1);
+        let a = mask.clmul(self, 0x01);
+        let b = self.shuffle() + a;
+        let c = mask.clmul(b, 0x01);
+        b.shuffle() + c
+    }
+
+    /// Carryless multiplication
+    fn clmul(self, rhs: Self, imm: u8) -> Self;
+
     /// Swap the hi and low 64-bit halves of the register
     fn shuffle(self) -> Self;
 

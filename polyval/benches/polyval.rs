@@ -2,7 +2,7 @@
 
 extern crate test;
 
-use polyval::{Polyval, universal_hash::UniversalHash};
+use polyval::{universal_hash::UniversalHash, Polyval};
 use test::Bencher;
 
 // TODO(tarcieri): move this into the `universal-hash` crate

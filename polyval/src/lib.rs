@@ -14,7 +14,7 @@
 //! ## Requirements
 //!
 //! - Rust 1.34.0 or newer
-//! - `RUSTFLAGS` with `-Ctarget-cpu` and `-Ctarget-feature`:
+//! - Recommended: `RUSTFLAGS` with `-Ctarget-cpu` and `-Ctarget-feature`:
 //!   - x86(-64) CPU: `target-cpu=sandybridge` or newer
 //!   - SSE2 + SSE4.1: `target-feature=+sse2,+sse4.1`
 //!
