@@ -18,9 +18,8 @@
 //!   - x86(-64) CPU: `target-cpu=sandybridge` or newer
 //!   - SSE2 + SSE4.1: `target-feature=+sse2,+sse4.1`
 //!
-//! An **INSECURE** (variable timing) portable implementation is gated behind
-//! the `insecure-soft` cargo feature. Use of this implementation is
-//! **NOT RECOMMENDED** and may potentially leak the POLYVAL key!
+//! If `RUSTFLAGS` are not provided, this crate will fall back to a much slower
+//! software-only implementation.
 //!
 //! ## Relationship to GHASH
 //!

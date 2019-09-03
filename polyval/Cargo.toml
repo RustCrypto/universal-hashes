@@ -22,9 +22,7 @@ zeroize = { version = "0.10", optional = true, default-features = false }
 hex-literal = "0.1"
 
 [features]
-default = []
 std = ["universal-hash/std"]
-insecure-soft = []
 
 [badges]
 maintenance = { status = "experimental" }
