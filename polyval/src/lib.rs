@@ -23,6 +23,9 @@
 //!
 //! ## Relationship to GHASH
 //!
+//! This crate also provides an implementation of **GHASH** gated under the
+//! `ghash` cargo feature and the [`GHash`] type.
+//!
 //! POLYVAL can be thought of as the little endian equivalent of GHASH, which
 //! affords it a small performance advantage over GHASH when used on little
 //! endian architectures.
@@ -47,10 +50,13 @@
 #![warn(missing_docs, rust_2018_idioms)]
 
 pub mod field;
+#[cfg(feature = "ghash")]
+mod ghash;
 
+#[cfg(feature = "ghash")]
+pub use self::ghash::GHash;
 pub use universal_hash;
 
-use core::convert::TryInto;
 use universal_hash::generic_array::{typenum::U16, GenericArray};
 use universal_hash::{Output, UniversalHash};
 
@@ -76,14 +82,14 @@ impl UniversalHash for Polyval {
     /// Initialize POLYVAL with the given `H` field element
     fn new(h: &GenericArray<u8, U16>) -> Self {
         Self {
-            H: field::Element::from_bytes(h.as_slice().try_into().unwrap()),
+            H: field::Element::from_bytes(h.clone().into()),
             S: field::Element::default(),
         }
     }
 
-    /// Input a field element `X` to be authenticated into POLYVAL.
+    /// Input a field element `X` to be authenticated
     fn update_block(&mut self, x: &GenericArray<u8, U16>) {
-        let x = field::Element::from_bytes(x.as_slice().try_into().unwrap());
+        let x = field::Element::from_bytes(x.clone().into());
         self.S = (self.S + x) * self.H;
     }
 
