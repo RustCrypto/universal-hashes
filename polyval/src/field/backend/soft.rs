@@ -113,27 +113,6 @@ impl Mul for U64x2 {
     }
 }
 
-impl U64x2 {
-    /// The `mulX_POLYVAL()` function as defined in [RFC 8452 Appendix A][1].
-    /// Performs a doubling (a.k.a. "multiply by x") over GF(2^128).
-    /// This is useful for implementing GHASH in terms of POLYVAL.
-    ///
-    /// [1]: https://tools.ietf.org/html/rfc8452#appendix-A
-    pub fn mulx(self) -> Self {
-        let mut v0 = self.0;
-        let mut v1 = self.1;
-        let v0h = v0 >> 63;
-        let v1h = v1 >> 63;
-
-        v0 <<= 1;
-        v1 <<= 1;
-        v0 ^= v1h;
-        v1 ^= v0h ^ (v1h << 63) ^ (v1h << 62) ^ (v1h << 57);
-
-        U64x2(v0, v1)
-    }
-}
-
 /// Reverse a `u64` in constant time
 fn rev64(mut x: u64) -> u64 {
     x = ((x & 0x5555_5555_5555_5555) << 1) | ((x >> 1) & 0x5555_5555_5555_5555);
