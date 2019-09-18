@@ -1,5 +1,6 @@
 [workspace]
 members = [
+    "ghash",
     "poly1305",
     "polyval"
 ]

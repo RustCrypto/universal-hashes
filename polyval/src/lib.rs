@@ -23,9 +23,6 @@
 //!
 //! ## Relationship to GHASH
 //!
-//! This crate also provides an implementation of **GHASH** gated under the
-//! `ghash` cargo feature and the [`GHash`] type.
-//!
 //! POLYVAL can be thought of as the little endian equivalent of GHASH, which
 //! affords it a small performance advantage over GHASH when used on little
 //! endian architectures.
@@ -50,11 +47,7 @@
 #![warn(missing_docs, rust_2018_idioms)]
 
 pub mod field;
-#[cfg(feature = "ghash")]
-mod ghash;
 
-#[cfg(feature = "ghash")]
-pub use self::ghash::GHash;
 pub use universal_hash;
 
 use universal_hash::generic_array::{typenum::U16, GenericArray};
