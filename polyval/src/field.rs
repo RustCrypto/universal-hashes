@@ -14,10 +14,23 @@
 //!
 //! [RFC 8452 Section 3]: https://tools.ietf.org/html/rfc8452#section-3
 
-pub mod backend;
+#[cfg(all(
+    target_feature = "pclmulqdq",
+    target_feature = "sse2",
+    target_feature = "sse4.1",
+    any(target_arch = "x86", target_arch = "x86_64")
+))]
+mod pclmulqdq;
+mod soft;
 
-use self::backend::Backend;
-use core::ops::{Add, Mul};
+#[cfg(all(
+    target_feature = "pclmulqdq",
+    target_feature = "sse2",
+    target_feature = "sse4.1",
+    any(target_arch = "x86", target_arch = "x86_64")
+))]
+use self::pclmulqdq::M128i;
+use self::soft::U64x2;
 
 /// Size of GF(2^128) in bytes (16-bytes).
 pub const FIELD_SIZE: usize = 16;
@@ -27,29 +40,64 @@ pub type Block = [u8; FIELD_SIZE];
 
 /// POLYVAL field element.
 #[derive(Copy, Clone)]
-pub struct Element<B: Backend>(B);
+pub enum Element {
+    #[cfg(all(
+        target_feature = "pclmulqdq",
+        target_feature = "sse2",
+        target_feature = "sse4.1",
+        any(target_arch = "x86", target_arch = "x86_64")
+    ))]
+    /// (P)CLMUL(QDQ)-accelerated backend on supported x86 architectures
+    Clmul(M128i),
 
-impl<B: Backend> Element<B> {
+    /// Portable software fallback
+    Soft(U64x2),
+}
+
+impl Element {
     /// Load a `FieldElement` from its bytestring representation.
+    #[cfg(all(
+        target_feature = "pclmulqdq",
+        target_feature = "sse2",
+        target_feature = "sse4.1",
+        any(target_arch = "x86", target_arch = "x86_64")
+    ))]
     pub fn from_bytes(bytes: Block) -> Self {
-        Element(bytes.into())
+        if cfg!(feature = "std") {
+            if is_x86_feature_detected!("pclmulqdq") {
+                Element::Clmul(bytes.into())
+            } else {
+                Element::Soft(bytes.into())
+            }
+        } else {
+            Element::Clmul(bytes.into())
+        }
+    }
+
+    /// Load a `FieldElement` from its bytestring representation.
+    #[cfg(not(all(
+        target_feature = "pclmulqdq",
+        target_feature = "sse2",
+        target_feature = "sse4.1",
+        any(target_arch = "x86", target_arch = "x86_64")
+    )))]
+    pub fn from_bytes(bytes: Block) -> Self {
+        Element::Soft(bytes.into())
     }
 
     /// Serialize this `FieldElement` as a bytestring.
     pub fn to_bytes(self) -> Block {
-        self.0.into()
+        match self {
+            #[cfg(all(
+                target_feature = "pclmulqdq",
+                target_feature = "sse2",
+                target_feature = "sse4.1",
+                any(target_arch = "x86", target_arch = "x86_64")
+            ))]
+            Element::Clmul(m128i) => m128i.into(),
+            Element::Soft(u64x2) => u64x2.into(),
+        }
     }
-}
-
-impl<B: Backend> Default for Element<B> {
-    fn default() -> Self {
-        Self::from_bytes(Block::default())
-    }
-}
-
-#[allow(clippy::suspicious_arithmetic_impl)]
-impl<B: Backend> Add for Element<B> {
-    type Output = Self;
 
     /// Adds two POLYVAL field elements.
     ///
@@ -58,16 +106,21 @@ impl<B: Backend> Add for Element<B> {
     /// > "The sum of any two elements in the field is the result of XORing them."
     ///
     /// [RFC 8452 Section 3]: https://tools.ietf.org/html/rfc8452#section-3
-    fn add(self, rhs: Self) -> Self {
-        Element(self.0 + rhs.0)
+    #[allow(clippy::should_implement_trait)]
+    pub fn add(self, other: Block) -> Self {
+        match self {
+            #[cfg(all(
+                target_feature = "pclmulqdq",
+                target_feature = "sse2",
+                target_feature = "sse4.1",
+                any(target_arch = "x86", target_arch = "x86_64")
+            ))]
+            Element::Clmul(m128i) => Element::Clmul(m128i + M128i::from(other)),
+            Element::Soft(u64x2) => Element::Soft(u64x2 + U64x2::from(other)),
+        }
     }
-}
 
-#[allow(clippy::suspicious_arithmetic_impl)]
-impl<B: Backend> Mul for Element<B> {
-    type Output = Self;
-
-    /// Computes POLYVAL multiplication over GF(2^128).
+    /// Computes carryless POLYVAL multiplication over GF(2^128).
     ///
     /// From [RFC 8452 Section 3]:
     ///
@@ -76,13 +129,22 @@ impl<B: Backend> Mul for Element<B> {
     /// > irreducible polynomial."
     ///
     /// [RFC 8452 Section 3]: https://tools.ietf.org/html/rfc8452#section-3
-    fn mul(self, rhs: Self) -> Self {
-        Element(self.0 * rhs.0)
+    pub fn clmul(self, other: Block) -> Self {
+        match self {
+            #[cfg(all(
+                target_feature = "pclmulqdq",
+                target_feature = "sse2",
+                target_feature = "sse4.1",
+                any(target_arch = "x86", target_arch = "x86_64")
+            ))]
+            Element::Clmul(m128i) => Element::Clmul(m128i * M128i::from(other)),
+            Element::Soft(u64x2) => Element::Soft(u64x2 * U64x2::from(other)),
+        }
     }
 }
 
-impl<B: Backend> From<B> for Element<B> {
-    fn from(element: B) -> Element<B> {
-        Element(element)
+impl Default for Element {
+    fn default() -> Self {
+        Self::from_bytes(Block::default())
     }
 }

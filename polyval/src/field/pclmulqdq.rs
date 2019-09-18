@@ -6,7 +6,6 @@ use core::arch::x86::*;
 #[cfg(target_arch = "x86_64")]
 use core::arch::x86_64::*;
 
-use super::Backend;
 use crate::field::Block;
 use core::ops::{Add, Mul};
 
@@ -14,8 +13,6 @@ use core::ops::{Add, Mul};
 #[repr(align(16))]
 #[derive(Copy, Clone)]
 pub struct M128i(__m128i);
-
-impl Backend for M128i {}
 
 impl From<Block> for M128i {
     // `_mm_loadu_si128` performs an unaligned load

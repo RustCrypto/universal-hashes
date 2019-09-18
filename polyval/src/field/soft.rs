@@ -5,7 +5,6 @@
 //!
 //! Copyright (c) 2016 Thomas Pornin <pornin@bolet.org>
 
-use super::Backend;
 use crate::field::Block;
 use core::{
     convert::TryInto,
@@ -15,8 +14,6 @@ use core::{
 /// 2 x `u64` values
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
 pub struct U64x2(u64, u64);
-
-impl Backend for U64x2 {}
 
 impl From<Block> for U64x2 {
     fn from(bytes: Block) -> U64x2 {
@@ -29,14 +26,7 @@ impl From<Block> for U64x2 {
 
 impl From<U64x2> for Block {
     fn from(u64x2: U64x2) -> Block {
-        let x: u128 = u64x2.into();
-        x.to_le_bytes()
-    }
-}
-
-impl From<U64x2> for u128 {
-    fn from(u64x2: U64x2) -> u128 {
-        u128::from(u64x2.0) | (u128::from(u64x2.1) << 64)
+        (u128::from(u64x2.0) | (u128::from(u64x2.1) << 64)).to_le_bytes()
     }
 }
 

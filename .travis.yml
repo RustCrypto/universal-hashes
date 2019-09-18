@@ -34,10 +34,10 @@ matrix:
       script: cd polyval && cargo test --release --tests
 
     # no_std build
-    - name: "Rust: stable (thumbv7em-none-eabihf)"
+    - name: "Rust: stable (thumbv7em-none-eabi)"
       rust: stable
-      install: rustup target add thumbv7em-none-eabihf
-      script: cargo build --all --target thumbv7em-none-eabihf --release
+      install: rustup target add thumbv7em-none-eabi
+      script: ./build_nostd.sh
     - name "Rust: nightly (benches)"
       rust: nightly
       script: cargo build --all-features --benches

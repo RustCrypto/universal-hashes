@@ -46,6 +46,16 @@
 #![doc(html_logo_url = "https://raw.githubusercontent.com/RustCrypto/meta/master/logo_small.png")]
 #![warn(missing_docs, rust_2018_idioms)]
 
+#[cfg(all(
+    feature = "std",
+    target_feature = "pclmulqdq",
+    target_feature = "sse2",
+    target_feature = "sse4.1",
+    any(target_arch = "x86", target_arch = "x86_64")
+))]
+#[macro_use]
+extern crate std;
+
 pub mod field;
 
 pub use universal_hash;
@@ -53,19 +63,16 @@ pub use universal_hash;
 use universal_hash::generic_array::{typenum::U16, GenericArray};
 use universal_hash::{Output, UniversalHash};
 
-// TODO(tarcieri): runtime selection of CLMUL vs soft backend when both are available
-use field::backend::M128i;
-
 /// **POLYVAL**: GHASH-like universal hash over GF(2^128).
 #[allow(non_snake_case)]
 #[derive(Clone)]
 #[repr(align(16))]
 pub struct Polyval {
     /// GF(2^128) field element input blocks are multiplied by
-    H: field::Element<M128i>,
+    H: field::Element,
 
     /// Field element representing the computed universal hash
-    S: field::Element<M128i>,
+    S: field::Element,
 }
 
 impl UniversalHash for Polyval {
@@ -82,8 +89,7 @@ impl UniversalHash for Polyval {
 
     /// Input a field element `X` to be authenticated
     fn update_block(&mut self, x: &GenericArray<u8, U16>) {
-        let x = field::Element::from_bytes(x.clone().into());
-        self.S = (self.S + x) * self.H;
+        self.S = self.H.clmul(self.S.add(x.clone().into()).to_bytes());
     }
 
     /// Reset internal state
