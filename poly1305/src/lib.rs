@@ -39,6 +39,9 @@ pub const BLOCK_SIZE: usize = 16;
 /// Poly1305 blocks (16-bytes)
 pub type Block = [u8; BLOCK_SIZE];
 
+/// Poly1305 tags (16-bytes)
+pub type Tag = Output<U16>;
+
 /// The Poly1305 universal hash function.
 ///
 /// Note that Poly1305 is not a traditional MAC and is single-use only
@@ -97,7 +100,7 @@ impl UniversalHash for Poly1305 {
     }
 
     /// Get the hashed output
-    fn result(mut self) -> Output<U16> {
+    fn result(mut self) -> Tag {
         if self.leftover > 0 {
             self.buffer[self.leftover] = 1;
 
@@ -189,13 +192,13 @@ impl UniversalHash for Poly1305 {
         f = u64::from(h3) + u64::from(self.pad[3]) + (f >> 32);
         h3 = f as u32;
 
-        let mut output = GenericArray::default();
-        output[0..4].copy_from_slice(&h0.to_le_bytes());
-        output[4..8].copy_from_slice(&h1.to_le_bytes());
-        output[8..12].copy_from_slice(&h2.to_le_bytes());
-        output[12..16].copy_from_slice(&h3.to_le_bytes());
+        let mut tag = GenericArray::default();
+        tag[0..4].copy_from_slice(&h0.to_le_bytes());
+        tag[4..8].copy_from_slice(&h1.to_le_bytes());
+        tag[8..12].copy_from_slice(&h2.to_le_bytes());
+        tag[12..16].copy_from_slice(&h3.to_le_bytes());
 
-        Output::new(output)
+        Tag::new(tag)
     }
 }
 
