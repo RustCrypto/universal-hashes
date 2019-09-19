@@ -14,10 +14,35 @@
 //!
 //! [RFC 8452 Section 3]: https://tools.ietf.org/html/rfc8452#section-3
 
-pub mod backend;
+#[cfg(all(
+    target_feature = "pclmulqdq",
+    target_feature = "sse2",
+    target_feature = "sse4.1",
+    any(target_arch = "x86", target_arch = "x86_64")
+))]
+mod pclmulqdq;
+mod soft;
 
-use self::backend::Backend;
 use core::ops::{Add, Mul};
+
+#[cfg(all(
+    target_feature = "pclmulqdq",
+    target_feature = "sse2",
+    target_feature = "sse4.1",
+    any(target_arch = "x86", target_arch = "x86_64")
+))]
+use self::pclmulqdq::M128i;
+
+#[allow(unused_imports)]
+use self::soft::U64x2;
+
+#[cfg(not(all(
+    target_feature = "pclmulqdq",
+    target_feature = "sse2",
+    target_feature = "sse4.1",
+    any(target_arch = "x86", target_arch = "x86_64")
+)))]
+type M128i = U64x2;
 
 /// Size of GF(2^128) in bytes (16-bytes).
 pub const FIELD_SIZE: usize = 16;
@@ -27,9 +52,9 @@ pub type Block = [u8; FIELD_SIZE];
 
 /// POLYVAL field element.
 #[derive(Copy, Clone)]
-pub struct Element<B: Backend>(B);
+pub struct Element(M128i);
 
-impl<B: Backend> Element<B> {
+impl Element {
     /// Load a `FieldElement` from its bytestring representation.
     pub fn from_bytes(bytes: Block) -> Self {
         Element(bytes.into())
@@ -41,14 +66,13 @@ impl<B: Backend> Element<B> {
     }
 }
 
-impl<B: Backend> Default for Element<B> {
+impl Default for Element {
     fn default() -> Self {
         Self::from_bytes(Block::default())
     }
 }
 
-#[allow(clippy::suspicious_arithmetic_impl)]
-impl<B: Backend> Add for Element<B> {
+impl Add for Element {
     type Output = Self;
 
     /// Adds two POLYVAL field elements.
@@ -63,8 +87,7 @@ impl<B: Backend> Add for Element<B> {
     }
 }
 
-#[allow(clippy::suspicious_arithmetic_impl)]
-impl<B: Backend> Mul for Element<B> {
+impl Mul for Element {
     type Output = Self;
 
     /// Computes POLYVAL multiplication over GF(2^128).
@@ -78,11 +101,5 @@ impl<B: Backend> Mul for Element<B> {
     /// [RFC 8452 Section 3]: https://tools.ietf.org/html/rfc8452#section-3
     fn mul(self, rhs: Self) -> Self {
         Element(self.0 * rhs.0)
-    }
-}
-
-impl<B: Backend> From<B> for Element<B> {
-    fn from(element: B) -> Element<B> {
-        Element(element)
     }
 }

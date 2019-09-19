@@ -53,19 +53,16 @@ pub use universal_hash;
 use universal_hash::generic_array::{typenum::U16, GenericArray};
 use universal_hash::{Output, UniversalHash};
 
-// TODO(tarcieri): runtime selection of CLMUL vs soft backend when both are available
-use field::backend::M128i;
-
 /// **POLYVAL**: GHASH-like universal hash over GF(2^128).
 #[allow(non_snake_case)]
 #[derive(Clone)]
 #[repr(align(16))]
 pub struct Polyval {
     /// GF(2^128) field element input blocks are multiplied by
-    H: field::Element<M128i>,
+    H: field::Element,
 
     /// Field element representing the computed universal hash
-    S: field::Element<M128i>,
+    S: field::Element,
 }
 
 impl UniversalHash for Polyval {
