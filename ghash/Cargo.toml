@@ -15,7 +15,7 @@ categories = ["cryptography", "no-std"]
 edition = "2018"
 
 [dependencies]
-polyval = { version = "0.0.1", path = "../polyval" }
+polyval = { version = "0.1", path = "../polyval" }
 
 [dev-dependencies]
 hex-literal = "0.1"

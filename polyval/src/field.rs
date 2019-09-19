@@ -52,6 +52,7 @@ pub type Block = [u8; FIELD_SIZE];
 
 /// POLYVAL field element.
 #[derive(Copy, Clone)]
+#[repr(transparent)]
 pub struct Element(M128i);
 
 impl Element {
