@@ -3,19 +3,20 @@
 extern crate test;
 
 use polyval::{universal_hash::UniversalHash, Polyval};
-use test::Bencher;
+use test::{Bencher, black_box};
 
 // TODO(tarcieri): move this into the `universal-hash` crate
 macro_rules! bench {
     ($name:ident, $bs:expr) => {
         #[bench]
         fn $name(b: &mut Bencher) {
-            let key = Default::default();
+            let key = black_box(Default::default());
             let mut m = Polyval::new(&key);
             let data = [0; $bs];
 
             b.iter(|| {
                 m.update_padded(&data);
+                black_box(m.result_reset());
             });
 
             b.bytes = $bs;
