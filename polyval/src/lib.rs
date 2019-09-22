@@ -83,6 +83,28 @@ impl UniversalHash for Polyval {
         self.S = (self.S + x) * self.H;
     }
 
+    /// Input data into the universal hash function. If the length of the
+    /// data is not a multiple of the block size, the remaining data is
+    /// padded with zeros up to the `BlockSize`.
+    ///
+    /// This approach is frequently used by AEAD modes which use
+    /// Message Authentication Codes (MACs) based on universal hashing.
+    fn update_padded(&mut self, data: &[u8]) {
+        let mut chunks = data.chunks_exact(16);
+
+        for chunk in &mut chunks {
+            self.update_block(GenericArray::from_slice(chunk));
+        }
+
+        let rem = chunks.remainder();
+
+        if !rem.is_empty() {
+            let mut padded_block = GenericArray::default();
+            padded_block[..rem.len()].copy_from_slice(rem);
+            self.update_block(&padded_block);
+        }
+    }
+
     /// Reset internal state
     fn reset(&mut self) {
         self.S = field::Element::default();
