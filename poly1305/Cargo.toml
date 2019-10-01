@@ -13,7 +13,7 @@ edition = "2018"
 
 [dependencies]
 universal-hash = { version = "0.2", default-features = false }
-zeroize = { version = "0.10", optional = true, default-features = false }
+zeroize = { version = "1.0.0-pre", optional = true, default-features = false }
 
 [features]
 std = ["universal-hash/std"]
