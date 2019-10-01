@@ -1,6 +1,6 @@
 [package]
 name = "poly1305"
-version = "0.4.0"
+version = "0.4.1"
 authors = ["RustCrypto Developers"]
 license = "MIT OR Apache-2.0"
 description = "The Poly1305 universal hash function and message authentication code"
