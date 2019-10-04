@@ -59,7 +59,7 @@ pub struct Poly1305 {
 
 impl UniversalHash for Poly1305 {
     type KeySize = U32;
-    type OutputSize = U16;
+    type BlockSize = U16;
 
     /// Initialize Poly1305 with the given key
     fn new(key: &GenericArray<u8, U32>) -> Poly1305 {

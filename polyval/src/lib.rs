@@ -67,7 +67,7 @@ pub struct Polyval {
 
 impl UniversalHash for Polyval {
     type KeySize = U16;
-    type OutputSize = U16;
+    type BlockSize = U16;
 
     /// Initialize POLYVAL with the given `H` field element
     fn new(h: &GenericArray<u8, U16>) -> Self {

@@ -25,4 +25,3 @@ std = ["polyval/std"]
 
 [badges]
 maintenance = { status = "experimental" }
-travis-ci = { repository = "RustCrypto/universal-hashes" }
