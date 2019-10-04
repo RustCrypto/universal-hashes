@@ -30,7 +30,7 @@ pub struct GHash(Polyval);
 
 impl UniversalHash for GHash {
     type KeySize = U16;
-    type OutputSize = U16;
+    type BlockSize = U16;
 
     /// Initialize GHASH with the given `H` field element
     fn new(h: &GenericArray<u8, U16>) -> Self {

@@ -15,7 +15,7 @@ categories = ["cryptography", "no-std"]
 edition = "2018"
 
 [dependencies]
-universal-hash = { version = "0.2", default-features = false }
+universal-hash = { version = "0.3", default-features = false }
 zeroize = { version = "1.0.0-pre", optional = true, default-features = false }
 
 [dev-dependencies]
@@ -26,4 +26,3 @@ std = ["universal-hash/std"]
 
 [badges]
 maintenance = { status = "experimental" }
-travis-ci = { repository = "RustCrypto/universal-hashes" }
