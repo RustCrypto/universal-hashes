@@ -11,7 +11,8 @@
 can be used as a [Message Authentication Code (MAC)][3].
 
 In practice, Poly1305 is primarily combined with ciphers from the
-[Salsa20 Family][4] such as [ChaCha20][5].
+[Salsa20 Family][4] such as in [ChaCha20Poly1305][5] and [XSalsa20Poly1305][6]
+(a.k.a. NaCl `crypto_secretbox`).
 
 [Documentation][docs-link]
 
@@ -56,4 +57,5 @@ dual licensed as above, without any additional terms or conditions.
 [2]: https://en.wikipedia.org/wiki/Universal_hashing
 [3]: https://en.wikipedia.org/wiki/Message_authentication_code
 [4]: https://cr.yp.to/snuffle/salsafamily-20071225.pdf
-[5]: https://crates.io/crates/chacha20
+[5]: https://github.com/RustCrypto/AEADs/tree/master/chacha20poly1305
+[6]: https://github.com/RustCrypto/AEADs/tree/master/xsalsa20poly1305
