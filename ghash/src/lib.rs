@@ -1,4 +1,25 @@
 //! **GHASH**: universal hash over GF(2^128) used by AES-GCM.
+//!
+//! ## Implementation Notes
+//!
+//! The implementation of GHASH found in this crate internally uses the
+//! [`polyval`] crate, which provides a similar universal hash function used by
+//! AES-GCM-SIV (RFC 8452).
+//!
+//! By implementing GHASH in terms of POLYVAL, the two universal hash functions
+//! can share a common core, meaning any optimization work (e.g. CPU-specific
+//! SIMD implementations) which happens upstream in the `polyval` crate
+//! benefits GHASH as well.
+//!
+//! From RFC 8452 Appendix A:
+//! <https://tools.ietf.org/html/rfc8452#appendix-A>
+//!
+//! > GHASH and POLYVAL both operate in GF(2^128), although with different
+//! > irreducible polynomials: POLYVAL works modulo x^128 + x^127 + x^126 +
+//! > x^121 + 1 and GHASH works modulo x^128 + x^7 + x^2 + x + 1.  Note
+//! > that these irreducible polynomials are the "reverse" of each other.
+//!
+//! [`polyval`]: https://github.com/RustCrypto/universal-hashes/tree/master/polyval
 
 #![no_std]
 #![doc(html_logo_url = "https://raw.githubusercontent.com/RustCrypto/meta/master/logo_small.png")]
@@ -13,17 +34,8 @@ use universal_hash::{Output, UniversalHash};
 
 /// **GHASH**: universal hash over GF(2^128) used by AES-GCM.
 ///
-/// GHASH is a universal hash function whose polynomial is the "reverse" of
-/// the one used by POLYVAL, and is used for message authentication in
+/// GHASH is a universal hash function used for message authentication in
 /// the AES-GCM authenticated encryption cipher.
-///
-/// From RFC 8452 Appendix A:
-/// <https://tools.ietf.org/html/rfc8452#appendix-A>
-///
-/// > GHASH and POLYVAL both operate in GF(2^128), although with different
-/// > irreducible polynomials: POLYVAL works modulo x^128 + x^127 + x^126 +
-/// > x^121 + 1 and GHASH works modulo x^128 + x^7 + x^2 + x + 1.  Note
-/// > that these irreducible polynomials are the "reverse" of each other.
 #[derive(Clone)]
 #[repr(align(16))]
 pub struct GHash(Polyval);
@@ -51,7 +63,7 @@ impl UniversalHash for GHash {
         self.0.reset();
     }
 
-    /// Get POLYVAL result (i.e. computed `S` field element)
+    /// Get GHASH output
     fn result(self) -> Output<U16> {
         let mut output: Block = self.0.result().into_bytes().into();
         output.reverse();
