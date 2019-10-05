@@ -28,9 +28,11 @@
 pub use polyval::universal_hash;
 
 use core::convert::TryInto;
-use polyval::{field::Block, Polyval};
+use polyval::Polyval;
 use universal_hash::generic_array::{typenum::U16, GenericArray};
 use universal_hash::{Output, UniversalHash};
+#[cfg(feature = "zeroize")]
+use zeroize::Zeroize;
 
 /// **GHASH**: universal hash over GF(2^128) used by AES-GCM.
 ///
@@ -46,16 +48,29 @@ impl UniversalHash for GHash {
 
     /// Initialize GHASH with the given `H` field element
     fn new(h: &GenericArray<u8, U16>) -> Self {
-        let mut h: Block = h.clone().into();
+        let mut h = *h;
         h.reverse();
-        GHash(Polyval::new(&mulX_POLYVAL(h).into()))
+
+        #[allow(unused_mut)]
+        let mut h_polyval = mulX_POLYVAL(&h);
+
+        #[cfg(feature = "zeroize")]
+        h.zeroize();
+
+        #[allow(clippy::let_and_return)]
+        let result = GHash(Polyval::new(&h_polyval));
+
+        #[cfg(feature = "zeroize")]
+        h_polyval.zeroize();
+
+        result
     }
 
     /// Input a field element `X` to be authenticated
     fn update_block(&mut self, x: &GenericArray<u8, U16>) {
-        let mut x: Block = x.clone().into();
+        let mut x = *x;
         x.reverse();
-        self.0.update_block(&x.into());
+        self.0.update_block(&x);
     }
 
     /// Reset internal state
@@ -65,9 +80,9 @@ impl UniversalHash for GHash {
 
     /// Get GHASH output
     fn result(self) -> Output<U16> {
-        let mut output: Block = self.0.result().into_bytes().into();
+        let mut output = self.0.result().into_bytes();
         output.reverse();
-        Output::new(output.into())
+        Output::new(output)
     }
 }
 
@@ -77,17 +92,10 @@ impl UniversalHash for GHash {
 ///
 /// [1]: https://tools.ietf.org/html/rfc8452#appendix-A
 #[allow(non_snake_case)]
-fn mulX_POLYVAL(block: Block) -> Block {
-    let mut v0 = u64::from_le_bytes(block[..8].try_into().unwrap());
-    let mut v1 = u64::from_le_bytes(block[8..].try_into().unwrap());
-
-    let v0h = v0 >> 63;
-    let v1h = v1 >> 63;
-
-    v0 <<= 1;
-    v1 <<= 1;
-    v0 ^= v1h;
-    v1 ^= v0h ^ (v1h << 63) ^ (v1h << 62) ^ (v1h << 57);
-
-    (u128::from(v0) | (u128::from(v1) << 64)).to_le_bytes()
+fn mulX_POLYVAL(block: &GenericArray<u8, U16>) -> GenericArray<u8, U16> {
+    let mut v = u128::from_le_bytes(block.as_slice().try_into().unwrap());
+    let hi = v >> 127;
+    v <<= 1;
+    v ^= (hi << 127) ^ (hi << 126) ^ (hi << 121);
+    v.to_le_bytes().into()
 }
