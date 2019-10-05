@@ -15,7 +15,7 @@ categories = ["cryptography", "no-std"]
 edition = "2018"
 
 [dependencies]
-polyval = { version = "0.2", path = "../polyval" }
+polyval = { version = "0.3", path = "../polyval" }
 zeroize = { version = "1.0.0-pre", optional = true, default-features = false }
 
 [dev-dependencies]
