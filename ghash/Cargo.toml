@@ -16,6 +16,7 @@ edition = "2018"
 
 [dependencies]
 polyval = { version = "0.2", path = "../polyval" }
+zeroize = { version = "1.0.0-pre", optional = true, default-features = false }
 
 [dev-dependencies]
 hex-literal = "0.1"

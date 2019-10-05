@@ -3,7 +3,7 @@
 extern crate test;
 
 use polyval::{universal_hash::UniversalHash, Polyval};
-use test::{Bencher, black_box};
+use test::{black_box, Bencher};
 
 // TODO(tarcieri): move this into the `universal-hash` crate
 macro_rules! bench {

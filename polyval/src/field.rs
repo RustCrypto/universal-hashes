@@ -44,11 +44,8 @@ use self::soft::U64x2;
 )))]
 type M128i = U64x2;
 
-/// Size of GF(2^128) in bytes (16-bytes).
-pub const FIELD_SIZE: usize = 16;
-
 /// POLYVAL field element bytestrings (16-bytes)
-pub type Block = [u8; FIELD_SIZE];
+type Block = [u8; 16];
 
 /// POLYVAL field element.
 #[derive(Copy, Clone)]
