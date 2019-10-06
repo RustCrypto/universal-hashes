@@ -93,9 +93,16 @@ impl UniversalHash for GHash {
 /// [1]: https://tools.ietf.org/html/rfc8452#appendix-A
 #[allow(non_snake_case)]
 fn mulX_POLYVAL(block: &GenericArray<u8, U16>) -> GenericArray<u8, U16> {
-    let mut v = u128::from_le_bytes(block.as_slice().try_into().unwrap());
-    let hi = v >> 127;
-    v <<= 1;
-    v ^= (hi << 127) ^ (hi << 126) ^ (hi << 121);
-    v.to_le_bytes().into()
+    let mut v0 = u64::from_le_bytes(block[..8].try_into().unwrap());
+    let mut v1 = u64::from_le_bytes(block[8..].try_into().unwrap());
+
+    let v0h = v0 >> 63;
+    let v1h = v1 >> 63;
+
+    v0 <<= 1;
+    v1 <<= 1;
+    v0 ^= v1h;
+    v1 ^= v0h ^ (v1h << 63) ^ (v1h << 62) ^ (v1h << 57);
+
+    (u128::from(v0) | (u128::from(v1) << 64)).to_le_bytes().into()
 }
