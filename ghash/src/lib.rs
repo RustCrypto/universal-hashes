@@ -104,5 +104,7 @@ fn mulX_POLYVAL(block: &GenericArray<u8, U16>) -> GenericArray<u8, U16> {
     v0 ^= v1h;
     v1 ^= v0h ^ (v1h << 63) ^ (v1h << 62) ^ (v1h << 57);
 
-    (u128::from(v0) | (u128::from(v1) << 64)).to_le_bytes().into()
+    (u128::from(v0) | (u128::from(v1) << 64))
+        .to_le_bytes()
+        .into()
 }
