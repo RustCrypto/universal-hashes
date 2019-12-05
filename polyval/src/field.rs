@@ -24,6 +24,7 @@ mod pclmulqdq;
 mod u32_soft;
 mod u64_soft;
 
+use cfg_if::cfg_if;
 use core::ops::{Add, Mul};
 
 #[cfg(all(
@@ -40,27 +41,19 @@ use self::u32_soft::U32x4;
 #[allow(unused_imports)]
 use self::u64_soft::U64x2;
 
-#[cfg(all(
-    not(target_pointer_width = "64"),
-    not(all(
-        target_feature = "pclmulqdq",
-        target_feature = "sse2",
-        target_feature = "sse4.1",
-        any(target_arch = "x86", target_arch = "x86_64")
-    ))
-))]
-type M128i = U32x4;
-
-#[cfg(all(
-    target_pointer_width = "64",
-    not(all(
-        target_feature = "pclmulqdq",
-        target_feature = "sse2",
-        target_feature = "sse4.1",
-        any(target_arch = "x86", target_arch = "x86_64")
-    ))
-))]
-type M128i = U64x2;
+#[cfg(not(all(
+    target_feature = "pclmulqdq",
+    target_feature = "sse2",
+    target_feature = "sse4.1",
+    any(target_arch = "x86", target_arch = "x86_64")
+)))]
+cfg_if! {
+    if #[cfg(target_pointer_width = "64")] {
+        type M128i = U64x2;
+    } else {
+        type M128i = U32x4;
+    }
+}
 
 /// POLYVAL field element bytestrings (16-bytes)
 type Block = [u8; 16];
