@@ -18,9 +18,10 @@ security reviews.
 | `polyval`  | [![crates.io](https://img.shields.io/crates/v/polyval.svg)](https://crates.io/crates/polyval) | [![Documentation](https://docs.rs/polyval/badge.svg)](https://docs.rs/polyval) |
 
 ### Minimum Supported Rust Version
-All crates in this repository support Rust 1.34 or higher. In future minimum
-supported Rust version can be changed, but it will be done with the minor
-version bump.
+All crates in this repository support **Rust 1.36** or higher.
+
+In the future, we reserve the right to change the Minimum Supported Rust
+Version, but it will be done with the minor version bump.
 
 ## Usage
 

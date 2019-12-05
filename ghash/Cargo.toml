@@ -23,6 +23,3 @@ hex-literal = "0.1"
 
 [features]
 std = ["polyval/std"]
-
-[badges]
-maintenance = { status = "experimental" }
