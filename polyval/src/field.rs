@@ -21,7 +21,8 @@
     any(target_arch = "x86", target_arch = "x86_64")
 ))]
 mod pclmulqdq;
-mod soft;
+mod u32_soft;
+mod u64_soft;
 
 use core::ops::{Add, Mul};
 
@@ -34,14 +35,31 @@ use core::ops::{Add, Mul};
 use self::pclmulqdq::M128i;
 
 #[allow(unused_imports)]
-use self::soft::U64x2;
+use self::u32_soft::U32x4;
 
-#[cfg(not(all(
-    target_feature = "pclmulqdq",
-    target_feature = "sse2",
-    target_feature = "sse4.1",
-    any(target_arch = "x86", target_arch = "x86_64")
-)))]
+#[allow(unused_imports)]
+use self::u64_soft::U64x2;
+
+#[cfg(all(
+    not(target_pointer_width = "64"),
+    not(all(
+        target_feature = "pclmulqdq",
+        target_feature = "sse2",
+        target_feature = "sse4.1",
+        any(target_arch = "x86", target_arch = "x86_64")
+    ))
+))]
+type M128i = U32x4;
+
+#[cfg(all(
+    target_pointer_width = "64",
+    not(all(
+        target_feature = "pclmulqdq",
+        target_feature = "sse2",
+        target_feature = "sse4.1",
+        any(target_arch = "x86", target_arch = "x86_64")
+    ))
+))]
 type M128i = U64x2;
 
 /// POLYVAL field element bytestrings (16-bytes)
