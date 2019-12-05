@@ -19,10 +19,13 @@ universal-hash = { version = "0.3", default-features = false }
 zeroize = { version = "1", optional = true, default-features = false }
 
 [dev-dependencies]
+criterion = "0.3.0"
+criterion-cycles-per-byte = "0.1.1"
 hex-literal = "0.1"
 
 [features]
 std = ["universal-hash/std"]
 
-[badges]
-maintenance = { status = "experimental" }
+[[bench]]
+name = "polyval"
+harness = false

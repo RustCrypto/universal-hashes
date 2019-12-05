@@ -17,6 +17,3 @@ zeroize = { version = "1", optional = true, default-features = false }
 
 [features]
 std = ["universal-hash/std"]
-
-[badges]
-maintenance = { status = "experimental" }

@@ -19,13 +19,13 @@ matrix:
     - rust: nightly
   fast_finish: true
   include:
-    - name: "Rust: 1.34.0"
-      rust: 1.34.0
+    - name: "Rust: 1.36.0"
+      rust: 1.36.0
       env: {} # clear `-D warnings` above; allow warnings
 
     # Test `polyval` with the PCLMULQDQ-accelerated backend
-    - name: "Rust: 1.34.0 (polyval)"
-      rust: 1.34.0
+    - name: "Rust: 1.36.0 (polyval)"
+      rust: 1.36.0
       env: RUSTFLAGS="-Ctarget-cpu=sandybridge -Ctarget-feature=+sse2,+sse4.1"
       script: cd polyval && cargo test --release --tests
     - name: "Rust: stable (polyval)"

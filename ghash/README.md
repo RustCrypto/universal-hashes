@@ -4,7 +4,6 @@
 [![Docs][docs-image]][docs-link]
 ![Apache2/MIT licensed][license-image]
 ![Rust Version][rustc-image]
-![Maintenance Status: Experimental][maintenance-image]
 [![Build Status][build-image]][build-link]
 
 [GHASH][1] is a [universal hash function][2] which operates over GF(2^128) and
@@ -44,8 +43,7 @@ dual licensed as above, without any additional terms or conditions.
 [docs-image]: https://docs.rs/ghash/badge.svg
 [docs-link]: https://docs.rs/ghash/
 [license-image]: https://img.shields.io/badge/license-Apache2.0/MIT-blue.svg
-[rustc-image]: https://img.shields.io/badge/rustc-1.34+-blue.svg
-[maintenance-image]: https://img.shields.io/badge/maintenance-experimental-blue.svg
+[rustc-image]: https://img.shields.io/badge/rustc-1.36+-blue.svg
 [build-image]: https://travis-ci.com/RustCrypto/universal-hashes.svg?branch=master
 [build-link]: https://travis-ci.com/RustCrypto/universal-hashes
 
