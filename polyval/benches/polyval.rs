@@ -16,7 +16,7 @@ fn bench(c: &mut Criterion<CyclesPerByte>) {
 
         group.bench_function(BenchmarkId::new("update_padded", size), |b| {
             let mut m = Polyval::new(&Default::default());
-            b.iter(|| m.update_padded(&buf) );
+            b.iter(|| m.update_padded(&buf));
         });
     }
 
