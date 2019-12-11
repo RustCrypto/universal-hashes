@@ -1,5 +1,9 @@
-//! Support for the PCLMULQDQ CPU intrinsic on `x86` and `x86_64` target
-//! architectures.
+//! Carryless multiplication over GF(2^128) optimized using Shay Gueron's
+//! techniques based on the PCLMULQDQ CPU intrinsic on `x86` and `x86_64`
+//! target architectures.
+//!
+//! For more information on how these techniques work, see:
+//! <https://blog.quarkslab.com/reversing-a-finite-field-multiplication-optimization.html>
 
 #[cfg(target_arch = "x86")]
 use core::arch::x86::*;

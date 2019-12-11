@@ -6,12 +6,6 @@
 //! > binary field of size 2^128.  The field is defined by the irreducible
 //! > polynomial x^128 + x^127 + x^126 + x^121 + 1."
 //!
-//! This implementation provides multiplication over GF(2^128) optimized using
-//! Shay Gueron's PCLMULQDQ-based techniques.
-//!
-//! For more information on how these techniques work, see:
-//! <https://blog.quarkslab.com/reversing-a-finite-field-multiplication-optimization.html>
-//!
 //! [RFC 8452 Section 3]: https://tools.ietf.org/html/rfc8452#section-3
 
 #[cfg(all(
