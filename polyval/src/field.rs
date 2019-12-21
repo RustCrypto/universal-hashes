@@ -18,6 +18,7 @@ mod pclmulqdq;
 mod u32_soft;
 mod u64_soft;
 
+#[allow(unused_imports)]
 use cfg_if::cfg_if;
 use core::ops::{Add, Mul};
 

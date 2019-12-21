@@ -81,9 +81,9 @@ unsafe fn reduce(x: __m128i) -> __m128i {
     #[allow(clippy::cast_ptr_alignment)]
     let mask = _mm_loadu_si128(&MASK as *const u128 as *const __m128i);
     let a = pclmulqdq(mask, x, 0x01);
-    let b = xor(shufpd1(x), a);
+    let b = xor(pshufd(x), a);
     let c = pclmulqdq(mask, b, 0x01);
-    xor(shufpd1(b), c)
+    xor(pshufd(b), c)
 }
 
 #[target_feature(enable = "sse2", enable = "sse4.1")]
@@ -92,9 +92,8 @@ unsafe fn xor(a: __m128i, b: __m128i) -> __m128i {
 }
 
 #[target_feature(enable = "sse2", enable = "sse4.1")]
-unsafe fn shufpd1(a: __m128i) -> __m128i {
-    let a = _mm_castsi128_pd(a);
-    _mm_castpd_si128(_mm_shuffle_pd(a, a, 1))
+unsafe fn pshufd(a: __m128i) -> __m128i {
+    _mm_shuffle_epi32(a, 0x4e)
 }
 
 #[target_feature(enable = "sse2", enable = "sse4.1")]
