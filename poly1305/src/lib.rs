@@ -210,10 +210,7 @@ impl Poly1305 {
         if self.leftover > 0 {
             let want = min(16 - self.leftover, m.len());
 
-            for (i, byte) in m.iter().cloned().enumerate().take(want) {
-                self.buffer[self.leftover + i] = byte;
-            }
-
+            self.buffer[self.leftover..self.leftover + want].copy_from_slice(&m[..want]);
             m = &m[want..];
             self.leftover += want;
 
