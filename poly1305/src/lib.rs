@@ -42,33 +42,20 @@ pub type Block = [u8; BLOCK_SIZE];
 /// Poly1305 tags (16-bytes)
 pub type Tag = Output<U16>;
 
-/// The Poly1305 universal hash function.
-///
-/// Note that Poly1305 is not a traditional MAC and is single-use only
-/// (a.k.a. "one-time authenticator").
-///
-/// For this reason it doesn't impl the `crypto_mac::Mac` trait.
 #[derive(Clone)]
-pub struct Poly1305 {
+struct Poly1305State {
     r: [u32; 5],
     h: [u32; 5],
     pad: [u32; 4],
-    leftover: usize,
-    buffer: Block,
 }
 
-impl UniversalHash for Poly1305 {
-    type KeySize = U32;
-    type BlockSize = U16;
-
-    /// Initialize Poly1305 with the given key
-    fn new(key: &GenericArray<u8, U32>) -> Poly1305 {
-        let mut poly = Poly1305 {
+impl Poly1305State {
+    /// Initialize Poly1305State with the given key
+    fn new(key: &GenericArray<u8, U32>) -> Poly1305State {
+        let mut poly = Poly1305State {
             r: [0u32; 5],
             h: [0u32; 5],
             pad: [0u32; 4],
-            leftover: 0,
-            buffer: Block::default(),
         };
 
         // r &= 0xffffffc0ffffffc0ffffffc0fffffff
@@ -86,29 +73,68 @@ impl UniversalHash for Poly1305 {
         poly
     }
 
+    /// Reset internal state
+    fn reset(&mut self) {
+        self.h = Default::default();
+    }
+}
+
+/// The Poly1305 universal hash function.
+///
+/// Note that Poly1305 is not a traditional MAC and is single-use only
+/// (a.k.a. "one-time authenticator").
+///
+/// For this reason it doesn't impl the `crypto_mac::Mac` trait.
+#[derive(Clone)]
+pub struct Poly1305 {
+    state: Poly1305State,
+    leftover: usize,
+    buffer: Block,
+}
+
+impl UniversalHash for Poly1305 {
+    type KeySize = U32;
+    type BlockSize = U16;
+
+    /// Initialize Poly1305 with the given key
+    fn new(key: &GenericArray<u8, U32>) -> Poly1305 {
+        Poly1305 {
+            state: Poly1305State::new(key),
+            leftover: 0,
+            buffer: Block::default(),
+        }
+    }
+
     /// Input data into the Poly1305 universal hash function
     fn update_block(&mut self, block: &GenericArray<u8, U16>) {
-        // TODO(tarcieri): pass block directly to `Poly1305::compute_block`
+        // TODO(tarcieri): pass block directly to `Poly1305State::compute_block`
         self.update(block.as_slice());
     }
 
     /// Reset internal state
     fn reset(&mut self) {
-        self.h = Default::default();
+        self.state.reset();
         self.buffer = Default::default();
         self.leftover = 0;
     }
 
     /// Get the hashed output
-    fn result(mut self) -> Tag {
-        if self.leftover > 0 {
-            self.buffer[self.leftover] = 1;
+    fn result(self) -> Tag {
+        self.state.finalize(&self.buffer[..self.leftover])
+    }
+}
 
-            for i in (self.leftover + 1)..BLOCK_SIZE {
-                self.buffer[i] = 0;
-            }
+impl Poly1305State {
+    fn finalize(mut self, data: &[u8]) -> Tag {
+        if !data.is_empty() {
+            // Compute last block (remaining data < 16 bytes)
+            assert!(data.len() < BLOCK_SIZE);
 
-            self.compute_block(true);
+            let mut block = [0; BLOCK_SIZE];
+            block[..data.len()].copy_from_slice(data);
+            block[data.len()] = 1;
+
+            self.compute_block(&block, true);
         }
 
         // fully carry h
@@ -218,14 +244,12 @@ impl Poly1305 {
                 return;
             }
 
-            self.compute_block(false);
+            self.state.compute_block(&self.buffer, false);
             self.leftover = 0;
         }
 
         while m.len() >= BLOCK_SIZE {
-            // TODO(tarcieri): avoid copying data into the buffer here
-            self.buffer.copy_from_slice(&m[..BLOCK_SIZE]);
-            self.compute_block(false);
+            self.state.compute_block(&m[..BLOCK_SIZE], false);
             m = &m[BLOCK_SIZE..];
         }
 
@@ -238,9 +262,12 @@ impl Poly1305 {
         self.update(data);
         self
     }
+}
 
-    /// Compute a single block of Poly1305 using the internal buffer
-    fn compute_block(&mut self, finished: bool) {
+impl Poly1305State {
+    /// Compute a single block of Poly1305
+    fn compute_block(&mut self, block: &[u8], finished: bool) {
+        assert_eq!(block.len(), BLOCK_SIZE);
         let hibit = if finished { 0 } else { 1 << 24 };
 
         let r0 = self.r[0];
@@ -261,11 +288,11 @@ impl Poly1305 {
         let mut h4 = self.h[4];
 
         // h += m
-        h0 += (u32::from_le_bytes(self.buffer[0..4].try_into().unwrap())) & 0x3ff_ffff;
-        h1 += (u32::from_le_bytes(self.buffer[3..7].try_into().unwrap()) >> 2) & 0x3ff_ffff;
-        h2 += (u32::from_le_bytes(self.buffer[6..10].try_into().unwrap()) >> 4) & 0x3ff_ffff;
-        h3 += (u32::from_le_bytes(self.buffer[9..13].try_into().unwrap()) >> 6) & 0x3ff_ffff;
-        h4 += (u32::from_le_bytes(self.buffer[12..16].try_into().unwrap()) >> 8) | hibit;
+        h0 += (u32::from_le_bytes(block[0..4].try_into().unwrap())) & 0x3ff_ffff;
+        h1 += (u32::from_le_bytes(block[3..7].try_into().unwrap()) >> 2) & 0x3ff_ffff;
+        h2 += (u32::from_le_bytes(block[6..10].try_into().unwrap()) >> 4) & 0x3ff_ffff;
+        h3 += (u32::from_le_bytes(block[9..13].try_into().unwrap()) >> 6) & 0x3ff_ffff;
+        h4 += (u32::from_le_bytes(block[12..16].try_into().unwrap()) >> 8) | hibit;
 
         // h *= r
         let d0 = (u64::from(h0) * u64::from(r0))
@@ -333,11 +360,17 @@ impl Poly1305 {
 }
 
 #[cfg(feature = "zeroize")]
-impl Drop for Poly1305 {
+impl Drop for Poly1305State {
     fn drop(&mut self) {
         self.r.zeroize();
         self.h.zeroize();
         self.pad.zeroize();
+    }
+}
+
+#[cfg(feature = "zeroize")]
+impl Drop for Poly1305 {
+    fn drop(&mut self) {
         self.buffer.zeroize();
     }
 }
