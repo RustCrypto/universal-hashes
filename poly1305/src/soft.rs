@@ -56,9 +56,15 @@ impl Poly1305State {
     }
 
     /// Compute a single block of Poly1305
-    pub(crate) fn compute_block(&mut self, block: &[u8], finished: bool) {
+    pub(crate) fn compute_block(&mut self, block: &[u8]) {
+        self.compute_block_inner(block, false);
+    }
+
+    fn compute_block_inner(&mut self, block: &[u8], partial: bool) {
         assert_eq!(block.len(), BLOCK_SIZE);
-        let hibit = if finished { 0 } else { 1 << 24 };
+
+        // If this is a partial block, the caller already set the high bit.
+        let hibit = if partial { 0 } else { 1 << 24 };
 
         let r0 = self.r[0];
         let r1 = self.r[1];
@@ -157,7 +163,7 @@ impl Poly1305State {
             block[..data.len()].copy_from_slice(data);
             block[data.len()] = 1;
 
-            self.compute_block(&block, true);
+            self.compute_block_inner(&block, true);
         }
 
         // fully carry h

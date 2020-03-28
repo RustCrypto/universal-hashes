@@ -47,8 +47,8 @@ pub type Tag = Output<U16>;
 #[derive(Clone)]
 pub struct Poly1305 {
     state: soft::Poly1305State,
-    leftover: usize,
     buffer: Block,
+    filled: usize,
 }
 
 impl UniversalHash for Poly1305 {
@@ -59,19 +59,19 @@ impl UniversalHash for Poly1305 {
     fn new(key: &GenericArray<u8, U32>) -> Poly1305 {
         Poly1305 {
             state: soft::Poly1305State::new(key),
-            leftover: 0,
             buffer: Block::default(),
+            filled: 0,
         }
     }
 
     /// Input data into the Poly1305 universal hash function
     fn update_block(&mut self, block: &GenericArray<u8, U16>) {
-        if self.leftover > 0 {
+        if self.filled > 0 {
             // We have a partial block that needs processing.
             self.update(block.as_slice());
         } else {
             // Pass this block directly to `Poly1305State::compute_block`.
-            self.state.compute_block(block.as_slice(), false);
+            self.state.compute_block(block.as_slice());
         }
     }
 
@@ -79,42 +79,41 @@ impl UniversalHash for Poly1305 {
     fn reset(&mut self) {
         self.state.reset();
         self.buffer = Default::default();
-        self.leftover = 0;
+        self.filled = 0;
     }
 
     /// Get the hashed output
     fn result(self) -> Tag {
-        self.state.finalize(&self.buffer[..self.leftover])
+        self.state.finalize(&self.buffer[..self.filled])
     }
 }
 
 impl Poly1305 {
     /// Input data into the Poly1305 universal hash function
-    pub fn update(&mut self, data: &[u8]) {
-        let mut m = data;
+    pub fn update(&mut self, mut data: &[u8]) {
+        // Handle partially-filled buffer from a previous update
+        if self.filled > 0 {
+            let want = min(BLOCK_SIZE - self.filled, data.len());
 
-        if self.leftover > 0 {
-            let want = min(16 - self.leftover, m.len());
+            self.buffer[self.filled..self.filled + want].copy_from_slice(&data[..want]);
+            data = &data[want..];
+            self.filled += want;
 
-            self.buffer[self.leftover..self.leftover + want].copy_from_slice(&m[..want]);
-            m = &m[want..];
-            self.leftover += want;
-
-            if self.leftover < BLOCK_SIZE {
+            if self.filled < BLOCK_SIZE {
                 return;
             }
 
-            self.state.compute_block(&self.buffer, false);
-            self.leftover = 0;
+            self.state.compute_block(&self.buffer);
+            self.filled = 0;
         }
 
-        while m.len() >= BLOCK_SIZE {
-            self.state.compute_block(&m[..BLOCK_SIZE], false);
-            m = &m[BLOCK_SIZE..];
+        while data.len() >= BLOCK_SIZE {
+            self.state.compute_block(&data[..BLOCK_SIZE]);
+            data = &data[BLOCK_SIZE..];
         }
 
-        self.buffer[..m.len()].copy_from_slice(m);
-        self.leftover = m.len();
+        self.buffer[..data.len()].copy_from_slice(data);
+        self.filled = data.len();
     }
 
     /// Process input messages in a chained manner
