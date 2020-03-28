@@ -66,8 +66,13 @@ impl UniversalHash for Poly1305 {
 
     /// Input data into the Poly1305 universal hash function
     fn update_block(&mut self, block: &GenericArray<u8, U16>) {
-        // TODO(tarcieri): pass block directly to `Poly1305State::compute_block`
-        self.update(block.as_slice());
+        if self.leftover > 0 {
+            // We have a partial block that needs processing.
+            self.update(block.as_slice());
+        } else {
+            // Pass this block directly to `Poly1305State::compute_block`.
+            self.state.compute_block(block.as_slice(), false);
+        }
     }
 
     /// Reset internal state
