@@ -154,7 +154,7 @@ impl Poly1305State {
         self.h[4] = h4;
     }
 
-    pub(crate) fn finalize(mut self, data: &[u8]) -> Tag {
+    pub(crate) fn finalize(&mut self, data: &[u8]) -> Tag {
         if !data.is_empty() {
             // Compute last block (remaining data < 16 bytes)
             assert!(data.len() < BLOCK_SIZE);
