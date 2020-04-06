@@ -10,6 +10,9 @@
 #![doc(html_logo_url = "https://raw.githubusercontent.com/RustCrypto/meta/master/logo_small.png")]
 #![warn(missing_docs, rust_2018_idioms)]
 
+#[cfg(feature = "std")]
+extern crate std;
+
 pub use universal_hash;
 
 use universal_hash::{
@@ -18,7 +21,27 @@ use universal_hash::{
     NewUniversalHash, UniversalHash,
 };
 
+#[cfg(all(
+    any(target_arch = "x86", target_arch = "x86_64"),
+    target_feature = "avx2"
+))]
+mod avx2;
+#[cfg(all(
+    any(target_arch = "x86", target_arch = "x86_64"),
+    target_feature = "avx2"
+))]
+use avx2::State;
+
+#[cfg(not(all(
+    any(target_arch = "x86", target_arch = "x86_64"),
+    target_feature = "avx2"
+)))]
 mod soft;
+#[cfg(not(all(
+    any(target_arch = "x86", target_arch = "x86_64"),
+    target_feature = "avx2"
+)))]
+use soft::State;
 
 /// Size of a Poly1305 key
 pub const KEY_SIZE: usize = 32;
@@ -43,7 +66,7 @@ pub type Tag = universal_hash::Output<Poly1305>;
 /// For this reason it doesn't impl the `crypto_mac::Mac` trait.
 #[derive(Clone)]
 pub struct Poly1305 {
-    state: soft::State,
+    state: State,
 }
 
 impl NewUniversalHash for Poly1305 {
@@ -52,7 +75,7 @@ impl NewUniversalHash for Poly1305 {
     /// Initialize Poly1305 with the given key
     fn new(key: &Key) -> Poly1305 {
         Poly1305 {
-            state: soft::State::new(key),
+            state: State::new(key),
         }
     }
 }
