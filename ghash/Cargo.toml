@@ -1,6 +1,6 @@
 [package]
 name = "ghash"
-version = "0.2.3"
+version = "0.3.0-pre"
 authors = ["RustCrypto Developers"]
 license = "MIT OR Apache-2.0"
 description = """
@@ -15,7 +15,7 @@ categories = ["cryptography", "no-std"]
 edition = "2018"
 
 [dependencies]
-polyval = { version = "0.3", path = "../polyval" }
+polyval = { version = "= 0.4.0-pre", path = "../polyval" }
 zeroize = { version = "1", optional = true, default-features = false }
 
 [dev-dependencies]

@@ -1,7 +1,10 @@
 #[macro_use]
 extern crate hex_literal;
 
-use ghash::{universal_hash::UniversalHash, GHash};
+use ghash::{
+    universal_hash::{NewUniversalHash, UniversalHash},
+    GHash,
+};
 
 //
 // Test vectors for GHASH from RFC 8452 Appendix A
@@ -18,8 +21,8 @@ const GHASH_RESULT: [u8; 16] = hex!("bd9b3997046731fb96251b91f9c99d7a");
 #[test]
 fn ghash_test_vector() {
     let mut ghash = GHash::new(&H.into());
-    ghash.update_block(&X_1.into());
-    ghash.update_block(&X_2.into());
+    ghash.update(&X_1.into());
+    ghash.update(&X_2.into());
 
     let result = ghash.result();
     assert_eq!(&GHASH_RESULT[..], result.into_bytes().as_slice());

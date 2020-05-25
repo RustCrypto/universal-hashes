@@ -50,8 +50,16 @@ mod field;
 
 pub use universal_hash;
 
-use universal_hash::generic_array::{typenum::U16, GenericArray};
-use universal_hash::{Output, UniversalHash};
+use universal_hash::{consts::U16, NewUniversalHash, Output, UniversalHash};
+
+/// POLYVAL keys (16-bytes)
+pub type Key = universal_hash::Key<Polyval>;
+
+/// POLYVAL blocks (16-bytes)
+pub type Block = universal_hash::Block<Polyval>;
+
+/// POLYVAL tags (16-bytes)
+pub type Tag = universal_hash::Output<Polyval>;
 
 /// **POLYVAL**: GHASH-like universal hash over GF(2^128).
 #[allow(non_snake_case)]
@@ -65,20 +73,23 @@ pub struct Polyval {
     S: field::Element,
 }
 
-impl UniversalHash for Polyval {
+impl NewUniversalHash for Polyval {
     type KeySize = U16;
-    type BlockSize = U16;
 
     /// Initialize POLYVAL with the given `H` field element
-    fn new(h: &GenericArray<u8, U16>) -> Self {
+    fn new(h: &Key) -> Self {
         Self {
             H: field::Element::from_bytes(h.clone().into()),
             S: field::Element::default(),
         }
     }
+}
+
+impl UniversalHash for Polyval {
+    type BlockSize = U16;
 
     /// Input a field element `X` to be authenticated
-    fn update_block(&mut self, x: &GenericArray<u8, U16>) {
+    fn update(&mut self, x: &Block) {
         let x = field::Element::from_bytes(x.clone().into());
         self.S = (self.S + x) * self.H;
     }
@@ -86,22 +97,20 @@ impl UniversalHash for Polyval {
     /// Input data into the universal hash function. If the length of the
     /// data is not a multiple of the block size, the remaining data is
     /// padded with zeros up to the `BlockSize`.
-    ///
-    /// This approach is frequently used by AEAD modes which use
-    /// Message Authentication Codes (MACs) based on universal hashing.
     fn update_padded(&mut self, data: &[u8]) {
+        // NOTE: this code is identical to upstream, but copied into
+        // here as a performance hack.
         let mut chunks = data.chunks_exact(16);
-
         for chunk in &mut chunks {
-            self.update_block(GenericArray::from_slice(chunk));
+            self.update(Block::from_slice(chunk));
         }
 
         let rem = chunks.remainder();
 
         if !rem.is_empty() {
-            let mut padded_block = GenericArray::default();
+            let mut padded_block = Block::default();
             padded_block[..rem.len()].copy_from_slice(rem);
-            self.update_block(&padded_block);
+            self.update(&padded_block);
         }
     }
 
@@ -111,7 +120,7 @@ impl UniversalHash for Polyval {
     }
 
     /// Get POLYVAL result (i.e. computed `S` field element)
-    fn result(self) -> Output<U16> {
-        Output::new(GenericArray::from(self.S.to_bytes()))
+    fn result(self) -> Tag {
+        Output::new(self.S.to_bytes().into())
     }
 }

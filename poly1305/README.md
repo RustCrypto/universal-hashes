@@ -15,13 +15,19 @@ In practice, Poly1305 is primarily combined with ciphers from the
 
 [Documentation][docs-link]
 
-## Security Warning
+## Security Notes
 
-No security audits of this crate have ever been performed, and it has not been
-thoroughly assessed to ensure its operation is constant-time on common CPU
-architectures.
+This crate has received one [security audit by NCC Group][7], with no significant
+findings. We would like to thank [MobileCoin][8] for funding the audit.
 
-USE AT YOUR OWN RISK!
+All implementations contained in the crate are designed to execute in constant
+time, either by relying on hardware intrinsics (i.e. AVX2 on x86/x86_64), or
+using a portable implementation which is only constant time on processors which
+implement constant-time multiplication.
+
+It is not suitable for use on processors with a variable-time multiplication
+operation (e.g. short circuit on multiply-by-zero / multiply-by-one, such as
+certain 32-bit PowerPC CPUs and some non-ARM microcontrollers).
 
 ## License
 
@@ -57,3 +63,5 @@ dual licensed as above, without any additional terms or conditions.
 [4]: https://cr.yp.to/snuffle/salsafamily-20071225.pdf
 [5]: https://github.com/RustCrypto/AEADs/tree/master/chacha20poly1305
 [6]: https://github.com/RustCrypto/AEADs/tree/master/xsalsa20poly1305
+[7]: https://research.nccgroup.com/2020/02/26/public-report-rustcrypto-aes-gcm-and-chacha20poly1305-implementation-review/
+[8]: https://www.mobilecoin.com/
