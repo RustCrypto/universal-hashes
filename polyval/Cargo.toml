@@ -1,8 +1,8 @@
 [package]
 name = "polyval"
-version = "0.3.3"
+version = "0.4.0-pre"
 authors = ["RustCrypto Developers"]
-license = "MIT OR Apache-2.0"
+license = "Apache-2.0 OR MIT"
 description = """
 POLYVAL is a GHASH-like universal hash over GF(2^128) useful for constructing
 a Message Authentication Code (MAC)
@@ -14,9 +14,12 @@ keywords = ["aes-gcm-siv", "crypto", "universal-hashing"]
 categories = ["cryptography", "no-std"]
 edition = "2018"
 
+[badges]
+maintenance = { status = "passively-maintained" }
+
 [dependencies]
 cfg-if = "0.1"
-universal-hash = { version = "0.3", default-features = false }
+universal-hash = { version = "= 0.4.0-pre", default-features = false }
 zeroize = { version = "1", optional = true, default-features = false }
 
 [dev-dependencies]

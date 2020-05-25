@@ -1,7 +1,10 @@
 #[macro_use]
 extern crate hex_literal;
 
-use polyval::{universal_hash::UniversalHash, Polyval};
+use polyval::{
+    universal_hash::{NewUniversalHash, UniversalHash},
+    Polyval,
+};
 
 //
 // Test vectors for POLYVAL from RFC 8452 Appendix A
@@ -18,8 +21,8 @@ const POLYVAL_RESULT: [u8; 16] = hex!("f7a3b47b846119fae5b7866cf5e5b77e");
 #[test]
 fn polyval_test_vector() {
     let mut poly = Polyval::new(&H.into());
-    poly.update_block(&X_1.into());
-    poly.update_block(&X_2.into());
+    poly.update(&X_1.into());
+    poly.update(&X_2.into());
 
     let result = poly.result();
     assert_eq!(&POLYVAL_RESULT[..], result.into_bytes().as_slice());

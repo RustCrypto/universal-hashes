@@ -29,10 +29,18 @@ pub use polyval::universal_hash;
 
 use core::convert::TryInto;
 use polyval::Polyval;
-use universal_hash::generic_array::{typenum::U16, GenericArray};
-use universal_hash::{Output, UniversalHash};
+use universal_hash::{consts::U16, NewUniversalHash, UniversalHash};
 #[cfg(feature = "zeroize")]
 use zeroize::Zeroize;
+
+/// GHASH keys (16-bytes)
+pub type Key = universal_hash::Key<GHash>;
+
+/// GHASH blocks (16-bytes)
+pub type Block = universal_hash::Block<GHash>;
+
+/// GHASH tags (16-bytes)
+pub type Tag = universal_hash::Output<GHash>;
 
 /// **GHASH**: universal hash over GF(2^128) used by AES-GCM.
 ///
@@ -42,12 +50,11 @@ use zeroize::Zeroize;
 #[repr(align(16))]
 pub struct GHash(Polyval);
 
-impl UniversalHash for GHash {
+impl NewUniversalHash for GHash {
     type KeySize = U16;
-    type BlockSize = U16;
 
     /// Initialize GHASH with the given `H` field element
-    fn new(h: &GenericArray<u8, U16>) -> Self {
+    fn new(h: &Key) -> Self {
         let mut h = *h;
         h.reverse();
 
@@ -65,12 +72,16 @@ impl UniversalHash for GHash {
 
         result
     }
+}
+
+impl UniversalHash for GHash {
+    type BlockSize = U16;
 
     /// Input a field element `X` to be authenticated
-    fn update_block(&mut self, x: &GenericArray<u8, U16>) {
+    fn update(&mut self, x: &Block) {
         let mut x = *x;
         x.reverse();
-        self.0.update_block(&x);
+        self.0.update(&x);
     }
 
     /// Reset internal state
@@ -79,10 +90,10 @@ impl UniversalHash for GHash {
     }
 
     /// Get GHASH output
-    fn result(self) -> Output<U16> {
+    fn result(self) -> Tag {
         let mut output = self.0.result().into_bytes();
         output.reverse();
-        Output::new(output)
+        Tag::new(output)
     }
 }
 
@@ -92,7 +103,7 @@ impl UniversalHash for GHash {
 ///
 /// [1]: https://tools.ietf.org/html/rfc8452#appendix-A
 #[allow(non_snake_case)]
-fn mulX_POLYVAL(block: &GenericArray<u8, U16>) -> GenericArray<u8, U16> {
+fn mulX_POLYVAL(block: &Block) -> Block {
     let mut v0 = u64::from_le_bytes(block[..8].try_into().unwrap());
     let mut v1 = u64::from_le_bytes(block[8..].try_into().unwrap());
 

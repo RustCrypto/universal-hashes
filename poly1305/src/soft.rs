@@ -13,27 +13,23 @@
 // https://github.com/floodyberry/poly1305-donna
 
 use core::convert::TryInto;
-use universal_hash::generic_array::{typenum::U32, GenericArray};
+
 #[cfg(feature = "zeroize")]
 use zeroize::Zeroize;
 
-use crate::{Tag, BLOCK_SIZE};
+use crate::{Block, Key, Tag};
 
-#[derive(Clone)]
-pub(crate) struct Poly1305State {
+#[derive(Clone, Default)]
+pub(crate) struct State {
     r: [u32; 5],
     h: [u32; 5],
     pad: [u32; 4],
 }
 
-impl Poly1305State {
+impl State {
     /// Initialize Poly1305State with the given key
-    pub(crate) fn new(key: &GenericArray<u8, U32>) -> Poly1305State {
-        let mut poly = Poly1305State {
-            r: [0u32; 5],
-            h: [0u32; 5],
-            pad: [0u32; 4],
-        };
+    pub(crate) fn new(key: &Key) -> State {
+        let mut poly = State::default();
 
         // r &= 0xffffffc0ffffffc0ffffffc0fffffff
         poly.r[0] = (u32::from_le_bytes(key[0..4].try_into().unwrap())) & 0x3ff_ffff;
@@ -56,15 +52,8 @@ impl Poly1305State {
     }
 
     /// Compute a single block of Poly1305
-    pub(crate) fn compute_block(&mut self, block: &[u8]) {
-        self.compute_block_inner(block, false);
-    }
-
-    fn compute_block_inner(&mut self, block: &[u8], partial: bool) {
-        assert_eq!(block.len(), BLOCK_SIZE);
-
-        // If this is a partial block, the caller already set the high bit.
-        let hibit = if partial { 0 } else { 1 << 24 };
+    pub(crate) fn update(&mut self, block: &Block) {
+        let hibit = 1 << 24;
 
         let r0 = self.r[0];
         let r1 = self.r[1];
@@ -154,18 +143,7 @@ impl Poly1305State {
         self.h[4] = h4;
     }
 
-    pub(crate) fn finalize(&mut self, data: &[u8]) -> Tag {
-        if !data.is_empty() {
-            // Compute last block (remaining data < 16 bytes)
-            assert!(data.len() < BLOCK_SIZE);
-
-            let mut block = [0; BLOCK_SIZE];
-            block[..data.len()].copy_from_slice(data);
-            block[data.len()] = 1;
-
-            self.compute_block_inner(&block, true);
-        }
-
+    pub(crate) fn finalize(&mut self) -> Tag {
         // fully carry h
         let mut h0 = self.h[0];
         let mut h1 = self.h[1];
@@ -247,7 +225,7 @@ impl Poly1305State {
         f = u64::from(h3) + u64::from(self.pad[3]) + (f >> 32);
         h3 = f as u32;
 
-        let mut tag = GenericArray::default();
+        let mut tag = Block::default();
         tag[0..4].copy_from_slice(&h0.to_le_bytes());
         tag[4..8].copy_from_slice(&h1.to_le_bytes());
         tag[8..12].copy_from_slice(&h2.to_le_bytes());
@@ -258,7 +236,7 @@ impl Poly1305State {
 }
 
 #[cfg(feature = "zeroize")]
-impl Drop for Poly1305State {
+impl Drop for State {
     fn drop(&mut self) {
         self.r.zeroize();
         self.h.zeroize();

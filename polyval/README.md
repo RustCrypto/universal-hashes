@@ -16,13 +16,19 @@ closely related to [GHASH][6] and therefore can also be used to implement
 
 [Documentation][docs-link]
 
-## Security Warning
+## Security Notes
 
-No security audits of this crate have ever been performed, and it has not been
-thoroughly assessed to ensure its operation is constant-time on common CPU
-architectures.
+This crate has received one [security audit by NCC Group][8], with no significant
+findings. We would like to thank [MobileCoin][9] for funding the audit.
 
-USE AT YOUR OWN RISK!
+All implementations contained in the crate are designed to execute in constant
+time, either by relying on hardware intrinsics (i.e. AVX2 on x86/x86_64), or
+using a portable implementation which is only constant time on processors which
+implement constant-time multiplication.
+
+It is not suitable for use on processors with a variable-time multiplication
+operation (e.g. short circuit on multiply-by-zero / multiply-by-one, such as
+certain 32-bit PowerPC CPUs and some non-ARM microcontrollers).
 
 ## License
 
@@ -59,3 +65,5 @@ dual licensed as above, without any additional terms or conditions.
 [5]: https://en.wikipedia.org/wiki/AES-GCM-SIV
 [6]: https://en.wikipedia.org/wiki/Galois/Counter_Mode#Mathematical_basis
 [7]: https://en.wikipedia.org/wiki/Galois/Counter_Mode
+[8]: https://research.nccgroup.com/2020/02/26/public-report-rustcrypto-aes-gcm-and-chacha20poly1305-implementation-review/
+[9]: https://www.mobilecoin.com/
