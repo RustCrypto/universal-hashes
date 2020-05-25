@@ -1,4 +1,4 @@
-# RustCrypto: Universal Hash Functions ![Rust Version][rustc-image]  [![Build Status][build-image]][build-link]
+# RustCrypto: Universal Hash Functions ![Rust Version][rustc-image]
 
 Collection of [Universal Hash Functions][1] written in pure Rust.
 
@@ -11,15 +11,15 @@ security reviews.
 
 ## Crates
 
-| Name | Crates.io | Documentation |
-|------|-----------|---------------|
-| `ghash` | [![crates.io](https://img.shields.io/crates/v/ghash.svg)](https://crates.io/crates/ghash) | [![Documentation](https://docs.rs/ghash/badge.svg)](https://docs.rs/ghash) |
-| `poly1305` | [![crates.io](https://img.shields.io/crates/v/poly1305.svg)](https://crates.io/crates/poly1305) | [![Documentation](https://docs.rs/poly1305/badge.svg)](https://docs.rs/poly1305) |
-| `polyval`  | [![crates.io](https://img.shields.io/crates/v/polyval.svg)](https://crates.io/crates/polyval) | [![Documentation](https://docs.rs/polyval/badge.svg)](https://docs.rs/polyval) |
+| Name | Crates.io | Documentation | Build Status |
+|------|-----------|---------------|--------------|
+| `ghash` | [![crates.io](https://img.shields.io/crates/v/ghash.svg)](https://crates.io/crates/ghash) | [![Documentation](https://docs.rs/ghash/badge.svg)](https://docs.rs/ghash) | ![build](https://github.com/RustCrypto/universal-hashes/workflows/ghash/badge.svg?branch=master&event=push) |
+| `poly1305` | [![crates.io](https://img.shields.io/crates/v/poly1305.svg)](https://crates.io/crates/poly1305) | [![Documentation](https://docs.rs/poly1305/badge.svg)](https://docs.rs/poly1305) | ![build](https://github.com/RustCrypto/universal-hashes/workflows/poly1305/badge.svg?branch=master&event=push) |
+| `polyval`  | [![crates.io](https://img.shields.io/crates/v/polyval.svg)](https://crates.io/crates/polyval) | [![Documentation](https://docs.rs/polyval/badge.svg)](https://docs.rs/polyval) | ![build](https://github.com/RustCrypto/universal-hashes/workflows/polyval/badge.svg?branch=master&event=push) |
 
 ### Minimum Supported Rust Version
 
-All crates in this repository support **Rust 1.36** or higher.
+All crates in this repository support **Rust 1.41** or higher.
 
 In the future, we reserve the right to change the Minimum Supported Rust
 Version, but it will be done with the minor version bump.
@@ -46,9 +46,7 @@ dual licensed as above, without any additional terms or conditions.
 
 [//]: # (badges)
 
-[rustc-image]: https://img.shields.io/badge/rustc-1.36+-blue.svg
-[build-image]: https://travis-ci.com/RustCrypto/universal-hashes.svg?branch=master
-[build-link]: https://travis-ci.com/RustCrypto/universal-hashes
+[rustc-image]: https://img.shields.io/badge/rustc-1.41+-blue.svg
 
 [//]: # (general links)
 
