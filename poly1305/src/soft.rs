@@ -51,9 +51,9 @@ impl State {
         self.h = Default::default();
     }
 
-    /// Compute a single block of Poly1305
-    pub(crate) fn update(&mut self, block: &Block) {
-        let hibit = 1 << 24;
+    /// Compute a Poly1305 block
+    pub(crate) fn compute_block(&mut self, block: &Block, partial: bool) {
+        let hibit = if partial { 0 } else { 1 << 24 };
 
         let r0 = self.r[0];
         let r1 = self.r[1];

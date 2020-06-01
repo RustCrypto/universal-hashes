@@ -12,8 +12,11 @@
 
 pub use universal_hash;
 
-use universal_hash::consts::{U16, U32};
-use universal_hash::{NewUniversalHash, UniversalHash};
+use universal_hash::{
+    consts::{U16, U32},
+    generic_array::GenericArray,
+    NewUniversalHash, UniversalHash,
+};
 
 mod soft;
 
@@ -59,7 +62,7 @@ impl UniversalHash for Poly1305 {
 
     /// Input data into the Poly1305 universal hash function
     fn update(&mut self, block: &Block) {
-        self.state.update(block);
+        self.state.compute_block(block, false);
     }
 
     /// Reset internal state
@@ -69,6 +72,27 @@ impl UniversalHash for Poly1305 {
 
     /// Get the hashed output
     fn result(mut self) -> Tag {
+        self.state.finalize()
+    }
+}
+
+impl Poly1305 {
+    /// Compute unpadded Poly1305 for the given input data.
+    ///
+    /// The main use case for this is XSalsa20Poly1305.
+    pub fn compute_unpadded(mut self, data: &[u8]) -> Tag {
+        for chunk in data.chunks(BLOCK_SIZE) {
+            if chunk.len() == BLOCK_SIZE {
+                let block = GenericArray::from_slice(chunk);
+                self.state.compute_block(block, false);
+            } else {
+                let mut block = Block::default();
+                block[..chunk.len()].copy_from_slice(chunk);
+                block[chunk.len()] = 1;
+                self.state.compute_block(&block, true)
+            }
+        }
+
         self.state.finalize()
     }
 }
