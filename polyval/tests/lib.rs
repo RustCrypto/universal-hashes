@@ -24,6 +24,6 @@ fn polyval_test_vector() {
     poly.update(&X_1.into());
     poly.update(&X_2.into());
 
-    let result = poly.result();
+    let result = poly.finalize();
     assert_eq!(&POLYVAL_RESULT[..], result.into_bytes().as_slice());
 }

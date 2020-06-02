@@ -90,8 +90,8 @@ impl UniversalHash for GHash {
     }
 
     /// Get GHASH output
-    fn result(self) -> Tag {
-        let mut output = self.0.result().into_bytes();
+    fn finalize(self) -> Tag {
+        let mut output = self.0.finalize().into_bytes();
         output.reverse();
         Tag::new(output)
     }
