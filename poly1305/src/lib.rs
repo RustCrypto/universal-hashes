@@ -71,7 +71,7 @@ impl UniversalHash for Poly1305 {
     }
 
     /// Get the hashed output
-    fn result(mut self) -> Tag {
+    fn finalize(mut self) -> Tag {
         self.state.finalize()
     }
 }

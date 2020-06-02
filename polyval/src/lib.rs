@@ -120,7 +120,7 @@ impl UniversalHash for Polyval {
     }
 
     /// Get POLYVAL result (i.e. computed `S` field element)
-    fn result(self) -> Tag {
+    fn finalize(self) -> Tag {
         Output::new(self.S.to_bytes().into())
     }
 }

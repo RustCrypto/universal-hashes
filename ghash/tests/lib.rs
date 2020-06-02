@@ -24,6 +24,6 @@ fn ghash_test_vector() {
     ghash.update(&X_1.into());
     ghash.update(&X_2.into());
 
-    let result = ghash.result();
+    let result = ghash.finalize();
     assert_eq!(&GHASH_RESULT[..], result.into_bytes().as_slice());
 }

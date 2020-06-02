@@ -52,7 +52,7 @@ fn donna_self_test1() {
 
     let mut poly = Poly1305::new(key.as_ref().into());
     poly.update(msg.as_ref().into());
-    assert_eq!(&expected[..], poly.result().into_bytes().as_slice());
+    assert_eq!(&expected[..], poly.finalize().into_bytes().as_slice());
 }
 
 #[test]
@@ -73,7 +73,7 @@ fn test_tls_vectors() {
         poly.update(chunk.into());
     }
 
-    assert_eq!(&expected[..], poly.result().into_bytes().as_slice());
+    assert_eq!(&expected[..], poly.finalize().into_bytes().as_slice());
 }
 
 #[test]
@@ -96,5 +96,5 @@ fn padded_input() {
 
     let mut poly = Poly1305::new(key.as_ref().into());
     poly.update_padded(&msg);
-    assert_eq!(&expected[..], poly.result().into_bytes().as_slice());
+    assert_eq!(&expected[..], poly.finalize().into_bytes().as_slice());
 }
