@@ -4,6 +4,3 @@ members = [
     "poly1305",
     "polyval"
 ]
-
-[patch.crates-io]
-universal-hash = { git = "https://github.com/RustCrypto/traits" }
