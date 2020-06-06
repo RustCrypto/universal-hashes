@@ -307,7 +307,7 @@ dependencies = [
 
 [[package]]
 name = "poly1305"
-version = "0.6.0-pre"
+version = "0.6.0"
 dependencies = [
  "universal-hash 0.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "zeroize 1.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
