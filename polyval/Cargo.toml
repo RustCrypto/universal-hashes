@@ -1,6 +1,6 @@
 [package]
 name = "polyval"
-version = "0.4.0-pre"
+version = "0.4.0"
 authors = ["RustCrypto Developers"]
 license = "Apache-2.0 OR MIT"
 description = """
@@ -13,9 +13,6 @@ readme = "README.md"
 keywords = ["aes-gcm-siv", "crypto", "universal-hashing"]
 categories = ["cryptography", "no-std"]
 edition = "2018"
-
-[badges]
-maintenance = { status = "passively-maintained" }
 
 [dependencies]
 cfg-if = "0.1"

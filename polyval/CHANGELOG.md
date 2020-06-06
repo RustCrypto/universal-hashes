@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.4.0 (2020-06-06)
+### Changed
+- Bump `universal-hash` dependency to v0.4; MSRV 1.41 ([#52], [#57])
+- Rename `result` methods to to `finalize` ([#56])
+
+[#57]: https://github.com/RustCrypto/universal-hashes/pull/57
+[#56]: https://github.com/RustCrypto/universal-hashes/pull/56
+[#52]: https://github.com/RustCrypto/universal-hashes/pull/52
+
 ## 0.3.3 (2019-12-21)
 ### Changed
 - Match ideal assembly implementation on x86/x86_64 ([#43], [#44])
