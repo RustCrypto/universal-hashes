@@ -5,6 +5,23 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.6.0 (2020-06-06)
+### Added
+- `Poly1305::compute_unpadded` for XSalsa20Poly1305 ([#55])
+
+### Changed
+- Bump `universal-hash` dependency to v0.4; MSRV 1.41 ([#52], [#57])
+- Rename `result` methods to to `finalize` ([#56])
+
+### Fixed
+- Build with `zeroize` enabled ([#48])
+
+[#57]: https://github.com/RustCrypto/universal-hashes/pull/57
+[#56]: https://github.com/RustCrypto/universal-hashes/pull/56
+[#55]: https://github.com/RustCrypto/universal-hashes/pull/55
+[#52]: https://github.com/RustCrypto/universal-hashes/pull/52
+[#48]: https://github.com/RustCrypto/universal-hashes/pull/48
+
 ## 0.5.2 (2019-11-14)
 ### Changed
 - Upgrade to `zeroize` 1.0 ([#33])
