@@ -2,13 +2,6 @@
 
 Collection of [Universal Hash Functions][1] written in pure Rust.
 
-## Warnings
-
-Crates in this repository have not yet received any formal cryptographic and
-security reviews.
-
-**USE AT YOUR OWN RISK.**
-
 ## Crates
 
 | Name | Crates.io | Documentation | Build Status |
