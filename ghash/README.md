@@ -53,7 +53,7 @@ dual licensed as above, without any additional terms or conditions.
 [build-image]: https://github.com/RustCrypto/universal-hashes/workflows/ghash/badge.svg?branch=master&event=push
 [build-link]: https://github.com/RustCrypto/universal-hashes/actions?query=workflow%3Aghash
 
-[//]: # (general links)
+[//]: # (footnotes)
 
 [1]: https://en.wikipedia.org/wiki/Galois/Counter_Mode#Mathematical_basis
 [2]: https://en.wikipedia.org/wiki/Universal_hashing

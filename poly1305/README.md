@@ -55,7 +55,7 @@ dual licensed as above, without any additional terms or conditions.
 [build-image]: https://github.com/RustCrypto/universal-hashes/workflows/poly1305/badge.svg?branch=master&event=push
 [build-link]: https://github.com/RustCrypto/universal-hashes/actions?query=workflow%3Apoly1305
 
-[//]: # (general links)
+[//]: # (footnotes)
 
 [1]: https://en.wikipedia.org/wiki/Poly1305
 [2]: https://en.wikipedia.org/wiki/Universal_hashing

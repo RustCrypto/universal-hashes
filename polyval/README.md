@@ -56,7 +56,7 @@ dual licensed as above, without any additional terms or conditions.
 [build-image]: https://github.com/RustCrypto/universal-hashes/workflows/polyval/badge.svg?branch=master&event=push
 [build-link]: https://github.com/RustCrypto/universal-hashes/actions?query=workflow%3Apolyval
 
-[//]: # (general links)
+[//]: # (footnotes)
 
 [1]: https://en.wikipedia.org/wiki/AES-GCM-SIV#Operation
 [2]: https://tools.ietf.org/html/rfc8452#section-3
