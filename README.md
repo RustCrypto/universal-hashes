@@ -4,11 +4,11 @@ Collection of [Universal Hash Functions][1] written in pure Rust.
 
 ## Crates
 
-| Name | Crates.io | Documentation | Build Status |
-|------|-----------|---------------|--------------|
-| `ghash` | [![crates.io](https://img.shields.io/crates/v/ghash.svg)](https://crates.io/crates/ghash) | [![Documentation](https://docs.rs/ghash/badge.svg)](https://docs.rs/ghash) | ![build](https://github.com/RustCrypto/universal-hashes/workflows/ghash/badge.svg?branch=master&event=push) |
-| `poly1305` | [![crates.io](https://img.shields.io/crates/v/poly1305.svg)](https://crates.io/crates/poly1305) | [![Documentation](https://docs.rs/poly1305/badge.svg)](https://docs.rs/poly1305) | ![build](https://github.com/RustCrypto/universal-hashes/workflows/poly1305/badge.svg?branch=master&event=push) |
-| `polyval`  | [![crates.io](https://img.shields.io/crates/v/polyval.svg)](https://crates.io/crates/polyval) | [![Documentation](https://docs.rs/polyval/badge.svg)](https://docs.rs/polyval) | ![build](https://github.com/RustCrypto/universal-hashes/workflows/polyval/badge.svg?branch=master&event=push) |
+| Name         | Crates.io | Documentation | Build Status |
+|--------------|-----------|---------------|--------------|
+| [`ghash`]    | [![crates.io](https://img.shields.io/crates/v/ghash.svg)](https://crates.io/crates/ghash) | [![Documentation](https://docs.rs/ghash/badge.svg)](https://docs.rs/ghash) | ![build](https://github.com/RustCrypto/universal-hashes/workflows/ghash/badge.svg?branch=master&event=push) |
+| [`poly1305`] | [![crates.io](https://img.shields.io/crates/v/poly1305.svg)](https://crates.io/crates/poly1305) | [![Documentation](https://docs.rs/poly1305/badge.svg)](https://docs.rs/poly1305) | ![build](https://github.com/RustCrypto/universal-hashes/workflows/poly1305/badge.svg?branch=master&event=push) |
+| [`polyval`]  | [![crates.io](https://img.shields.io/crates/v/polyval.svg)](https://crates.io/crates/polyval) | [![Documentation](https://docs.rs/polyval/badge.svg)](https://docs.rs/polyval) | ![build](https://github.com/RustCrypto/universal-hashes/workflows/polyval/badge.svg?branch=master&event=push) |
 
 ### Minimum Supported Rust Version
 
@@ -41,7 +41,13 @@ dual licensed as above, without any additional terms or conditions.
 
 [rustc-image]: https://img.shields.io/badge/rustc-1.41+-blue.svg
 
-[//]: # (general links)
+[//]: # (crates)
+
+[`ghash`]: https://github.com/RustCrypto/universal-hashes/tree/master/ghash
+[`poly1305`]: https://github.com/RustCrypto/universal-hashes/tree/master/poly1305
+[`polyval`]: https://github.com/RustCrypto/universal-hashes/tree/master/polyval
+
+[//]: # (footnotes)
 
 [1]: https://en.wikipedia.org/wiki/Universal_hashing
 [2]: https://docs.rs/universal-hash
