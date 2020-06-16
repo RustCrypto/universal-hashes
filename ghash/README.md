@@ -1,4 +1,4 @@
-# GHASH: fast universal hash function and MAC
+# RustCrypto: GHASH
 
 [![crate][crate-image]][crate-link]
 [![Docs][docs-image]][docs-link]

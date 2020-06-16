@@ -1,4 +1,4 @@
-# Poly1305
+# RustCrypto: Poly1305
 
 [![crate][crate-image]][crate-link]
 [![Docs][docs-image]][docs-link]
