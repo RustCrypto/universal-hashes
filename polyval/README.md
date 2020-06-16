@@ -1,4 +1,4 @@
-# POLYVAL: fast universal hash function and MAC
+# RustCrypto: POLYVAL
 
 [![crate][crate-image]][crate-link]
 [![Docs][docs-image]][docs-link]
