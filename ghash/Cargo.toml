@@ -15,11 +15,11 @@ categories = ["cryptography", "no-std"]
 edition = "2018"
 
 [dependencies]
-polyval = { version = "0.4", path = "../polyval" }
+universal-hash = { version = "0.4", default-features = false }
 zeroize = { version = "1", optional = true, default-features = false }
 
 [dev-dependencies]
 hex-literal = "0.1"
 
 [features]
-std = ["polyval/std"]
+std = []
