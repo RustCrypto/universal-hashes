@@ -38,7 +38,9 @@ impl NewUniversalHash for GHash {
     fn new(h: &Key) -> Self {
         unsafe {
             let bs_mask = _mm_set_epi64x(BS_MASK1, BS_MASK2);
-            let h = _mm_loadu_si128(h.as_ptr() as *const _);
+            // `_mm_loadu_si128` performs an unaligned load
+            #[allow(clippy::cast_ptr_alignment)]
+            let h = _mm_loadu_si128(h.as_ptr() as *const __m128i);
             let h = _mm_shuffle_epi8(h, bs_mask);
             let y = _mm_setzero_si128();
             Self { h, y }
@@ -67,7 +69,9 @@ impl UniversalHash for GHash {
             let bs_mask = _mm_set_epi64x(BS_MASK1, BS_MASK2);
 
             let h = self.h;
-            let x = _mm_loadu_si128(x.as_ptr() as *const _);
+            // `_mm_loadu_si128` performs an unaligned load
+            #[allow(clippy::cast_ptr_alignment)]
+            let x = _mm_loadu_si128(x.as_ptr() as *const __m128i);
             let x = _mm_shuffle_epi8(x, bs_mask);
             let y = _mm_xor_si128(self.y, x);
 
