@@ -27,17 +27,3 @@ fn ghash_test_vector() {
     let result = ghash.finalize();
     assert_eq!(&GHASH_RESULT[..], result.into_bytes().as_slice());
 }
-
-#[test]
-fn ghash_test_vector2() {
-    let mut ghash = GHash::new(&H.into());
-    ghash.update_padded(&hex!(
-        "
-        4f4f95668c83dfb6401762bb2d01a262
-        d1a24ddd2721d006bbe45f20d3c9f362
-    "
-    ));
-
-    let result = ghash.finalize();
-    assert_eq!(&GHASH_RESULT[..], result.into_bytes().as_slice());
-}
