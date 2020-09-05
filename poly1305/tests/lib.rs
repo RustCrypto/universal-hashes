@@ -1,8 +1,9 @@
 use hex_literal::hex;
 use poly1305::{
     universal_hash::{NewUniversalHash, UniversalHash},
-    Poly1305, BLOCK_SIZE,
+    Poly1305, BLOCK_SIZE, KEY_SIZE,
 };
+use std::iter::repeat;
 
 #[test]
 fn test_nacl_vector() {
@@ -44,6 +45,25 @@ fn donna_self_test1() {
     let mut poly = Poly1305::new(key.as_ref().into());
     poly.update(msg.as_ref().into());
     assert_eq!(&expected[..], poly.finalize().into_bytes().as_slice());
+}
+
+#[test]
+fn donna_self_test2() {
+    let total_key = hex!("01020304050607fffefdfcfbfaf9ffffffffffffffffffffffffffff00000000");
+    let total_mac = hex!("64afe2e8d6ad7bbdd287f97c44623d39");
+
+    let mut tpoly = Poly1305::new(total_key.as_ref().into());
+
+    for i in 0..256 {
+        let mut key = [0u8; KEY_SIZE];
+        key.copy_from_slice(&repeat(i as u8).take(KEY_SIZE).collect::<Vec<_>>());
+
+        let msg: Vec<u8> = repeat(i as u8).take(256).collect();
+        let tag = Poly1305::new(key.as_ref().into()).compute_unpadded(&msg[..i]);
+        tpoly.update(&tag.into_bytes());
+    }
+
+    assert_eq!(&total_mac[..], tpoly.finalize().into_bytes().as_slice());
 }
 
 #[test]
