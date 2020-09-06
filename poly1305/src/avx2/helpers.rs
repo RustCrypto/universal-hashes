@@ -1,5 +1,6 @@
 //! AVX2 helpers for implementing Poly1305 using 26-bit limbs.
 
+use core::fmt;
 use core::ops::{Add, Mul};
 
 #[cfg(target_arch = "x86")]
@@ -11,6 +12,39 @@ use crate::{Block, Key, BLOCK_SIZE};
 
 const fn set02(x3: u8, x2: u8, x1: u8, x0: u8) -> i32 {
     (((x3) << 6) | ((x2) << 4) | ((x1) << 2) | (x0)) as i32
+}
+
+/// Helper for Display impls of aligned values.
+fn write_130(f: &mut fmt::Formatter<'_>, limbs: [u32; 5]) -> fmt::Result {
+    let r0 = limbs[0] as u128;
+    let r1 = limbs[1] as u128;
+    let r2 = limbs[2] as u128;
+    let r3 = limbs[3] as u128;
+    let r4 = limbs[4] as u128;
+
+    // Reduce into two u128s
+    let l0 = r0 + (r1 << 26) + (r2 << 52) + (r3 << 78);
+    let (l0, c) = l0.overflowing_add(r4 << 104);
+    let l1 = (r4 >> 24) + if c { 1 } else { 0 };
+
+    write!(f, "0x{:02x}{:032x}", l1, l0)
+}
+
+/// Helper for Display impls of unreduced values.
+fn write_130_wide(f: &mut fmt::Formatter<'_>, limbs: [u64; 5]) -> fmt::Result {
+    let r0 = limbs[0] as u128;
+    let r1 = limbs[1] as u128;
+    let r2 = limbs[2] as u128;
+    let r3 = limbs[3] as u128;
+    let r4 = limbs[4] as u128;
+
+    // Reduce into two u128s
+    let l0 = r0 + (r1 << 26) + (r2 << 52);
+    let (l0, c1) = l0.overflowing_add(r3 << 78);
+    let (l0, c2) = l0.overflowing_add(r4 << 104);
+    let l1 = (r3 >> 50) + (r4 >> 24) + if c1 { 1 } else { 0 } + if c2 { 1 } else { 0 };
+
+    write!(f, "0x{:02x}{:032x}", l1, l0)
 }
 
 /// Derives the Poly1305 addition and polynomial keys.
@@ -40,6 +74,30 @@ pub(super) fn prepare_keys(key: &Key) -> (AdditionKey, PrecomputedMultiplier) {
 /// The top three 32-bit words of the underlying 256-bit vector are ignored.
 #[derive(Clone, Copy, Debug)]
 pub(super) struct Aligned130(pub(super) __m256i);
+
+impl fmt::Display for Aligned130 {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        use core::convert::TryInto;
+
+        let mut v0 = [0u8; 32];
+        unsafe {
+            _mm256_storeu_si256(v0.as_mut_ptr() as *mut _, self.0);
+        }
+
+        write!(f, "Aligned130(")?;
+        write_130(
+            f,
+            [
+                u32::from_le_bytes(v0[0..4].try_into().unwrap()),
+                u32::from_le_bytes(v0[4..8].try_into().unwrap()),
+                u32::from_le_bytes(v0[8..12].try_into().unwrap()),
+                u32::from_le_bytes(v0[12..16].try_into().unwrap()),
+                u32::from_le_bytes(v0[16..20].try_into().unwrap()),
+            ],
+        )?;
+        write!(f, ")")
+    }
+}
 
 impl Aligned130 {
     /// Aligns a 16-byte Poly1305 block at 26-bit boundaries within 32-bit words, and sets
@@ -360,6 +418,32 @@ pub(super) struct Unreduced130 {
     v1: __m256i,
 }
 
+impl fmt::Display for Unreduced130 {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        use core::convert::TryInto;
+
+        let mut v0 = [0u8; 32];
+        let mut v1 = [0u8; 32];
+        unsafe {
+            _mm256_storeu_si256(v0.as_mut_ptr() as *mut _, self.v0);
+            _mm256_storeu_si256(v1.as_mut_ptr() as *mut _, self.v1);
+        }
+
+        write!(f, "Unreduced130(")?;
+        write_130_wide(
+            f,
+            [
+                u64::from_le_bytes(v0[0..8].try_into().unwrap()),
+                u64::from_le_bytes(v0[8..16].try_into().unwrap()),
+                u64::from_le_bytes(v0[16..24].try_into().unwrap()),
+                u64::from_le_bytes(v0[24..32].try_into().unwrap()),
+                u64::from_le_bytes(v1[0..8].try_into().unwrap()),
+            ],
+        )?;
+        write!(f, ")")
+    }
+}
+
 impl Unreduced130 {
     /// Reduces x modulo 2^130 - 5.
     ///
@@ -495,6 +579,15 @@ impl Unreduced130 {
 pub(super) struct Aligned2x130 {
     v0: Aligned130,
     v1: Aligned130,
+}
+
+impl fmt::Display for Aligned2x130 {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        writeln!(f, "Aligned2x130([")?;
+        writeln!(f, "    {},", self.v0)?;
+        writeln!(f, "    {},", self.v1)?;
+        write!(f, "])")
+    }
 }
 
 impl Aligned2x130 {
@@ -857,6 +950,72 @@ pub(super) struct Aligned4x130 {
     v0: __m256i,
     v1: __m256i,
     v2: __m256i,
+}
+
+impl fmt::Display for Aligned4x130 {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        use core::convert::TryInto;
+
+        let mut v0 = [0u8; 32];
+        let mut v1 = [0u8; 32];
+        let mut v2 = [0u8; 32];
+        unsafe {
+            _mm256_storeu_si256(v0.as_mut_ptr() as *mut _, self.v0);
+            _mm256_storeu_si256(v1.as_mut_ptr() as *mut _, self.v1);
+            _mm256_storeu_si256(v2.as_mut_ptr() as *mut _, self.v2);
+        }
+
+        writeln!(f, "Aligned4x130([")?;
+        write!(f, "    ")?;
+        write_130(
+            f,
+            [
+                u32::from_le_bytes(v0[0..4].try_into().unwrap()),
+                u32::from_le_bytes(v1[0..4].try_into().unwrap()),
+                u32::from_le_bytes(v0[4..8].try_into().unwrap()),
+                u32::from_le_bytes(v1[4..8].try_into().unwrap()),
+                u32::from_le_bytes(v2[0..4].try_into().unwrap()),
+            ],
+        )?;
+        writeln!(f, ",")?;
+        write!(f, "    ")?;
+        write_130(
+            f,
+            [
+                u32::from_le_bytes(v0[8..12].try_into().unwrap()),
+                u32::from_le_bytes(v1[8..12].try_into().unwrap()),
+                u32::from_le_bytes(v0[12..16].try_into().unwrap()),
+                u32::from_le_bytes(v1[12..16].try_into().unwrap()),
+                u32::from_le_bytes(v2[8..12].try_into().unwrap()),
+            ],
+        )?;
+        writeln!(f, ",")?;
+        write!(f, "    ")?;
+        write_130(
+            f,
+            [
+                u32::from_le_bytes(v0[16..20].try_into().unwrap()),
+                u32::from_le_bytes(v1[16..20].try_into().unwrap()),
+                u32::from_le_bytes(v0[20..24].try_into().unwrap()),
+                u32::from_le_bytes(v1[20..24].try_into().unwrap()),
+                u32::from_le_bytes(v2[16..20].try_into().unwrap()),
+            ],
+        )?;
+        writeln!(f, ",")?;
+        write!(f, "    ")?;
+        write_130(
+            f,
+            [
+                u32::from_le_bytes(v0[24..28].try_into().unwrap()),
+                u32::from_le_bytes(v1[24..28].try_into().unwrap()),
+                u32::from_le_bytes(v0[28..32].try_into().unwrap()),
+                u32::from_le_bytes(v1[28..32].try_into().unwrap()),
+                u32::from_le_bytes(v2[24..28].try_into().unwrap()),
+            ],
+        )?;
+        writeln!(f, ",")?;
+        write!(f, "])")
+    }
 }
 
 impl Aligned4x130 {
@@ -1472,6 +1631,76 @@ pub(super) struct Unreduced4x130 {
     v2: __m256i,
     v3: __m256i,
     v4: __m256i,
+}
+
+impl fmt::Display for Unreduced4x130 {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        use core::convert::TryInto;
+
+        let mut v0 = [0u8; 32];
+        let mut v1 = [0u8; 32];
+        let mut v2 = [0u8; 32];
+        let mut v3 = [0u8; 32];
+        let mut v4 = [0u8; 32];
+        unsafe {
+            _mm256_storeu_si256(v0.as_mut_ptr() as *mut _, self.v0);
+            _mm256_storeu_si256(v1.as_mut_ptr() as *mut _, self.v1);
+            _mm256_storeu_si256(v2.as_mut_ptr() as *mut _, self.v2);
+            _mm256_storeu_si256(v3.as_mut_ptr() as *mut _, self.v3);
+            _mm256_storeu_si256(v4.as_mut_ptr() as *mut _, self.v4);
+        }
+
+        writeln!(f, "Unreduced4x130([")?;
+        write!(f, "    ")?;
+        write_130_wide(
+            f,
+            [
+                u64::from_le_bytes(v0[0..8].try_into().unwrap()),
+                u64::from_le_bytes(v1[0..8].try_into().unwrap()),
+                u64::from_le_bytes(v2[0..8].try_into().unwrap()),
+                u64::from_le_bytes(v3[0..8].try_into().unwrap()),
+                u64::from_le_bytes(v4[0..8].try_into().unwrap()),
+            ],
+        )?;
+        writeln!(f, ",")?;
+        write!(f, "    ")?;
+        write_130_wide(
+            f,
+            [
+                u64::from_le_bytes(v0[8..16].try_into().unwrap()),
+                u64::from_le_bytes(v1[8..16].try_into().unwrap()),
+                u64::from_le_bytes(v2[8..16].try_into().unwrap()),
+                u64::from_le_bytes(v3[8..16].try_into().unwrap()),
+                u64::from_le_bytes(v4[8..16].try_into().unwrap()),
+            ],
+        )?;
+        writeln!(f, ",")?;
+        write!(f, "    ")?;
+        write_130_wide(
+            f,
+            [
+                u64::from_le_bytes(v0[16..24].try_into().unwrap()),
+                u64::from_le_bytes(v1[16..24].try_into().unwrap()),
+                u64::from_le_bytes(v2[16..24].try_into().unwrap()),
+                u64::from_le_bytes(v3[16..24].try_into().unwrap()),
+                u64::from_le_bytes(v4[16..24].try_into().unwrap()),
+            ],
+        )?;
+        writeln!(f, ",")?;
+        write!(f, "    ")?;
+        write_130_wide(
+            f,
+            [
+                u64::from_le_bytes(v0[24..32].try_into().unwrap()),
+                u64::from_le_bytes(v1[24..32].try_into().unwrap()),
+                u64::from_le_bytes(v2[24..32].try_into().unwrap()),
+                u64::from_le_bytes(v3[24..32].try_into().unwrap()),
+                u64::from_le_bytes(v4[24..32].try_into().unwrap()),
+            ],
+        )?;
+        writeln!(f, ",")?;
+        write!(f, "])")
+    }
 }
 
 impl Unreduced4x130 {
