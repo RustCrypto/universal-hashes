@@ -1856,57 +1856,87 @@ impl Add<Aligned130> for AdditionKey {
             let mut x = _mm256_and_si256(x.0, _mm256_set_epi32(0, 0, 0, -1, -1, -1, -1, -1));
             let k = self.0;
 
-            // Reduce modulus 2^130-5
-            // t = [
-            //     0,
-            //     0,
-            //     0,
-            //     x3 >> 26,
-            //     x2 >> 26,
-            //     x1 >> 26,
-            //     x0 >> 26,
-            //     x4 >> 26,
-            // ];
-            let t = _mm256_permutevar8x32_epi32(
-                _mm256_srli_epi32(x, 26),
-                _mm256_set_epi32(7, 7, 7, 3, 2, 1, 0, 4),
+            /// Reduce to an integer below 2^130.
+            unsafe fn propagate_carry(x: __m256i) -> __m256i {
+                // t = [
+                //     0,
+                //     0,
+                //     0,
+                //     x3 >> 26,
+                //     x2 >> 26,
+                //     x1 >> 26,
+                //     x0 >> 26,
+                //     x4 >> 26,
+                // ];
+                let t = _mm256_permutevar8x32_epi32(
+                    _mm256_srli_epi32(x, 26),
+                    _mm256_set_epi32(7, 7, 7, 3, 2, 1, 0, 4),
+                );
+
+                // [
+                //     0,
+                //     0,
+                //     0,
+                //     x4 % 2^26,
+                //     x3 % 2^26,
+                //     x2 % 2^26,
+                //     x1 % 2^26,
+                //     x0 % 2^26,
+                // ]
+                // + t + [0, 0, 0, 0, 0, 0, 0, 4·(x4 >> 26)]
+                // = [
+                //     0,
+                //     0,
+                //     0,
+                //     x4 % 2^26 +    x3 >> 26,
+                //     x3 % 2^26 +    x2 >> 26,
+                //     x2 % 2^26 +    x1 >> 26,
+                //     x1 % 2^26 +    x0 >> 26,
+                //     x0 % 2^26 + 5·(x4 >> 26),
+                // ] => [0, 0, 0, x4, x3, x2, x1, x0]
+                _mm256_add_epi32(
+                    _mm256_add_epi32(
+                        _mm256_and_si256(
+                            x,
+                            _mm256_set_epi32(
+                                0, 0, 0, 0x3ffffff, 0x3ffffff, 0x3ffffff, 0x3ffffff, 0x3ffffff,
+                            ),
+                        ),
+                        t,
+                    ),
+                    _mm256_permutevar8x32_epi32(
+                        _mm256_slli_epi32(t, 2),
+                        _mm256_set_epi32(7, 7, 7, 7, 7, 7, 7, 0),
+                    ),
+                )
+            }
+
+            // Reduce modulus 2^130-5:
+            // - Reduce to an integer below 2^130:
+            // TODO: Is it more efficient to unpack the limbs for this?
+            for _ in 0..5 {
+                x = propagate_carry(x);
+            }
+
+            // - Compute x + -p by adding 5 and carrying up to the top limb:
+            // g = [0, 0, 0, g4, g3, g2, g1, g0]
+            let mut g = _mm256_add_epi32(x, _mm256_set_epi32(0, 0, 0, 0, 0, 0, 0, 5));
+            // TODO: Is it more efficient to unpack the limbs for this?
+            for _ in 0..4 {
+                g = propagate_carry(g);
+            }
+            let g = _mm256_sub_epi32(g, _mm256_set_epi32(0, 0, 0, 1 << 26, 0, 0, 0, 0));
+
+            // - Check whether g4 overflowed:
+            let mask = _mm256_permutevar8x32_epi32(
+                _mm256_sub_epi32(_mm256_srli_epi32(g, 32 - 1), _mm256_set1_epi32(1)),
+                _mm256_set1_epi32(4),
             );
 
-            // [
-            //     0,
-            //     0,
-            //     0,
-            //     x4 % 2^26,
-            //     x3 % 2^26,
-            //     x2 % 2^26,
-            //     x1 % 2^26,
-            //     x0 % 2^26,
-            // ]
-            // + t + [0, 0, 0, 0, 0, 0, 0, 4·(x4 >> 26)]
-            // = [
-            //     0,
-            //     0,
-            //     0,
-            //     x4 % 2^26 +    x3 >> 26,
-            //     x3 % 2^26 +    x2 >> 26,
-            //     x2 % 2^26 +    x1 >> 26,
-            //     x1 % 2^26 +    x0 >> 26,
-            //     x0 % 2^26 + 5·(x4 >> 26),
-            // ] => [0, 0, 0, x4, x3, x2, x1, x0]
-            let x = _mm256_add_epi32(
-                _mm256_add_epi32(
-                    _mm256_and_si256(
-                        x,
-                        _mm256_set_epi32(
-                            0, 0, 0, 0x3ffffff, 0x3ffffff, 0x3ffffff, 0x3ffffff, 0x3ffffff,
-                        ),
-                    ),
-                    t,
-                ),
-                _mm256_permutevar8x32_epi32(
-                    _mm256_slli_epi32(t, 2),
-                    _mm256_set_epi32(7, 7, 7, 7, 7, 7, 7, 0),
-                ),
+            // - Select x if g4 overflowed, else g:
+            let x = _mm256_or_si256(
+                _mm256_and_si256(x, _mm256_xor_si256(mask, _mm256_set1_epi32(-1))),
+                _mm256_and_si256(g, mask),
             );
 
             // Align back to 32 bits per digit. We drop the top two bits of the top limb,
