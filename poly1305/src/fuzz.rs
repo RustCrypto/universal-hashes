@@ -48,7 +48,17 @@ fn crash_3() {
     //                 difference = 0x0100000000
     //
     // This discrepancy was due to Unreduced130::reduce (as called during finalization)
-    // not correctly reducing. TODO: Figure out what about it was wrong.
+    // not correctly reducing. During the reduction step, the upper limb's upper bits
+    // (beyond 2^130) are added into the lower limb multiplied by 5 (for reduction modulo
+    // 2^130 - 5). This is computed like so:
+    //
+    //     b = t_4 >> 26
+    //     t_0 += b + (b << 2)
+    //
+    // It is possible for the upper limb to be 57+ bits; thus b << 2 can be 33+ bits.
+    // However, the original reduction code was using _mm256_slli_epi32, which shifts
+    // packed 32-bit integers; this was causing the upper bits of b to be lost. Switching
+    // to _mm256_slli_epi64 (correctly treating b as a 64-bit field) solves the problem.
     avx2_fuzzer_test_case(include_bytes!(
         "fuzz/id:000003,sig:06,src:000003,op:havoc,rep:64"
     ));

@@ -501,7 +501,7 @@ impl Unreduced130 {
                 // t = [0, 0, 0, t_4 >> 26]
                 let t = _mm256_srlv_epi64(v1, _mm256_set_epi64x(64, 64, 64, 26));
                 // v0 + 5·t = [t_3, t_2, t_1, t_0 + 5·(t_4 >> 26)]
-                let red_0 = _mm256_add_epi64(_mm256_add_epi64(v0, t), _mm256_slli_epi32(t, 2));
+                let red_0 = _mm256_add_epi64(_mm256_add_epi64(v0, t), _mm256_slli_epi64(t, 2));
                 // [0, 0, 0, t_4 % 2^26]
                 let red_1 = _mm256_and_si256(v1, _mm256_set_epi64x(0, 0, 0, 0x3ffffff));
                 (red_1, red_0)
