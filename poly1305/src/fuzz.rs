@@ -27,6 +27,28 @@ fn crash_2() {
 
 #[test]
 fn crash_3() {
+    // This input corresponds to a key of:
+    //     r = 0x0f245bfc0f7fe5fc0fffff3400fb1c2b
+    //     s = 0xffffff000001000040f6fff5ffffffff
+    //
+    // and input blocks:
+    //    [0x01ea0010000a00ff108b72ffffffffffff, 0x01ffffffff245b74ff7fe5ffffff0040ff,
+    //     0x01000a00ff108b7200ff04000002ffffff, 0x01ffffffffffffffffffff0000ffea0010,
+    //     0x0180ffffffffffffffffffffffe3ffffff, 0x01ffffffffffffffffffffffffffffffff,
+    //     0x01ffffffffffffffffffdfffff03ffffff, 0x01ffffffffff245b74ff7fe5ffffe4ffff,
+    //     0x0112118b7d00ffeaffffffffffffffffff, 0x010e40eb10ffffffff1edd7f0010000a00]
+    //
+    // When this crash occurred, the software and AVX2 backends would generate the same
+    // tags given the first seven blocks as input. Given the first eight blocks, the
+    // following tags were generated:
+    //
+    //      |                                tag     |  low 128 bits of final accumulator
+    // soft | 0x0004d01b9168ded528a9b541cc461988 - s = 0x0004d11b9167ded4e7b2b54bcc461989
+    // avx2 | 0x0004d01b9168ded528a9b540cc461988 - s = 0x0004d11b9167ded4e7b2b54acc461989
+    //                 difference = 0x0100000000
+    //
+    // This discrepancy was due to Unreduced130::reduce (as called during finalization)
+    // not correctly reducing. TODO: Figure out what about it was wrong.
     avx2_fuzzer_test_case(include_bytes!(
         "fuzz/id:000003,sig:06,src:000003,op:havoc,rep:64"
     ));
