@@ -1907,17 +1907,42 @@ impl Add<Aligned130> for AdditionKey {
                 ),
             );
 
-            // Add key and store result in lower 128 bit
+            // Add key
             // [
             //     (x4[24..0] || x3[26..18]) + k7,
             //     (x3[18..0] || x2[26..12]) + k6,
             //     (x2[12..0] || x1[26.. 6]) + k5,
             //     (x1[ 6..0] || x0[26.. 0]) + k4,
             // ]
-            let x = _mm256_add_epi64(
+            let mut x = _mm256_add_epi64(
                 _mm256_permutevar8x32_epi32(x, _mm256_set_epi32(7, 3, 7, 2, 7, 1, 7, 0)),
                 k,
             );
+
+            // Ensure that all carries are handled
+            unsafe fn propagate_carry_32(x: __m256i) -> __m256i {
+                // [
+                //     (l4 % 2^32) + (l3 >> 32),
+                //     (l3 % 2^32) + (l2 >> 32),
+                //     (l2 % 2^32) + (l1 >> 32),
+                //     (l1 % 2^32),
+                // ]
+                _mm256_add_epi64(
+                    _mm256_and_si256(x, _mm256_set_epi32(0, -1, 0, -1, 0, -1, 0, -1)),
+                    _mm256_permute4x64_epi64(
+                        _mm256_and_si256(
+                            _mm256_srli_epi64(x, 32),
+                            _mm256_set_epi64x(0, -1, -1, -1),
+                        ),
+                        set02(2, 1, 0, 3),
+                    ),
+                )
+            }
+            for _ in 0..3 {
+                x = propagate_carry_32(x);
+            }
+
+            // Now that all limbs are at most 32 bits, realign from 64- to 32-bit limbs.
             // [
             //     0,
             //     0,
@@ -1928,13 +1953,7 @@ impl Add<Aligned130> for AdditionKey {
             //     ((x2[12..0] || x1[26.. 6]) + k5) % 2^32 + ((x1[ 6..0] || x0[26.. 0]) + k4) >> 32,
             //     ((x1[ 6..0] || x0[26.. 0]) + k4) % 2^32,
             // ]
-            let x = _mm256_add_epi64(
-                _mm256_permutevar8x32_epi32(x, _mm256_set_epi32(7, 7, 7, 7, 6, 4, 2, 0)),
-                _mm256_permutevar8x32_epi32(
-                    _mm256_srli_epi64(x, 32),
-                    _mm256_set_epi32(7, 7, 7, 7, 4, 2, 0, 7),
-                ),
-            );
+            let x = _mm256_permutevar8x32_epi32(x, _mm256_set_epi32(7, 7, 7, 7, 6, 4, 2, 0));
 
             // Reduce modulus 2^128
             IntegerTag(_mm256_castsi256_si128(x))

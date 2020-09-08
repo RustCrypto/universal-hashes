@@ -118,3 +118,36 @@ fn crash_7() {
         "fuzz/id:000007,sig:06,src:000024+000000,op:splice,rep:64"
     ));
 }
+
+#[test]
+fn crash_8() {
+    // This input corresponds to a key of:
+    //     r = 0x0fff00fc0000000000000000006f91ab
+    //     s = 0xffffffffffffffffffffffffffffffff
+    //
+    // and a single input block:
+    //     0x01d4d4ffffffffffffffffffffffffffff
+    //
+    // We should have the following computation:
+    //     tag = ((m * r) % p) + s
+    //         = ((0x01d4d4ffffffffffffffffffffffffffff * 0x0fff00fc0000000000000000006f91ab) % p) + s
+    //         = (0x1d4b7cf881ac00000000000000cc5320bf47ff03ffffffffffffffffff906e55 % ((1 << 130) - 5)) + s
+    //         = 0xe3e65b3aa217000000000000008fd63d + 0xffffffffffffffffffffffffffffffff
+    //         = 0x01e3e65b3aa217000000000000008fd63c mod 128
+    //
+    // or in bytes:
+    //     tag = [
+    //         0x3c, 0xd6, 0x8f, 0x00, 0x00, 0x00, 0x00, 0x00,
+    //         0x00, 0x00, 0x17, 0xa2, 0x3a, 0x5b, 0xe6, 0xe3,
+    //     ];
+    //
+    // The crash was caused by the final modular reduction (in the `addkey` method of the
+    // Goll-Gueron implementation, and `impl Add<Aligned130> for AdditionKey` here). After
+    // adding s, limbs 0 and 2 have carries, while limb 1 is 0xffffffff. The original
+    // implementation only carried once, after which limb 1 has a carry, which was then
+    // discarded. The fix was to always carry three times, to ensure that all potential
+    // carry bits are carried.
+    avx2_fuzzer_test_case(include_bytes!(
+        "fuzz/id:000008,sig:06,src:000019,time:165655+000011,op:splice,rep:128"
+    ));
+}
