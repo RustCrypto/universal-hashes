@@ -10,6 +10,9 @@
 #![doc(html_logo_url = "https://raw.githubusercontent.com/RustCrypto/meta/master/logo_small.png")]
 #![warn(missing_docs, rust_2018_idioms)]
 
+#[cfg(feature = "std")]
+extern crate std;
+
 pub use universal_hash;
 
 use universal_hash::{
@@ -18,7 +21,37 @@ use universal_hash::{
     NewUniversalHash, UniversalHash,
 };
 
+#[cfg(all(
+    any(target_arch = "x86", target_arch = "x86_64"),
+    target_feature = "avx2"
+))]
+mod avx2;
+#[cfg(all(
+    any(target_arch = "x86", target_arch = "x86_64"),
+    target_feature = "avx2"
+))]
+use avx2::State;
+
+#[cfg(any(
+    not(all(
+        any(target_arch = "x86", target_arch = "x86_64"),
+        target_feature = "avx2"
+    )),
+    any(fuzzing, test)
+))]
 mod soft;
+#[cfg(not(all(
+    any(target_arch = "x86", target_arch = "x86_64"),
+    target_feature = "avx2"
+)))]
+use soft::State;
+
+#[cfg(all(
+    any(target_arch = "x86", target_arch = "x86_64"),
+    target_feature = "avx2",
+    any(fuzzing, test)
+))]
+mod fuzz;
 
 /// Size of a Poly1305 key
 pub const KEY_SIZE: usize = 32;
@@ -43,7 +76,7 @@ pub type Tag = universal_hash::Output<Poly1305>;
 /// For this reason it doesn't impl the `crypto_mac::Mac` trait.
 #[derive(Clone)]
 pub struct Poly1305 {
-    state: soft::State,
+    state: State,
 }
 
 impl NewUniversalHash for Poly1305 {
@@ -52,7 +85,7 @@ impl NewUniversalHash for Poly1305 {
     /// Initialize Poly1305 with the given key
     fn new(key: &Key) -> Poly1305 {
         Poly1305 {
-            state: soft::State::new(key),
+            state: State::new(key),
         }
     }
 }
@@ -95,4 +128,40 @@ impl Poly1305 {
 
         self.state.finalize()
     }
+}
+
+/// Helper function for fuzzing the AVX2 backend.
+#[cfg(all(
+    any(target_arch = "x86", target_arch = "x86_64"),
+    target_feature = "avx2",
+    any(fuzzing, test)
+))]
+pub fn fuzz_avx2(key: &Key, data: &[u8]) {
+    let mut avx2 = avx2::State::new(key);
+    let mut soft = soft::State::new(key);
+
+    for (_i, chunk) in data.chunks(BLOCK_SIZE).enumerate() {
+        if chunk.len() == BLOCK_SIZE {
+            let block = GenericArray::from_slice(chunk);
+            avx2.compute_block(block, false);
+            soft.compute_block(block, false);
+        } else {
+            let mut block = Block::default();
+            block[..chunk.len()].copy_from_slice(chunk);
+            block[chunk.len()] = 1;
+            avx2.compute_block(&block, true);
+            soft.compute_block(&block, true);
+        }
+
+        // Check that the same tag would be derived after each chunk.
+        // We add the chunk number to the assertion for debugging.
+        // When fuzzing, we skip this check, and just look at the end.
+        #[cfg(test)]
+        assert_eq!(
+            (_i + 1, avx2.clone().finalize().into_bytes()),
+            (_i + 1, soft.clone().finalize().into_bytes()),
+        );
+    }
+
+    assert_eq!(avx2.finalize().into_bytes(), soft.finalize().into_bytes());
 }
