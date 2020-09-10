@@ -1,4 +1,37 @@
-use super::fuzz_avx2;
+use universal_hash::generic_array::GenericArray;
+
+use crate::{backend, Block, Key, BLOCK_SIZE};
+
+/// Helper function for fuzzing the AVX2 backend.
+pub fn fuzz_avx2(key: &Key, data: &[u8]) {
+    let mut avx2 = backend::avx2::State::new(key);
+    let mut soft = backend::soft::State::new(key);
+
+    for (_i, chunk) in data.chunks(BLOCK_SIZE).enumerate() {
+        if chunk.len() == BLOCK_SIZE {
+            let block = GenericArray::from_slice(chunk);
+            avx2.compute_block(block, false);
+            soft.compute_block(block, false);
+        } else {
+            let mut block = Block::default();
+            block[..chunk.len()].copy_from_slice(chunk);
+            block[chunk.len()] = 1;
+            avx2.compute_block(&block, true);
+            soft.compute_block(&block, true);
+        }
+
+        // Check that the same tag would be derived after each chunk.
+        // We add the chunk number to the assertion for debugging.
+        // When fuzzing, we skip this check, and just look at the end.
+        #[cfg(test)]
+        assert_eq!(
+            (_i + 1, avx2.clone().finalize().into_bytes()),
+            (_i + 1, soft.clone().finalize().into_bytes()),
+        );
+    }
+
+    assert_eq!(avx2.finalize().into_bytes(), soft.finalize().into_bytes());
+}
 
 fn avx2_fuzzer_test_case(data: &[u8]) {
     fuzz_avx2(data[0..32].into(), &data[32..]);

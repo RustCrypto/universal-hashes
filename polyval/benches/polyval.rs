@@ -2,7 +2,10 @@
 
 use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion, Throughput};
 use criterion_cycles_per_byte::CyclesPerByte;
-use polyval::{universal_hash::UniversalHash, Polyval};
+use polyval::{
+    universal_hash::{NewUniversalHash, UniversalHash},
+    Polyval,
+};
 
 const KB: usize = 1024;
 
