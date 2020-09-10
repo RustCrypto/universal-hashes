@@ -21,30 +21,7 @@ use universal_hash::{
     NewUniversalHash, UniversalHash,
 };
 
-#[cfg(all(
-    any(target_arch = "x86", target_arch = "x86_64"),
-    target_feature = "avx2"
-))]
-mod avx2;
-#[cfg(all(
-    any(target_arch = "x86", target_arch = "x86_64"),
-    target_feature = "avx2"
-))]
-use avx2::State;
-
-#[cfg(any(
-    not(all(
-        any(target_arch = "x86", target_arch = "x86_64"),
-        target_feature = "avx2"
-    )),
-    any(fuzzing, test)
-))]
-mod soft;
-#[cfg(not(all(
-    any(target_arch = "x86", target_arch = "x86_64"),
-    target_feature = "avx2"
-)))]
-use soft::State;
+mod backend;
 
 #[cfg(all(
     any(target_arch = "x86", target_arch = "x86_64"),
@@ -76,7 +53,7 @@ pub type Tag = universal_hash::Output<Poly1305>;
 /// For this reason it doesn't impl the `crypto_mac::Mac` trait.
 #[derive(Clone)]
 pub struct Poly1305 {
-    state: State,
+    state: backend::State,
 }
 
 impl NewUniversalHash for Poly1305 {
@@ -85,7 +62,7 @@ impl NewUniversalHash for Poly1305 {
     /// Initialize Poly1305 with the given key
     fn new(key: &Key) -> Poly1305 {
         Poly1305 {
-            state: State::new(key),
+            state: backend::State::new(key),
         }
     }
 }
@@ -137,8 +114,8 @@ impl Poly1305 {
     any(fuzzing, test)
 ))]
 pub fn fuzz_avx2(key: &Key, data: &[u8]) {
-    let mut avx2 = avx2::State::new(key);
-    let mut soft = soft::State::new(key);
+    let mut avx2 = backend::avx2::State::new(key);
+    let mut soft = backend::soft::State::new(key);
 
     for (_i, chunk) in data.chunks(BLOCK_SIZE).enumerate() {
         if chunk.len() == BLOCK_SIZE {
