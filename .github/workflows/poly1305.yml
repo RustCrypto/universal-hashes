@@ -11,6 +11,14 @@ on:
       - "poly1305/**"
       - "Cargo.*"
 
+defaults:
+  run:
+    working-directory: poly1305
+
+env:
+  CARGO_INCREMENTAL: 0
+  RUSTFLAGS: "-Dwarnings"
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -30,8 +38,17 @@ jobs:
           toolchain: ${{ matrix.rust }}
           target: ${{ matrix.target }}
           override: true
-      - working-directory: poly1305
-        run: cargo build --no-default-features --release --target ${{ matrix.target }}
+      - run: cargo build --no-default-features --release --target ${{ matrix.target }}
+  benches:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v1
+      - uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: nightly
+          override: true
+      - run: cargo build --benches
   test:
     runs-on: ubuntu-latest
     strategy:
@@ -45,9 +62,9 @@ jobs:
       with:
         profile: minimal
         toolchain: ${{ matrix.rust }}
+        override: true
     - run: |
         cargo check --all-features
         cargo test --no-default-features
         cargo test
         cargo test --all-features
-      working-directory: poly1305
