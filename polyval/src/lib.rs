@@ -59,11 +59,11 @@ use cfg_if::cfg_if;
 )))]
 cfg_if! {
     if #[cfg(target_pointer_width = "64")] {
-        mod u64_soft;
-        pub use u64_soft::Polyval;
+        mod u64_backend;
+        pub use u64_backend::Polyval;
     } else {
-        mod u32_soft;
-        pub use u32_soft::Polyval;
+        mod u32_backend;
+        pub use u32_backend::Polyval;
     }
 }
 
@@ -73,7 +73,7 @@ cfg_if! {
     target_feature = "sse4.1",
     any(target_arch = "x86", target_arch = "x86_64")
 ))]
-mod clmul;
+mod clmul_backend;
 
 #[cfg(all(
     target_feature = "pclmulqdq",
@@ -81,7 +81,7 @@ mod clmul;
     target_feature = "sse4.1",
     any(target_arch = "x86", target_arch = "x86_64")
 ))]
-pub use clmul::Polyval;
+pub use clmul_backend::Polyval;
 
 /// POLYVAL keys (16-bytes)
 pub type Key = universal_hash::Key<Polyval>;
