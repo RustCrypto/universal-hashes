@@ -25,41 +25,95 @@
 //! In other words, if we bit-reverse (over 32 bits) the operands, then we
 //! bit-reverse (over 64 bits) the result.
 
-use crate::field::Block;
+use crate::{Block, Key, Tag};
 use core::{
     convert::TryInto,
     num::Wrapping,
     ops::{Add, Mul},
 };
+use universal_hash::{consts::U16, NewUniversalHash, Output, UniversalHash};
+
+/// **POLYVAL**: GHASH-like universal hash over GF(2^128).
+#[allow(non_snake_case)]
+#[derive(Clone)]
+#[repr(align(16))]
+pub struct Polyval {
+    /// GF(2^128) field element input blocks are multiplied by
+    H: U32x4,
+
+    /// Field element representing the computed universal hash
+    S: U32x4,
+}
+
+impl NewUniversalHash for Polyval {
+    type KeySize = U16;
+
+    /// Initialize POLYVAL with the given `H` field element
+    fn new(h: &Key) -> Self {
+        Self {
+            H: h.into(),
+            S: U32x4::default(),
+        }
+    }
+}
+
+impl UniversalHash for Polyval {
+    type BlockSize = U16;
+
+    /// Input a field element `X` to be authenticated
+    fn update(&mut self, x: &Block) {
+        let x = U32x4::from(x);
+        self.S = (self.S + x) * self.H;
+    }
+
+    /// Input data into the universal hash function. If the length of the
+    /// data is not a multiple of the block size, the remaining data is
+    /// padded with zeros up to the `BlockSize`.
+    fn update_padded(&mut self, data: &[u8]) {
+        // NOTE: this code is identical to upstream, but copied into
+        // here as a performance hack.
+        let mut chunks = data.chunks_exact(16);
+        for chunk in &mut chunks {
+            self.update(Block::from_slice(chunk));
+        }
+
+        let rem = chunks.remainder();
+
+        if !rem.is_empty() {
+            let mut padded_block = Block::default();
+            padded_block[..rem.len()].copy_from_slice(rem);
+            self.update(&padded_block);
+        }
+    }
+
+    /// Reset internal state
+    fn reset(&mut self) {
+        self.S = U32x4::default();
+    }
+
+    /// Get POLYVAL result (i.e. computed `S` field element)
+    fn finalize(self) -> Tag {
+        let result = u128::from(self.S.0)
+            | (u128::from(self.S.1) << 32)
+            | (u128::from(self.S.2) << 64)
+            | (u128::from(self.S.3) << 96);
+        
+        Output::new(result.to_le_bytes().into())
+    }
+}
 
 /// 4 x `u32` values
-#[derive(Copy, Clone, Debug, Eq, PartialEq)]
-pub struct U32x4(u32, u32, u32, u32);
+#[derive(Copy, Clone, Debug, Default, Eq, PartialEq)]
+struct U32x4(u32, u32, u32, u32);
 
-impl From<Block> for U32x4 {
-    fn from(bytes: Block) -> U32x4 {
+impl From<&Block> for U32x4 {
+    fn from(bytes: &Block) -> U32x4 {
         U32x4(
             u32::from_le_bytes(bytes[..4].try_into().unwrap()),
             u32::from_le_bytes(bytes[4..8].try_into().unwrap()),
             u32::from_le_bytes(bytes[8..12].try_into().unwrap()),
             u32::from_le_bytes(bytes[12..].try_into().unwrap()),
         )
-    }
-}
-
-impl From<U32x4> for Block {
-    fn from(u32x4: U32x4) -> Block {
-        let x: u128 = u32x4.into();
-        x.to_le_bytes()
-    }
-}
-
-impl From<U32x4> for u128 {
-    fn from(u32x4: U32x4) -> u128 {
-        u128::from(u32x4.0)
-            | (u128::from(u32x4.1) << 32)
-            | (u128::from(u32x4.2) << 64)
-            | (u128::from(u32x4.3) << 96)
     }
 }
 
