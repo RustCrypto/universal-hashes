@@ -8,7 +8,7 @@ use core::arch::x86::*;
 #[cfg(target_arch = "x86_64")]
 use core::arch::x86_64::*;
 
-use crate::{Block, Key, BLOCK_SIZE};
+use crate::{Block, Key};
 
 const fn set02(x3: u8, x2: u8, x1: u8, x0: u8) -> i32 {
     (((x3) << 6) | ((x2) << 4) | ((x1) << 2) | (x0)) as i32
@@ -102,9 +102,7 @@ impl fmt::Display for Aligned130 {
 impl Aligned130 {
     /// Aligns a 16-byte Poly1305 block at 26-bit boundaries within 32-bit words, and sets
     /// the high bit.
-    pub(super) fn from_block(block: &[u8]) -> Self {
-        assert_eq!(block.len(), BLOCK_SIZE);
-
+    pub(super) fn from_block(block: &Block) -> Self {
         unsafe {
             Aligned130::new(_mm256_or_si256(
                 _mm256_and_si256(
@@ -544,10 +542,10 @@ impl Aligned2x130 {
     /// # Panics
     ///
     /// Panics if `src.len() < 32`.
-    pub(super) fn from_blocks(src: &[u8]) -> Self {
+    pub(super) fn from_blocks(src: &[Block; 2]) -> Self {
         Aligned2x130 {
-            v0: Aligned130::from_block(&src[0..BLOCK_SIZE]),
-            v1: Aligned130::from_block(&src[BLOCK_SIZE..BLOCK_SIZE * 2]),
+            v0: Aligned130::from_block(&src[0]),
+            v1: Aligned130::from_block(&src[1]),
         }
     }
 
@@ -972,7 +970,7 @@ impl Aligned4x130 {
     /// # Panics
     ///
     /// Panics if `src.len() < 64`.
-    pub(super) fn from_blocks(src: &[u8]) -> Self {
+    pub(super) fn from_blocks(src: &[Block; 4]) -> Self {
         unsafe {
             // 26-bit mask on each 32-bit word.
             let mask_26 = _mm256_set1_epi32(0x3ffffff);
@@ -990,9 +988,9 @@ impl Aligned4x130 {
             // - Swap the middle two 64-bit words:
             // a0 = [b33, b32, b23, b22, b13, b12, b03, b02]
             // a1 = [b31, b30, b21, b20, b11, b10, b01, b00]
-            let blocks_23 =
-                _mm256_loadu_si256(src[BLOCK_SIZE * 2..BLOCK_SIZE * 4].as_ptr() as *const _);
-            let blocks_01 = _mm256_loadu_si256(src[0..BLOCK_SIZE * 2].as_ptr() as *const _);
+            let (lo, hi) = src.split_at(2);
+            let blocks_23 = _mm256_loadu_si256(hi.as_ptr() as *const _);
+            let blocks_01 = _mm256_loadu_si256(lo.as_ptr() as *const _);
             let a0 = _mm256_permute4x64_epi64(
                 _mm256_unpackhi_epi64(blocks_01, blocks_23),
                 set02(3, 1, 2, 0),
