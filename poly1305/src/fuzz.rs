@@ -40,21 +40,21 @@ fn avx2_fuzzer_test_case(data: &[u8]) {
 #[test]
 fn crash_0() {
     avx2_fuzzer_test_case(include_bytes!(
-        "fuzz/id:000000,sig:06,src:000014,op:flip4,pos:11"
+        "fuzz/id=000000,sig=06,src=000014,op=flip4,pos=11"
     ));
 }
 
 #[test]
 fn crash_1() {
     avx2_fuzzer_test_case(include_bytes!(
-        "fuzz/id:000001,sig:06,src:000006+000014,op:splice,rep:64"
+        "fuzz/id=000001,sig=06,src=000006+000014,op=splice,rep=64"
     ));
 }
 
 #[test]
 fn crash_2() {
     avx2_fuzzer_test_case(include_bytes!(
-        "fuzz/id:000002,sig:06,src:000008+000014,op:splice,rep:32"
+        "fuzz/id=000002,sig=06,src=000008+000014,op=splice,rep=32"
     ));
 }
 
@@ -93,21 +93,21 @@ fn crash_3() {
     // packed 32-bit integers; this was causing the upper bits of b to be lost. Switching
     // to _mm256_slli_epi64 (correctly treating b as a 64-bit field) solves the problem.
     avx2_fuzzer_test_case(include_bytes!(
-        "fuzz/id:000003,sig:06,src:000003,op:havoc,rep:64"
+        "fuzz/id=000003,sig=06,src=000003,op=havoc,rep=64"
     ));
 }
 
 #[test]
 fn crash_4() {
     avx2_fuzzer_test_case(include_bytes!(
-        "fuzz/id:000004,sig:06,src:000022+000005,op:splice,rep:32"
+        "fuzz/id=000004,sig=06,src=000022+000005,op=splice,rep=32"
     ));
 }
 
 #[test]
 fn crash_5() {
     avx2_fuzzer_test_case(include_bytes!(
-        "fuzz/id:000005,sig:06,src:000008+000007,op:splice,rep:128"
+        "fuzz/id=000005,sig=06,src=000008+000007,op=splice,rep=128"
     ));
 }
 
@@ -141,14 +141,14 @@ fn crash_6() {
     // fully carrying all bits. `Aligned130` is guaranteed to be a 130-bit integer, but is
     // not guaranteed to be an integer modulo 2^130 - 5.
     avx2_fuzzer_test_case(include_bytes!(
-        "fuzz/id:000006,sig:06,src:000005,op:havoc,rep:8"
+        "fuzz/id=000006,sig=06,src=000005,op=havoc,rep=8"
     ));
 }
 
 #[test]
 fn crash_7() {
     avx2_fuzzer_test_case(include_bytes!(
-        "fuzz/id:000007,sig:06,src:000024+000000,op:splice,rep:64"
+        "fuzz/id=000007,sig=06,src=000024+000000,op=splice,rep=64"
     ));
 }
 
@@ -181,6 +181,6 @@ fn crash_8() {
     // discarded. The fix was to always carry three times, to ensure that all potential
     // carry bits are carried.
     avx2_fuzzer_test_case(include_bytes!(
-        "fuzz/id:000008,sig:06,src:000019,time:165655+000011,op:splice,rep:128"
+        "fuzz/id=000008,sig=06,src=000019,time=165655+000011,op=splice,rep=128"
     ));
 }
