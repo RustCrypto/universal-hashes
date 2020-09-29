@@ -15,14 +15,13 @@
 // optimisations provided by Bhattacharyya and Sarkar. The latter require the message
 // length to be known, which is incompatible with the streaming API of UniversalHash.
 
+use core::convert::TryInto;
 use universal_hash::generic_array::GenericArray;
 
-use crate::{Block, Key, Tag, BLOCK_SIZE};
+use crate::{Block, Key, Tag};
 
 mod helpers;
 use self::helpers::*;
-
-const BLOCK_X4_SIZE: usize = BLOCK_SIZE * 4;
 
 #[derive(Clone)]
 struct Initialized {
@@ -37,7 +36,7 @@ pub(crate) struct State {
     r1: PrecomputedMultiplier,
     r2: PrecomputedMultiplier,
     initialized: Option<Initialized>,
-    cached_blocks: [u8; BLOCK_X4_SIZE],
+    cached_blocks: [Block; 4],
     num_cached_blocks: usize,
     partial_block: Option<Block>,
 }
@@ -56,7 +55,7 @@ impl State {
             r1,
             r2: r2.into(),
             initialized: None,
-            cached_blocks: [0u8; BLOCK_X4_SIZE],
+            cached_blocks: [Block::default(); 4],
             num_cached_blocks: 0,
             partial_block: None,
         }
@@ -76,9 +75,7 @@ impl State {
             return;
         }
 
-        self.cached_blocks
-            [self.num_cached_blocks * BLOCK_SIZE..(self.num_cached_blocks + 1) * BLOCK_SIZE]
-            .copy_from_slice(block);
+        self.cached_blocks[self.num_cached_blocks].copy_from_slice(block);
         if self.num_cached_blocks < 3 {
             self.num_cached_blocks += 1;
             return;
@@ -89,10 +86,10 @@ impl State {
         if let Some(inner) = &mut self.initialized {
             // P <-- R^4 * P + blocks
             inner.p =
-                (&inner.p * inner.r4).reduce() + Aligned4x130::from_blocks(&self.cached_blocks[..]);
+                (&inner.p * inner.r4).reduce() + Aligned4x130::from_blocks(&self.cached_blocks);
         } else {
             // Initialize the polynomial.
-            let p = Aligned4x130::from_blocks(&self.cached_blocks[..]);
+            let p = Aligned4x130::from_blocks(&self.cached_blocks);
 
             // Initialize the multiplier (used to merge down the polynomial during
             // finalization).
@@ -115,18 +112,18 @@ impl State {
 
         if self.num_cached_blocks >= 2 {
             // Compute 32 byte block (remaining data < 64 bytes)
-            let mut c = Aligned2x130::from_blocks(&data[0..BLOCK_SIZE * 2]);
+            let mut c = Aligned2x130::from_blocks(data[..2].try_into().unwrap());
             if let Some(p) = p {
                 c = c + p;
             }
             p = Some(c.mul_and_sum(self.r1, self.r2).reduce());
-            data = &data[BLOCK_SIZE * 2..];
+            data = &data[2..];
             self.num_cached_blocks -= 2;
         }
 
         if self.num_cached_blocks == 1 {
             // Compute 16 byte block (remaining data < 32 bytes)
-            let mut c = Aligned130::from_block(&data[0..BLOCK_SIZE]);
+            let mut c = Aligned130::from_block(&data[0]);
             if let Some(p) = p {
                 c = c + p;
             }
