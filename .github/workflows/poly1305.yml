@@ -85,4 +85,4 @@ jobs:
       - run: cargo test --target ${{ matrix.target }} --all-features --release
       - run: cargo test --target ${{ matrix.target }} --all-features --release
         env:
-          RUSTFLAGS: -Ctarget-cpu=haswell -Ctarget-feature=+avx2
+          RUSTFLAGS: -Ctarget-cpu=haswell -Ctarget-feature=+avx2 -Dwarnings
