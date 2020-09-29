@@ -10,7 +10,7 @@ a Message Authentication Code (MAC)
 documentation = "https://docs.rs/polyval"
 repository = "https://github.com/RustCrypto/universal-hashes"
 readme = "README.md"
-keywords = ["aes-gcm-siv", "crypto", "universal-hashing"]
+keywords = ["aes-gcm", "aes-gcm-siv", "crypto", "ghash", "universal-hashing"]
 categories = ["cryptography", "no-std"]
 edition = "2018"
 
