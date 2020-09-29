@@ -73,8 +73,13 @@ impl UniversalHash for Polyval {
 
     /// Get POLYVAL result (i.e. computed `S` field element)
     fn finalize(self) -> Tag {
-        let result = u128::from(self.S.0) | (u128::from(self.S.1) << 64);
-        Output::new(result.to_le_bytes().into())
+        let mut block = Block::default();
+
+        for (chunk, i) in block.chunks_mut(8).zip(&[self.S.0, self.S.1]) {
+            chunk.copy_from_slice(&i.to_le_bytes());
+        }
+
+        Output::new(block)
     }
 }
 
