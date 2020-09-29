@@ -38,7 +38,8 @@ jobs:
           toolchain: ${{ matrix.rust }}
           target: ${{ matrix.target }}
           override: true
-      - run: cargo build --no-default-features --release --target ${{ matrix.target }}
+      - run: cargo build --release --target ${{ matrix.target }}
+
   benches:
     runs-on: ubuntu-latest
     steps:
@@ -49,22 +50,39 @@ jobs:
           toolchain: nightly
           override: true
       - run: cargo build --benches
+
   test:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        rust:
-          - 1.41.0 # MSRV
-          - stable
+        include:
+          - rust: 1.41.0 # MSRV
+            target: i686-unknown-linux-gnu # 32-bit Linux
+            deps: sudo apt install gcc-multilib # 32-bit support packages
+          - rust: 1.41.0 # MSRV
+            target: x86_64-unknown-linux-gnu
+            deps: true
+          - rust: 1.41.0 # MSRV
+            target: x86_64-unknown-linux-gnu
+            deps: true
+          - rust: stable
+            target: i686-unknown-linux-gnu # 32-bit Linux
+            deps: sudo apt install gcc-multilib # 32-bit support packages
+          - rust: stable
+            target: x86_64-unknown-linux-gnu
+            deps: true
     steps:
-    - uses: actions/checkout@v1
-    - uses: actions-rs/toolchain@v1
-      with:
-        profile: minimal
-        toolchain: ${{ matrix.rust }}
-        override: true
-    - run: |
-        cargo check --all-features
-        cargo test --no-default-features
-        cargo test
-        cargo test --all-features
+      - uses: actions/checkout@v1
+      - uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: ${{ matrix.rust }}
+          target: ${{ matrix.target }}
+          override: true
+      - run: ${{ matrix.deps }}
+      - run: cargo check --target ${{ matrix.target }} --all-features
+      - run: cargo test --target ${{ matrix.target }} --release
+      - run: cargo test --target ${{ matrix.target }} --all-features --release
+      - run: cargo test --target ${{ matrix.target }} --all-features --release
+        env:
+          RUSTFLAGS: -Ctarget-cpu=haswell -Ctarget-feature=+avx2
