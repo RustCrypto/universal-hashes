@@ -20,8 +20,10 @@ In practice, Poly1305 is primarily combined with ciphers from the
 This crate has received one [security audit by NCC Group][7], with no significant
 findings. We would like to thank [MobileCoin][8] for funding the audit.
 
+NOTE: the audit predates the AVX2 backend, which has not yet been audited.
+
 All implementations contained in the crate are designed to execute in constant
-time, either by relying on hardware intrinsics (i.e. AVX2 on x86/x86_64), or
+time, either by relying on hardware intrinsics (e.g. AVX2 on x86/x86_64), or
 using a portable implementation which is only constant time on processors which
 implement constant-time multiplication.
 
