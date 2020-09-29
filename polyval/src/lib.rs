@@ -18,6 +18,12 @@
 //!   - x86(-64) CPU: `target-cpu=sandybridge` or newer
 //!   - SSE2 + SSE4.1: `target-feature=+sse2,+sse4.1`
 //!
+//! Example:
+//!
+//! ```text
+//! $ RUSTFLAGS="-Ctarget-cpu=native -Ctarget-feature=+sse2,+sse4.1" cargo bench
+//! ```
+//!
 //! If `RUSTFLAGS` are not provided, this crate will fall back to a much slower
 //! software-only implementation.
 //!
@@ -46,11 +52,45 @@
 #![doc(html_logo_url = "https://raw.githubusercontent.com/RustCrypto/meta/master/logo_small.png")]
 #![warn(missing_docs, rust_2018_idioms)]
 
-mod field;
-
 pub use universal_hash;
 
-use universal_hash::{consts::U16, NewUniversalHash, Output, UniversalHash};
+#[allow(unused_imports)]
+use cfg_if::cfg_if;
+
+#[cfg(not(all(
+    target_feature = "pclmulqdq",
+    target_feature = "sse2",
+    target_feature = "sse4.1",
+    any(target_arch = "x86", target_arch = "x86_64")
+)))]
+cfg_if! {
+    if #[cfg(target_pointer_width = "64")] {
+        mod u64_backend;
+        pub use u64_backend::Polyval;
+    } else {
+        mod u32_backend;
+        pub use u32_backend::Polyval;
+    }
+}
+
+#[cfg(all(
+    target_feature = "pclmulqdq",
+    target_feature = "sse2",
+    target_feature = "sse4.1",
+    any(target_arch = "x86", target_arch = "x86_64")
+))]
+mod clmul_backend;
+
+#[cfg(all(
+    target_feature = "pclmulqdq",
+    target_feature = "sse2",
+    target_feature = "sse4.1",
+    any(target_arch = "x86", target_arch = "x86_64")
+))]
+pub use clmul_backend::Polyval;
+
+/// Size of a POLYVAL block in bytes
+pub const BLOCK_SIZE: usize = 16;
 
 /// POLYVAL keys (16-bytes)
 pub type Key = universal_hash::Key<Polyval>;
@@ -60,67 +100,3 @@ pub type Block = universal_hash::Block<Polyval>;
 
 /// POLYVAL tags (16-bytes)
 pub type Tag = universal_hash::Output<Polyval>;
-
-/// **POLYVAL**: GHASH-like universal hash over GF(2^128).
-#[allow(non_snake_case)]
-#[derive(Clone)]
-#[repr(align(16))]
-pub struct Polyval {
-    /// GF(2^128) field element input blocks are multiplied by
-    H: field::Element,
-
-    /// Field element representing the computed universal hash
-    S: field::Element,
-}
-
-impl NewUniversalHash for Polyval {
-    type KeySize = U16;
-
-    /// Initialize POLYVAL with the given `H` field element
-    fn new(h: &Key) -> Self {
-        Self {
-            H: field::Element::from_bytes(h.clone().into()),
-            S: field::Element::default(),
-        }
-    }
-}
-
-impl UniversalHash for Polyval {
-    type BlockSize = U16;
-
-    /// Input a field element `X` to be authenticated
-    fn update(&mut self, x: &Block) {
-        let x = field::Element::from_bytes(x.clone().into());
-        self.S = (self.S + x) * self.H;
-    }
-
-    /// Input data into the universal hash function. If the length of the
-    /// data is not a multiple of the block size, the remaining data is
-    /// padded with zeros up to the `BlockSize`.
-    fn update_padded(&mut self, data: &[u8]) {
-        // NOTE: this code is identical to upstream, but copied into
-        // here as a performance hack.
-        let mut chunks = data.chunks_exact(16);
-        for chunk in &mut chunks {
-            self.update(Block::from_slice(chunk));
-        }
-
-        let rem = chunks.remainder();
-
-        if !rem.is_empty() {
-            let mut padded_block = Block::default();
-            padded_block[..rem.len()].copy_from_slice(rem);
-            self.update(&padded_block);
-        }
-    }
-
-    /// Reset internal state
-    fn reset(&mut self) {
-        self.S = field::Element::default();
-    }
-
-    /// Get POLYVAL result (i.e. computed `S` field element)
-    fn finalize(self) -> Tag {
-        Output::new(self.S.to_bytes().into())
-    }
-}

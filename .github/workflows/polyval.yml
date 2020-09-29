@@ -39,7 +39,27 @@ jobs:
           target: ${{ matrix.target }}
           override: true
       - run: cargo build --no-default-features --release --target ${{ matrix.target }}
-  test:
+
+  test_u32:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        rust:
+          - 1.41.0 # MSRV
+          - stable
+    steps:
+      - uses: actions/checkout@v1
+      - uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: ${{ matrix.rust }}
+          target: i686-unknown-linux-gnu
+          override: true
+      - run: sudo apt install gcc-multilib # 32-bit support
+      - run: cargo test --target i686-unknown-linux-gnu
+      - run: cargo test --target i686-unknown-linux-gnu --all-features
+
+  test_u64:
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -52,9 +72,25 @@ jobs:
       with:
         profile: minimal
         toolchain: ${{ matrix.rust }}
-    - run: |
-        cargo check --all-features
-        cargo test --no-default-features
-        cargo test
-        cargo test --all-features
-        cargo build --benches
+        override: true
+    - run: cargo check --all-features
+    - run: cargo test
+    - run: cargo test --all-features
+
+  test_clmul:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        rust:
+          - 1.41.0 # MSRV
+          - stable
+    steps:
+      - uses: actions/checkout@v1
+      - uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: ${{ matrix.rust }}
+          override: true
+      - run: cargo test
+        env:
+          RUSTFLAGS: -Ctarget-cpu=haswell -Ctarget-feature=+sse2,+sse4.1
