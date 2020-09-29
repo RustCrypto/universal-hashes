@@ -47,6 +47,7 @@ impl State {
     }
 
     /// Reset internal state
+    #[allow(dead_code)]
     pub(crate) fn reset(&mut self) {
         self.h = Default::default();
     }
