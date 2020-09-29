@@ -46,26 +46,6 @@ impl UniversalHash for Polyval {
         self.S = (self.S + x) * self.H;
     }
 
-    /// Input data into the universal hash function. If the length of the
-    /// data is not a multiple of the block size, the remaining data is
-    /// padded with zeros up to the `BlockSize`.
-    fn update_padded(&mut self, data: &[u8]) {
-        // NOTE: this code is identical to upstream, but copied into
-        // here as a performance hack.
-        let mut chunks = data.chunks_exact(16);
-        for chunk in &mut chunks {
-            self.update(Block::from_slice(chunk));
-        }
-
-        let rem = chunks.remainder();
-
-        if !rem.is_empty() {
-            let mut padded_block = Block::default();
-            padded_block[..rem.len()].copy_from_slice(rem);
-            self.update(&padded_block);
-        }
-    }
-
     /// Reset internal state
     fn reset(&mut self) {
         self.S = U64x2::default();
