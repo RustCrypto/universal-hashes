@@ -15,7 +15,7 @@ categories = ["cryptography", "no-std"]
 edition = "2018"
 
 [dependencies]
-cfg-if = "0.1"
+cfg-if = "1.0"
 universal-hash = { version = "0.4", default-features = false }
 zeroize = { version = "1", optional = true, default-features = false }
 
