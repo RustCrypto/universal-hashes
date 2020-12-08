@@ -45,7 +45,7 @@ impl State {
     /// Initialize Poly1305 [`State`] with the given key
     pub(crate) fn new(key: &Key) -> Self {
         // Prepare addition key and polynomial key.
-        let (k, r1) = prepare_keys(key);
+        let (k, r1) = unsafe { prepare_keys(key) };
 
         // Precompute R^2.
         let r2 = (r1 * r1).reduce();
@@ -68,7 +68,8 @@ impl State {
     }
 
     /// Compute a Poly1305 block
-    pub(crate) fn compute_block(&mut self, block: &Block, partial: bool) {
+    #[target_feature(enable = "avx2")]
+    pub(crate) unsafe fn compute_block(&mut self, block: &Block, partial: bool) {
         // We can cache a single partial block.
         if partial {
             assert!(self.partial_block.is_none());
@@ -101,7 +102,8 @@ impl State {
     }
 
     /// Finalize output producing a [`Tag`]
-    pub(crate) fn finalize(&mut self) -> Tag {
+    #[target_feature(enable = "avx2")]
+    pub(crate) unsafe fn finalize(&mut self) -> Tag {
         assert!(self.num_cached_blocks < 4);
         let mut data = &self.cached_blocks[..];
 

@@ -81,6 +81,7 @@ mod backend;
 #[cfg(all(
     any(target_arch = "x86", target_arch = "x86_64"),
     not(feature = "force-soft"),
+    target_feature = "avx2", // Fuzz tests bypass AVX2 autodetection code
     any(fuzzing, test)
 ))]
 mod fuzz;
@@ -177,6 +178,7 @@ impl Poly1305 {
 #[cfg(all(
     any(target_arch = "x86", target_arch = "x86_64"),
     not(feature = "force-soft"),
+    target_feature = "avx2", // Fuzz tests bypass AVX2 autodetection code
     any(fuzzing, test)
 ))]
 pub use crate::fuzz::fuzz_avx2;
