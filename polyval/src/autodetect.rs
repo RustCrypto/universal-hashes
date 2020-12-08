@@ -1,7 +1,7 @@
 //! Autodetection for (P)CLMUL(QDQ) CPU intrinsics on x86 CPUs, with fallback
 //! to the "soft" backend when it's unavailable.
 
-use crate::{backends, Block, Key};
+use crate::{backend, Block, Key};
 use universal_hash::{consts::U16, NewUniversalHash, Output, UniversalHash};
 
 cpuid_bool::new!(clmul_cpuid, "pclmulqdq", "sse4.1");
@@ -13,8 +13,8 @@ pub struct Polyval {
 }
 
 union Inner {
-    clmul: backends::clmul::Polyval,
-    soft: backends::soft::Polyval,
+    clmul: backend::clmul::Polyval,
+    soft: backend::soft::Polyval,
 }
 
 impl NewUniversalHash for Polyval {
@@ -26,11 +26,11 @@ impl NewUniversalHash for Polyval {
 
         let inner = if clmul_present {
             Inner {
-                clmul: backends::clmul::Polyval::new(h),
+                clmul: backend::clmul::Polyval::new(h),
             }
         } else {
             Inner {
-                soft: backends::soft::Polyval::new(h),
+                soft: backend::soft::Polyval::new(h),
             }
         };
 

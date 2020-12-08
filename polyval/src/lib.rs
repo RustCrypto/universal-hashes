@@ -54,7 +54,7 @@
 #![doc(html_logo_url = "https://raw.githubusercontent.com/RustCrypto/meta/master/logo_small.png")]
 #![warn(missing_docs, rust_2018_idioms)]
 
-mod backends;
+mod backend;
 
 pub use universal_hash;
 
@@ -74,7 +74,7 @@ pub use crate::autodetect::Polyval;
     any(target_arch = "x86", target_arch = "x86_64"),
     not(feature = "force-soft")
 )))]
-pub use crate::backends::soft::Polyval;
+pub use crate::backend::soft::Polyval;
 
 /// Size of a POLYVAL block in bytes
 pub const BLOCK_SIZE: usize = 16;
