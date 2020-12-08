@@ -5,7 +5,7 @@
 //!
 //! Copyright (c) 2016 Thomas Pornin <pornin@bolet.org>
 
-use crate::{Block, Key, Tag};
+use crate::{Block, Key};
 use core::{
     convert::TryInto,
     num::Wrapping,
@@ -17,6 +17,13 @@ use universal_hash::{consts::U16, NewUniversalHash, Output, UniversalHash};
 #[allow(non_snake_case)]
 #[derive(Clone)]
 #[repr(align(16))]
+#[cfg_attr(
+    all(
+        any(target_arch = "x86", target_arch = "x86_64"),
+        not(feature = "force-soft")
+    ),
+    derive(Copy)
+)] // TODO(tarcieri): switch to ManuallyDrop on MSRV 1.49+
 pub struct Polyval {
     /// GF(2^128) field element input blocks are multiplied by
     H: U64x2,
@@ -52,7 +59,7 @@ impl UniversalHash for Polyval {
     }
 
     /// Get POLYVAL result (i.e. computed `S` field element)
-    fn finalize(self) -> Tag {
+    fn finalize(self) -> Output<Self> {
         let mut block = Block::default();
 
         for (chunk, i) in block.chunks_mut(8).zip(&[self.S.0, self.S.1]) {
