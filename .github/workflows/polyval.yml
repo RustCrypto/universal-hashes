@@ -38,59 +38,108 @@ jobs:
           toolchain: ${{ matrix.rust }}
           target: ${{ matrix.target }}
           override: true
-      - run: cargo build --no-default-features --release --target ${{ matrix.target }}
+      - run: cargo build --target ${{ matrix.target }} --release
+      - run: cargo build --target ${{ matrix.target }} --release --features zeroize
 
-  test_u32:
+  # Tests for the portable software backend
+  soft:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        rust:
-          - 1.41.0 # MSRV
-          - stable
+        include:
+          # 32-bit Linux
+          - target: i686-unknown-linux-gnu
+            rust: 1.41.0 # MSRV
+            deps: sudo apt install gcc-multilib
+          - target: i686-unknown-linux-gnu
+            rust: stable
+            deps: sudo apt install gcc-multilib
+
+          # 64-bit Linux
+          - target: x86_64-unknown-linux-gnu
+            rust: 1.41.0 # MSRV
+          - target: x86_64-unknown-linux-gnu
+            rust: stable
     steps:
       - uses: actions/checkout@v1
       - uses: actions-rs/toolchain@v1
         with:
-          profile: minimal
           toolchain: ${{ matrix.rust }}
-          target: i686-unknown-linux-gnu
+          target: ${{ matrix.target }}
+          profile: minimal
           override: true
-      - run: sudo apt install gcc-multilib # 32-bit support
-      - run: cargo test --target i686-unknown-linux-gnu
-      - run: cargo test --target i686-unknown-linux-gnu --all-features
+      - run: ${{ matrix.deps }}
+      - run: cargo check --target ${{ matrix.target }} --all-features
+      - run: cargo test --target ${{ matrix.target }} --release
+      - run: cargo test --target ${{ matrix.target }} --release --features std
+      - run: cargo test --target ${{ matrix.target }} --release --features zeroize
+      - run: cargo test --target ${{ matrix.target }} --release --all-features
 
-  test_u64:
+  # Tests for the CLMUL backend
+  clmul:
     runs-on: ubuntu-latest
+    env:
+      RUSTFLAGS: -Ctarget-cpu=haswell -Ctarget-feature=+sse2,+sse4.1
     strategy:
       matrix:
-        rust:
-          - 1.41.0 # MSRV
-          - stable
-    steps:
-    - uses: actions/checkout@v1
-    - uses: actions-rs/toolchain@v1
-      with:
-        profile: minimal
-        toolchain: ${{ matrix.rust }}
-        override: true
-    - run: cargo check --all-features
-    - run: cargo test
-    - run: cargo test --all-features
+        include:
+          # 32-bit Linux
+          - target: i686-unknown-linux-gnu
+            rust: 1.41.0 # MSRV
+            deps: sudo apt install gcc-multilib
+          - target: i686-unknown-linux-gnu
+            rust: stable
+            deps: sudo apt install gcc-multilib
 
-  test_clmul:
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        rust:
-          - 1.41.0 # MSRV
-          - stable
+          # 64-bit Linux
+          - target: x86_64-unknown-linux-gnu
+            rust: 1.41.0 # MSRV
+          - target: x86_64-unknown-linux-gnu
+            rust: stable
     steps:
       - uses: actions/checkout@v1
       - uses: actions-rs/toolchain@v1
         with:
-          profile: minimal
           toolchain: ${{ matrix.rust }}
+          target: ${{ matrix.target }}
+          profile: minimal
           override: true
-      - run: cargo test
-        env:
-          RUSTFLAGS: -Ctarget-cpu=haswell -Ctarget-feature=+sse2,+sse4.1
+      - run: ${{ matrix.deps }}
+      - run: cargo check --target ${{ matrix.target }} --all-features
+      - run: cargo test --target ${{ matrix.target }}
+      - run: cargo test --target ${{ matrix.target }} --release --features std
+      - run: cargo test --target ${{ matrix.target }} --release --features zeroize
+      - run: cargo test --target ${{ matrix.target }} --release --all-features
+
+  # Cross-compiled tests
+  cross:
+    strategy:
+      matrix:
+        include:
+          # ARM64
+          - target: aarch64-unknown-linux-gnu
+            rust: 1.41.0 # MSRV
+          - target: aarch64-unknown-linux-gnu
+            rust: stable
+
+          # PPC32
+          - target: powerpc-unknown-linux-gnu
+            rust: 1.41.0 # MSRV
+          - target: powerpc-unknown-linux-gnu
+            rust: stable
+
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v1
+      - run: ${{ matrix.deps }}
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: ${{ matrix.rust }}
+          target: ${{ matrix.target }}
+          profile: minimal
+          override: true
+      - run: cargo install cross
+      - run: cross test --target ${{ matrix.target }} --release
+      - run: cross test --target ${{ matrix.target }} --release --features std
+      - run: cross test --target ${{ matrix.target }} --release --features zeroize
+      - run: cross test --target ${{ matrix.target }} --release --all-features
