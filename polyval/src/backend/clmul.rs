@@ -46,7 +46,7 @@ impl UniversalHash for Polyval {
     #[inline]
     fn update(&mut self, x: &Block) {
         unsafe {
-            mul(self, x);
+            self.mul(x);
         }
     }
 
@@ -63,66 +63,68 @@ impl UniversalHash for Polyval {
     }
 }
 
-#[inline]
-#[target_feature(enable = "pclmulqdq")]
-#[target_feature(enable = "sse4.1")]
-unsafe fn mul(polyval: &mut Polyval, x: &Block) {
-    let h = polyval.h;
+impl Polyval {
+    #[inline]
+    #[target_feature(enable = "pclmulqdq")]
+    #[target_feature(enable = "sse4.1")]
+    unsafe fn mul(&mut self, x: &Block) {
+        let h = self.h;
 
-    // `_mm_loadu_si128` performs an unaligned load
-    #[allow(clippy::cast_ptr_alignment)]
-    let x = _mm_loadu_si128(x.as_ptr() as *const __m128i);
-    let y = _mm_xor_si128(polyval.y, x);
+        // `_mm_loadu_si128` performs an unaligned load
+        #[allow(clippy::cast_ptr_alignment)]
+        let x = _mm_loadu_si128(x.as_ptr() as *const __m128i);
+        let y = _mm_xor_si128(self.y, x);
 
-    let h0 = h;
-    let h1 = _mm_shuffle_epi32(h, 0x0E);
-    let h2 = _mm_xor_si128(h0, h1);
-    let y0 = y;
+        let h0 = h;
+        let h1 = _mm_shuffle_epi32(h, 0x0E);
+        let h2 = _mm_xor_si128(h0, h1);
+        let y0 = y;
 
-    // Multiply values partitioned to 64-bit parts
-    let y1 = _mm_shuffle_epi32(y, 0x0E);
-    let y2 = _mm_xor_si128(y0, y1);
-    let t0 = _mm_clmulepi64_si128(y0, h0, 0x00);
-    let t1 = _mm_clmulepi64_si128(y, h, 0x11);
-    let t2 = _mm_clmulepi64_si128(y2, h2, 0x00);
-    let t2 = _mm_xor_si128(t2, _mm_xor_si128(t0, t1));
-    let v0 = t0;
-    let v1 = _mm_xor_si128(_mm_shuffle_epi32(t0, 0x0E), t2);
-    let v2 = _mm_xor_si128(t1, _mm_shuffle_epi32(t2, 0x0E));
-    let v3 = _mm_shuffle_epi32(t1, 0x0E);
+        // Multiply values partitioned to 64-bit parts
+        let y1 = _mm_shuffle_epi32(y, 0x0E);
+        let y2 = _mm_xor_si128(y0, y1);
+        let t0 = _mm_clmulepi64_si128(y0, h0, 0x00);
+        let t1 = _mm_clmulepi64_si128(y, h, 0x11);
+        let t2 = _mm_clmulepi64_si128(y2, h2, 0x00);
+        let t2 = _mm_xor_si128(t2, _mm_xor_si128(t0, t1));
+        let v0 = t0;
+        let v1 = _mm_xor_si128(_mm_shuffle_epi32(t0, 0x0E), t2);
+        let v2 = _mm_xor_si128(t1, _mm_shuffle_epi32(t2, 0x0E));
+        let v3 = _mm_shuffle_epi32(t1, 0x0E);
 
-    // Polynomial reduction
-    let v2 = xor5(
-        v2,
-        v0,
-        _mm_srli_epi64(v0, 1),
-        _mm_srli_epi64(v0, 2),
-        _mm_srli_epi64(v0, 7),
-    );
+        // Polynomial reduction
+        let v2 = xor5(
+            v2,
+            v0,
+            _mm_srli_epi64(v0, 1),
+            _mm_srli_epi64(v0, 2),
+            _mm_srli_epi64(v0, 7),
+        );
 
-    let v1 = xor4(
-        v1,
-        _mm_slli_epi64(v0, 63),
-        _mm_slli_epi64(v0, 62),
-        _mm_slli_epi64(v0, 57),
-    );
+        let v1 = xor4(
+            v1,
+            _mm_slli_epi64(v0, 63),
+            _mm_slli_epi64(v0, 62),
+            _mm_slli_epi64(v0, 57),
+        );
 
-    let v3 = xor5(
-        v3,
-        v1,
-        _mm_srli_epi64(v1, 1),
-        _mm_srli_epi64(v1, 2),
-        _mm_srli_epi64(v1, 7),
-    );
+        let v3 = xor5(
+            v3,
+            v1,
+            _mm_srli_epi64(v1, 1),
+            _mm_srli_epi64(v1, 2),
+            _mm_srli_epi64(v1, 7),
+        );
 
-    let v2 = xor4(
-        v2,
-        _mm_slli_epi64(v1, 63),
-        _mm_slli_epi64(v1, 62),
-        _mm_slli_epi64(v1, 57),
-    );
+        let v2 = xor4(
+            v2,
+            _mm_slli_epi64(v1, 63),
+            _mm_slli_epi64(v1, 62),
+            _mm_slli_epi64(v1, 57),
+        );
 
-    polyval.y = _mm_unpacklo_epi64(v2, v3);
+        self.y = _mm_unpacklo_epi64(v2, v3);
+    }
 }
 
 #[inline(always)]
