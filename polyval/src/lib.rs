@@ -1,7 +1,7 @@
 //! **POLYVAL** is a GHASH-like universal hash over GF(2^128) useful for
 //! implementing [AES-GCM-SIV] or [AES-GCM/GMAC].
 //!
-//! From [RFC 8452 Section 3] which defines POLYVAL for use in AES-GCM_SIV:
+//! From [RFC 8452 Section 3] which defines POLYVAL for use in AES-GCM-SIV:
 //!
 //! > "POLYVAL, like GHASH (the authenticator in AES-GCM; ...), operates in a
 //! > binary field of size 2^128.  The field is defined by the irreducible
