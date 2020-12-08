@@ -54,7 +54,7 @@ dependencies = [
 
 [[package]]
 name = "polyval"
-version = "0.4.2"
+version = "0.4.3"
 dependencies = [
  "cpuid-bool",
  "hex-literal",

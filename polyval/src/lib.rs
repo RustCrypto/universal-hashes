@@ -11,21 +11,23 @@
 //! input data data by a field element `H`, POLYVAL can be used to authenticate
 //! the message sequence as powers (in the finite field sense) of `H`.
 //!
-//! ## Requirements
+//! ## Minimum Supported Rust Version
 //!
-//! - Rust 1.41.0 or newer
-//! - Recommended: `RUSTFLAGS` with `-Ctarget-cpu` and `-Ctarget-feature`:
-//!   - x86(-64) CPU: `target-cpu=sandybridge` or newer
-//!   - SSE2 + SSE4.1: `target-feature=+sse2,+sse4.1`
+//! Rust *1.41* or higher.
+//!
+//! In the future the minimum supported Rust version may be changed, but it
+//! be will be accompanied with a minor version bump.
+//!
+//! ## Performance Notes
+//!
+//! On x86(-64) platforms, set `target-cpu` in `RUSTFLAGS` to `sandybridge` or
+//! newer for optimum performance:
 //!
 //! Example:
 //!
 //! ```text
-//! $ RUSTFLAGS="-Ctarget-cpu=native -Ctarget-feature=+sse2,+sse4.1" cargo bench
+//! $ RUSTFLAGS="-Ctarget-cpu=sandybridge" cargo bench
 //! ```
-//!
-//! If `RUSTFLAGS` are not provided, this crate will fall back to a much slower
-//! software-only implementation.
 //!
 //! ## Relationship to GHASH
 //!
