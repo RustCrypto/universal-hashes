@@ -890,7 +890,7 @@ impl SpacedMultiplier4x130 {
 ///
 /// Unlike `Aligned2x130` which wraps two `Aligned130`s, this struct represents the four
 /// integers as 20 limbs spread across three 256-bit vectors.
-#[derive(Clone, Debug)]
+#[derive(Copy, Clone, Debug)]
 pub(super) struct Aligned4x130 {
     v0: __m256i,
     v1: __m256i,
@@ -1116,7 +1116,7 @@ impl Mul<PrecomputedMultiplier> for &Aligned4x130 {
             // x.v0 = [  x32,   x30,   x22,   x20,   x12,   x10,   x02,   x00]
             // y =    [5·r_4, 5·r_3, 5·r_2,   r_4,   r_3,   r_2,   r_1,   r_0]
             // z =    [5·r_1, 5·r_1, 5·r_1, 5·r_1, 5·r_1, 5·r_1, 5·r_1, 5·r_1]
-            let mut x = self.clone();
+            let mut x = *self;
             let y = other.a;
             let z = other.a_5;
 

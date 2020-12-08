@@ -48,6 +48,7 @@ dependencies = [
 name = "poly1305"
 version = "0.6.1"
 dependencies = [
+ "cpuid-bool",
  "hex-literal",
  "universal-hash",
  "zeroize",

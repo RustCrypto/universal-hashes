@@ -70,14 +70,32 @@ use universal_hash::{
     NewUniversalHash, UniversalHash,
 };
 
+#[cfg(all(
+    any(target_arch = "x86", target_arch = "x86_64"),
+    not(feature = "force-soft")
+))]
+mod autodetect;
+
 mod backend;
 
 #[cfg(all(
     any(target_arch = "x86", target_arch = "x86_64"),
-    target_feature = "avx2",
+    not(feature = "force-soft"),
     any(fuzzing, test)
 ))]
 mod fuzz;
+
+#[cfg(all(
+    any(target_arch = "x86", target_arch = "x86_64"),
+    not(feature = "force-soft")
+))]
+use crate::autodetect::State;
+
+#[cfg(not(all(
+    any(target_arch = "x86", target_arch = "x86_64"),
+    not(feature = "force-soft")
+)))]
+use crate::backend::soft::State;
 
 /// Size of a Poly1305 key
 pub const KEY_SIZE: usize = 32;
@@ -102,7 +120,7 @@ pub type Tag = universal_hash::Output<Poly1305>;
 /// For this reason it doesn't impl the `crypto_mac::Mac` trait.
 #[derive(Clone)]
 pub struct Poly1305 {
-    state: backend::State,
+    state: State,
 }
 
 impl NewUniversalHash for Poly1305 {
@@ -111,7 +129,7 @@ impl NewUniversalHash for Poly1305 {
     /// Initialize Poly1305 with the given key
     fn new(key: &Key) -> Poly1305 {
         Poly1305 {
-            state: backend::State::new(key),
+            state: State::new(key),
         }
     }
 }
@@ -158,7 +176,7 @@ impl Poly1305 {
 
 #[cfg(all(
     any(target_arch = "x86", target_arch = "x86_64"),
-    target_feature = "avx2",
+    not(feature = "force-soft"),
     any(fuzzing, test)
 ))]
 pub use crate::fuzz::fuzz_avx2;

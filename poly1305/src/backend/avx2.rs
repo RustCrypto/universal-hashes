@@ -23,14 +23,14 @@ use crate::{Block, Key, Tag};
 mod helpers;
 use self::helpers::*;
 
-#[derive(Clone)]
+#[derive(Copy, Clone)]
 struct Initialized {
     p: Aligned4x130,
     m: SpacedMultiplier4x130,
     r4: PrecomputedMultiplier,
 }
 
-#[derive(Clone)]
+#[derive(Copy, Clone)]
 pub(crate) struct State {
     k: AdditionKey,
     r1: PrecomputedMultiplier,
@@ -42,7 +42,7 @@ pub(crate) struct State {
 }
 
 impl State {
-    /// Initialize Poly1305 state with the given key
+    /// Initialize Poly1305 [`State`] with the given key
     pub(crate) fn new(key: &Key) -> Self {
         // Prepare addition key and polynomial key.
         let (k, r1) = prepare_keys(key);
@@ -67,6 +67,7 @@ impl State {
         self.num_cached_blocks = 0;
     }
 
+    /// Compute a Poly1305 block
     pub(crate) fn compute_block(&mut self, block: &Block, partial: bool) {
         // We can cache a single partial block.
         if partial {
@@ -99,6 +100,7 @@ impl State {
         }
     }
 
+    /// Finalize output producing a [`Tag`]
     pub(crate) fn finalize(&mut self) -> Tag {
         assert!(self.num_cached_blocks < 4);
         let mut data = &self.cached_blocks[..];
