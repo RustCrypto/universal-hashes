@@ -54,8 +54,25 @@
 
 mod backends;
 
-pub use crate::backends::Polyval;
 pub use universal_hash;
+
+#[cfg(all(
+    any(target_arch = "x86", target_arch = "x86_64"),
+    not(feature = "force-soft")
+))]
+mod autodetect;
+
+#[cfg(all(
+    any(target_arch = "x86", target_arch = "x86_64"),
+    not(feature = "force-soft")
+))]
+pub use crate::autodetect::Polyval;
+
+#[cfg(not(all(
+    any(target_arch = "x86", target_arch = "x86_64"),
+    not(feature = "force-soft")
+)))]
+pub use crate::backends::soft::Polyval;
 
 /// Size of a POLYVAL block in bytes
 pub const BLOCK_SIZE: usize = 16;
