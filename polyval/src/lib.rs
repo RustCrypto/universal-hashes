@@ -52,42 +52,10 @@
 #![doc(html_logo_url = "https://raw.githubusercontent.com/RustCrypto/meta/master/logo_small.png")]
 #![warn(missing_docs, rust_2018_idioms)]
 
+mod backends;
+
+pub use crate::backends::Polyval;
 pub use universal_hash;
-
-#[allow(unused_imports)]
-use cfg_if::cfg_if;
-
-#[cfg(not(all(
-    target_feature = "pclmulqdq",
-    target_feature = "sse2",
-    target_feature = "sse4.1",
-    any(target_arch = "x86", target_arch = "x86_64")
-)))]
-cfg_if! {
-    if #[cfg(target_pointer_width = "64")] {
-        mod u64_backend;
-        pub use u64_backend::Polyval;
-    } else {
-        mod u32_backend;
-        pub use u32_backend::Polyval;
-    }
-}
-
-#[cfg(all(
-    target_feature = "pclmulqdq",
-    target_feature = "sse2",
-    target_feature = "sse4.1",
-    any(target_arch = "x86", target_arch = "x86_64")
-))]
-mod clmul_backend;
-
-#[cfg(all(
-    target_feature = "pclmulqdq",
-    target_feature = "sse2",
-    target_feature = "sse4.1",
-    any(target_arch = "x86", target_arch = "x86_64")
-))]
-pub use clmul_backend::Polyval;
 
 /// Size of a POLYVAL block in bytes
 pub const BLOCK_SIZE: usize = 16;
