@@ -448,62 +448,9 @@ impl Unreduced130 {
     pub(super) fn reduce(self) -> Aligned130 {
         unsafe {
             // Starting with the following limb layout:
-            // x.v1 = [  _,   _,   _, t_4]
-            // x.v0 = [t_3, t_2, t_1, t_0]
-            let x = self;
-
-            // Carry chain
-            let adc = |v1: __m256i, v0: __m256i| -> (__m256i, __m256i) {
-                //   [t_3,       t_2 % 2^26, t_1 % 2^26, t_0 % 2^26]
-                // + [t_2 >> 26, t_1 >>  26, t_0 >>  26,  0        ]
-                // = [
-                //     t_3        + t_2 >> 26,
-                //     t_2 % 2^26 + t_1 >> 26,
-                //     t_1 % 2^26 + t_0 >> 26,
-                //     t_0 % 2^26,
-                // ]
-                let v0 = _mm256_add_epi64(
-                    _mm256_and_si256(v0, _mm256_set_epi64x(-1, 0x3ffffff, 0x3ffffff, 0x3ffffff)),
-                    _mm256_permute4x64_epi64(
-                        _mm256_srlv_epi64(v0, _mm256_set_epi64x(64, 26, 26, 26)),
-                        set02(2, 1, 0, 3),
-                    ),
-                );
-                //   [_, _, _, t_4]
-                // + [
-                //     (t_2 % 2^26 + t_1 >> 26) >> 26,
-                //     (t_1 % 2^26 + t_0 >> 26) >> 26,
-                //     (t_0 % 2^26            ) >> 26,
-                //     (t_3        + t_2 >> 26) >> 26,
-                // ]
-                // = [_, _, _, t_4 + (t_3 + t_2 >> 26) >> 26]
-                let v1 = _mm256_add_epi64(
-                    v1,
-                    _mm256_permute4x64_epi64(_mm256_srli_epi64(v0, 26), set02(2, 1, 0, 3)),
-                );
-                // [
-                //     (t_3 + t_2 >> 26) % 2^26,
-                //     t_2 % 2^26 + t_1 >> 26,
-                //     t_1 % 2^26 + t_0 >> 26,
-                //     t_0 % 2^26,
-                // ]
-                let chain = _mm256_and_si256(v0, _mm256_set_epi64x(0x3ffffff, -1, -1, -1));
-
-                (v1, chain)
-            };
-
-            // Reduction modulus 2^130-5
-            let red = |v1: __m256i, v0: __m256i| -> (__m256i, __m256i) {
-                // t = [0, 0, 0, t_4 >> 26]
-                let t = _mm256_srlv_epi64(v1, _mm256_set_epi64x(64, 64, 64, 26));
-                // v0 + 5·t = [t_3, t_2, t_1, t_0 + 5·(t_4 >> 26)]
-                let red_0 = _mm256_add_epi64(_mm256_add_epi64(v0, t), _mm256_slli_epi64(t, 2));
-                // [0, 0, 0, t_4 % 2^26]
-                let red_1 = _mm256_and_si256(v1, _mm256_set_epi64x(0, 0, 0, 0x3ffffff));
-                (red_1, red_0)
-            };
-
-            let (red_1, red_0) = adc(x.v1, x.v0);
+            // self.v1 = [  _,   _,   _, t_4]
+            // self.v0 = [t_3, t_2, t_1, t_0]
+            let (red_1, red_0) = adc(self.v1, self.v0);
             let (red_1, red_0) = red(red_1, red_0);
             let (red_1, red_0) = adc(red_1, red_0);
 
@@ -515,6 +462,59 @@ impl Unreduced130 {
             ))
         }
     }
+}
+
+/// Carry chain
+#[inline(always)]
+unsafe fn adc(v1: __m256i, v0: __m256i) -> (__m256i, __m256i) {
+    //   [t_3,       t_2 % 2^26, t_1 % 2^26, t_0 % 2^26]
+    // + [t_2 >> 26, t_1 >>  26, t_0 >>  26,  0        ]
+    // = [
+    //     t_3        + t_2 >> 26,
+    //     t_2 % 2^26 + t_1 >> 26,
+    //     t_1 % 2^26 + t_0 >> 26,
+    //     t_0 % 2^26,
+    // ]
+    let v0 = _mm256_add_epi64(
+        _mm256_and_si256(v0, _mm256_set_epi64x(-1, 0x3ffffff, 0x3ffffff, 0x3ffffff)),
+        _mm256_permute4x64_epi64(
+            _mm256_srlv_epi64(v0, _mm256_set_epi64x(64, 26, 26, 26)),
+            set02(2, 1, 0, 3),
+        ),
+    );
+    //   [_, _, _, t_4]
+    // + [
+    //     (t_2 % 2^26 + t_1 >> 26) >> 26,
+    //     (t_1 % 2^26 + t_0 >> 26) >> 26,
+    //     (t_0 % 2^26            ) >> 26,
+    //     (t_3        + t_2 >> 26) >> 26,
+    // ]
+    // = [_, _, _, t_4 + (t_3 + t_2 >> 26) >> 26]
+    let v1 = _mm256_add_epi64(
+        v1,
+        _mm256_permute4x64_epi64(_mm256_srli_epi64(v0, 26), set02(2, 1, 0, 3)),
+    );
+    // [
+    //     (t_3 + t_2 >> 26) % 2^26,
+    //     t_2 % 2^26 + t_1 >> 26,
+    //     t_1 % 2^26 + t_0 >> 26,
+    //     t_0 % 2^26,
+    // ]
+    let chain = _mm256_and_si256(v0, _mm256_set_epi64x(0x3ffffff, -1, -1, -1));
+
+    (v1, chain)
+}
+
+/// Reduction modulus 2^130-5
+#[inline(always)]
+unsafe fn red(v1: __m256i, v0: __m256i) -> (__m256i, __m256i) {
+    // t = [0, 0, 0, t_4 >> 26]
+    let t = _mm256_srlv_epi64(v1, _mm256_set_epi64x(64, 64, 64, 26));
+    // v0 + 5·t = [t_3, t_2, t_1, t_0 + 5·(t_4 >> 26)]
+    let red_0 = _mm256_add_epi64(_mm256_add_epi64(v0, t), _mm256_slli_epi64(t, 2));
+    // [0, 0, 0, t_4 % 2^26]
+    let red_1 = _mm256_and_si256(v1, _mm256_set_epi64x(0, 0, 0, 0x3ffffff));
+    (red_1, red_0)
 }
 
 /// A pair of `Aligned130`s.
