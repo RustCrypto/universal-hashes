@@ -88,10 +88,10 @@ impl Clone for State {
 impl Drop for State {
     fn drop(&mut self) {
         use zeroize::Zeroize;
-        if self.token.get() {
-            // TODO(tarcieri): SIMD zeroize support
-        } else {
-            unsafe { self.inner.soft.zeroize() }
-        }
+        const SIZE: usize = core::mem::size_of::<State>();
+
+        let inner_array = unsafe { &mut *(self as *mut State as *mut [u8; SIZE]) };
+
+        inner_slice.zeroize();
     }
 }
