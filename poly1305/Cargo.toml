@@ -15,8 +15,12 @@ edition = "2018"
 universal-hash = { version = "0.4", default-features = false }
 zeroize = { version = "1", optional = true, default-features = false }
 
+[target.'cfg(any(target_arch = "x86_64", target_arch = "x86"))'.dependencies]
+cpuid-bool = "0.2"
+
 [dev-dependencies]
 hex-literal = "0.2"
 
 [features]
+force-soft = []
 std = ["universal-hash/std"]

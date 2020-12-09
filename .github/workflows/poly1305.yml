@@ -39,6 +39,7 @@ jobs:
           target: ${{ matrix.target }}
           override: true
       - run: cargo build --target ${{ matrix.target }} --release
+      - run: cargo build --target ${{ matrix.target }} --release --features force-soft
 
   # Tests for the portable software backend
   soft:
@@ -70,6 +71,8 @@ jobs:
       - run: ${{ matrix.deps }}
       - run: cargo check --target ${{ matrix.target }} --all-features
       - run: cargo test --target ${{ matrix.target }} --release
+      - run: cargo test --target ${{ matrix.target }} --release --features force-soft
+      - run: cargo test --target ${{ matrix.target }} --release --features std
       - run: cargo test --target ${{ matrix.target }} --release --all-features
 
   # Tests for the AVX2 backend
@@ -104,6 +107,8 @@ jobs:
       - run: ${{ matrix.deps }}
       - run: cargo check --target ${{ matrix.target }} --all-features
       - run: cargo test --target ${{ matrix.target }} --release
+      - run: cargo test --target ${{ matrix.target }} --release --features force-soft
+      - run: cargo test --target ${{ matrix.target }} --release --features std
       - run: cargo test --target ${{ matrix.target }} --release --all-features
 
   # Cross-compiled tests
@@ -135,4 +140,6 @@ jobs:
           override: true
       - run: cargo install cross
       - run: cross test --target ${{ matrix.target }} --release
+      - run: cross test --target ${{ matrix.target }} --release --features force-soft
+      - run: cross test --target ${{ matrix.target }} --release --features std
       - run: cross test --target ${{ matrix.target }} --release --all-features
