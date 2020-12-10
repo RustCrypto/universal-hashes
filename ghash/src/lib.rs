@@ -97,6 +97,8 @@ impl UniversalHash for GHash {
     }
 }
 
+opaque_debug::implement!(GHash);
+
 /// The `mulX_POLYVAL()` function as defined in [RFC 8452 Appendix A][1].
 /// Performs a doubling (a.k.a. "multiply by x") over GF(2^128).
 /// This is useful for implementing GHASH in terms of POLYVAL.

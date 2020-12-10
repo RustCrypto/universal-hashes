@@ -15,6 +15,7 @@ categories = ["cryptography", "no-std"]
 edition = "2018"
 
 [dependencies]
+opaque-debug = "0.3"
 universal-hash = { version = "0.4", default-features = false }
 zeroize = { version = "1", optional = true, default-features = false }
 
