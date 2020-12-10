@@ -89,9 +89,7 @@ impl Drop for State {
     fn drop(&mut self) {
         use zeroize::Zeroize;
         const SIZE: usize = core::mem::size_of::<State>();
-
-        let inner_array = unsafe { &mut *(self as *mut State as *mut [u8; SIZE]) };
-
-        inner_slice.zeroize();
+        let state = unsafe { &mut *(self as *mut State as *mut [u8; SIZE]) };
+        state.zeroize();
     }
 }
