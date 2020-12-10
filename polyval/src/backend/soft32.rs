@@ -25,6 +25,8 @@
 //! In other words, if we bit-reverse (over 32 bits) the operands, then we
 //! bit-reverse (over 64 bits) the result.
 
+// TODO(tarcieri): fix zeroize when we switch to ManuallyDrop on MSRV 1.49+
+
 use crate::{Block, Key};
 use core::{
     convert::TryInto,

@@ -5,6 +5,8 @@
 //!
 //! Copyright (c) 2016 Thomas Pornin <pornin@bolet.org>
 
+// TODO(tarcieri): fix zeroize when we switch to ManuallyDrop on MSRV 1.49+
+
 use crate::{Block, Key};
 use core::{
     convert::TryInto,
