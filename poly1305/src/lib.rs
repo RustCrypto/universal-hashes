@@ -56,12 +56,6 @@ use universal_hash::{
     NewUniversalHash, UniversalHash,
 };
 
-#[cfg(all(
-    any(target_arch = "x86", target_arch = "x86_64"),
-    not(feature = "force-soft")
-))]
-mod autodetect;
-
 mod backend;
 
 #[cfg(all(
@@ -76,7 +70,7 @@ mod fuzz;
     any(target_arch = "x86", target_arch = "x86_64"),
     not(feature = "force-soft")
 ))]
-use crate::autodetect::State;
+use crate::backend::autodetect::State;
 
 #[cfg(not(all(
     any(target_arch = "x86", target_arch = "x86_64"),
