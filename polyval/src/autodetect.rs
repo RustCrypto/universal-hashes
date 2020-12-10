@@ -90,3 +90,13 @@ impl Clone for Polyval {
         }
     }
 }
+
+#[cfg(feature = "zeroize")]
+impl Drop for Polyval {
+    fn drop(&mut self) {
+        use zeroize::Zeroize;
+        const SIZE: usize = core::mem::size_of::<Polyval>();
+        let state = unsafe { &mut *(self as *mut Polyval as *mut [u8; SIZE]) };
+        state.zeroize();
+    }
+}
