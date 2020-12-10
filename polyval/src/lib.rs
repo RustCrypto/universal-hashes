@@ -62,13 +62,7 @@ pub use universal_hash;
     any(target_arch = "x86", target_arch = "x86_64"),
     not(feature = "force-soft")
 ))]
-mod autodetect;
-
-#[cfg(all(
-    any(target_arch = "x86", target_arch = "x86_64"),
-    not(feature = "force-soft")
-))]
-pub use crate::autodetect::Polyval;
+pub use crate::backend::autodetect::Polyval;
 
 #[cfg(not(all(
     any(target_arch = "x86", target_arch = "x86_64"),
