@@ -161,6 +161,8 @@ impl Poly1305 {
     }
 }
 
+opaque_debug::implement!(Poly1305);
+
 #[cfg(all(
     any(target_arch = "x86", target_arch = "x86_64"),
     not(feature = "force-soft"),

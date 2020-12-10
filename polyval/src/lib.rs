@@ -76,6 +76,8 @@ pub use crate::autodetect::Polyval;
 )))]
 pub use crate::backend::soft::Polyval;
 
+opaque_debug::implement!(Polyval);
+
 /// Size of a POLYVAL block in bytes
 pub const BLOCK_SIZE: usize = 16;
 
