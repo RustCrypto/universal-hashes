@@ -19,20 +19,6 @@
 //! Minimum supported Rust version may be changed in the future, but such
 //! changes will be accompanied with a minor version bump.
 //!
-//! # Performance Notes
-//!
-//! For maximum performance on x86/x86_64 CPUs, we recommend enabling the AVX2
-//! backend using the following `RUSTFLAGS`:
-//!
-//! - x86(-64) CPU: `target-cpu=haswell` or newer
-//! - AVX2: `target-feature=+avx2`
-//!
-//! Example:
-//!
-//! ```text
-//! $ RUSTFLAGS="-Ctarget-cpu=haswell -Ctarget-feature=+avx2" cargo bench
-//! ```
-//!
 //! # Security Notes
 //!
 //! This crate has received one [security audit by NCC Group][audit], with no
