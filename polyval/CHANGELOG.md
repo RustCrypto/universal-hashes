@@ -7,8 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## 0.4.4 (2020-12-26)
 ### Added
+- `Debug` impl using `opaque-debug` ([#105])
 - `mulx` feature ([#107])
 
+[#105]: https://github.com/RustCrypto/universal-hashes/pull/105
 [#107]: https://github.com/RustCrypto/universal-hashes/pull/107
 
 ## 0.4.3 (2020-12-08)
