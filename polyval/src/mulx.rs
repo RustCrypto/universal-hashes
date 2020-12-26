@@ -1,6 +1,6 @@
-/// The `mulX_POLYVAL()` function.
+//! The `mulX_POLYVAL()` function.
+
 use crate::Block;
-use core::convert::TryInto;
 
 /// The `mulX_POLYVAL()` function as defined in [RFC 8452 Appendix A][1].
 ///
@@ -10,20 +10,12 @@ use core::convert::TryInto;
 /// [1]: https://tools.ietf.org/html/rfc8452#appendix-A
 #[cfg_attr(docsrs, doc(cfg(feature = "mulx")))]
 pub fn mulx(block: &Block) -> Block {
-    let mut v0 = u64::from_le_bytes(block[..8].try_into().unwrap());
-    let mut v1 = u64::from_le_bytes(block[8..].try_into().unwrap());
+    let mut v = u128::from_le_bytes((*block).into());
+    let v_hi = v >> 127;
 
-    let v0h = v0 >> 63;
-    let v1h = v1 >> 63;
-
-    v0 <<= 1;
-    v1 <<= 1;
-    v0 ^= v1h;
-    v1 ^= v0h ^ (v1h << 63) ^ (v1h << 62) ^ (v1h << 57);
-
-    (u128::from(v0) | (u128::from(v1) << 64))
-        .to_le_bytes()
-        .into()
+    v <<= 1;
+    v ^= v_hi ^ (v_hi << 127) ^ (v_hi << 126) ^ (v_hi << 121);
+    v.to_le_bytes().into()
 }
 
 #[cfg(test)]
