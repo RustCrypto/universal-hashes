@@ -1,10 +1,8 @@
-#[macro_use]
-extern crate hex_literal;
-
 use ghash::{
     universal_hash::{NewUniversalHash, UniversalHash},
     GHash,
 };
+use hex_literal::hex;
 
 //
 // Test vectors for GHASH from RFC 8452 Appendix A
