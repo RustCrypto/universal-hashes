@@ -1,8 +1,8 @@
 [package]
 name = "ghash"
-version = "0.3.0"
+version = "0.3.1"
 authors = ["RustCrypto Developers"]
-license = "MIT OR Apache-2.0"
+license = "Apache-2.0 OR MIT"
 description = """
 Universal hash over GF(2^128) useful for constructing a Message Authentication Code (MAC),
 as in the AES-GCM authenticated encryption cipher.
