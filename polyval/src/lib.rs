@@ -51,24 +51,21 @@
 //! [RFC 8452 Appendix A]: https://tools.ietf.org/html/rfc8452#appendix-A
 
 #![no_std]
+#![cfg_attr(docsrs, feature(doc_cfg))]
 #![doc(html_logo_url = "https://raw.githubusercontent.com/RustCrypto/meta/master/logo_small.png")]
 #![warn(missing_docs, rust_2018_idioms)]
 
 mod backend;
 
+#[cfg(feature = "mulx")]
+mod mulx;
+
 pub use universal_hash;
 
-#[cfg(all(
-    any(target_arch = "x86", target_arch = "x86_64"),
-    not(feature = "force-soft")
-))]
-pub use crate::backend::autodetect::Polyval;
+pub use crate::backend::Polyval;
 
-#[cfg(not(all(
-    any(target_arch = "x86", target_arch = "x86_64"),
-    not(feature = "force-soft")
-)))]
-pub use crate::backend::soft::Polyval;
+#[cfg(feature = "mulx")]
+pub use crate::mulx::mulx;
 
 opaque_debug::implement!(Polyval);
 

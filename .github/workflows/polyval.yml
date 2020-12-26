@@ -40,10 +40,11 @@ jobs:
           override: true
       - run: cargo build --target ${{ matrix.target }} --release
       - run: cargo build --target ${{ matrix.target }} --release --features force-soft
+      - run: cargo build --target ${{ matrix.target }} --release --features mulx
       - run: cargo build --target ${{ matrix.target }} --release --features zeroize
-      - run: cargo build --target ${{ matrix.target }} --release --features force-soft,zeroize
+      - run: cargo build --target ${{ matrix.target }} --release --features force-soft,mulx,zeroize
 
-  # Tests for the portable software backend
+  # Tests with CPU feature detection enabled
   autodetect:
     runs-on: ubuntu-latest
     strategy:
@@ -52,10 +53,10 @@ jobs:
           # 32-bit Linux
           - target: i686-unknown-linux-gnu
             rust: 1.41.0 # MSRV
-            deps: sudo apt install gcc-multilib
+            deps: sudo apt update && sudo apt install gcc-multilib
           - target: i686-unknown-linux-gnu
             rust: stable
-            deps: sudo apt install gcc-multilib
+            deps: sudo apt update && sudo apt install gcc-multilib
 
           # 64-bit Linux
           - target: x86_64-unknown-linux-gnu
@@ -73,11 +74,12 @@ jobs:
       - run: ${{ matrix.deps }}
       - run: cargo check --target ${{ matrix.target }} --all-features
       - run: cargo test --target ${{ matrix.target }} --release
+      - run: cargo test --target ${{ matrix.target }} --release --features mulx
       - run: cargo test --target ${{ matrix.target }} --release --features std
       - run: cargo test --target ${{ matrix.target }} --release --features zeroize
       - run: cargo test --target ${{ matrix.target }} --release --features std,zeroize
 
-  # Tests for the CLMUL backend
+  # Tests for the CLMUL backend (forced)
   clmul:
     runs-on: ubuntu-latest
     env:
@@ -88,10 +90,10 @@ jobs:
           # 32-bit Linux
           - target: i686-unknown-linux-gnu
             rust: 1.41.0 # MSRV
-            deps: sudo apt install gcc-multilib
+            deps: sudo apt update && sudo apt install gcc-multilib
           - target: i686-unknown-linux-gnu
             rust: stable
-            deps: sudo apt install gcc-multilib
+            deps: sudo apt update && sudo apt install gcc-multilib
 
           # 64-bit Linux
           - target: x86_64-unknown-linux-gnu
@@ -110,11 +112,12 @@ jobs:
       - run: cargo check --target ${{ matrix.target }} --all-features
       - run: cargo test --target ${{ matrix.target }} --release
       - run: cargo test --target ${{ matrix.target }} --release --features force-soft
+      - run: cargo test --target ${{ matrix.target }} --release --features mulx
       - run: cargo test --target ${{ matrix.target }} --release --features std
       - run: cargo test --target ${{ matrix.target }} --release --features zeroize
       - run: cargo test --target ${{ matrix.target }} --release --all-features
 
-  # Tests for the portable software backend
+  # Tests for the portable software backend (forced)
   soft:
     runs-on: ubuntu-latest
     strategy:
@@ -123,10 +126,10 @@ jobs:
           # 32-bit Linux
           - target: i686-unknown-linux-gnu
             rust: 1.41.0 # MSRV
-            deps: sudo apt install gcc-multilib
+            deps: sudo apt update && sudo apt install gcc-multilib
           - target: i686-unknown-linux-gnu
             rust: stable
-            deps: sudo apt install gcc-multilib
+            deps: sudo apt update && sudo apt install gcc-multilib
 
           # 64-bit Linux
           - target: x86_64-unknown-linux-gnu
@@ -144,6 +147,7 @@ jobs:
       - run: ${{ matrix.deps }}
       - run: cargo check --target ${{ matrix.target }} --all-features
       - run: cargo test --target ${{ matrix.target }} --release --features force-soft
+      - run: cargo test --target ${{ matrix.target }} --release --features force-soft,mulx
       - run: cargo test --target ${{ matrix.target }} --release --features force-soft,std
       - run: cargo test --target ${{ matrix.target }} --release --features force-soft,zeroize
       - run: cargo test --target ${{ matrix.target }} --release --all-features
@@ -178,6 +182,7 @@ jobs:
       - run: cargo install cross
       - run: cross test --target ${{ matrix.target }} --release
       - run: cross test --target ${{ matrix.target }} --release --features force-soft
+      - run: cross test --target ${{ matrix.target }} --release --features mulx
       - run: cross test --target ${{ matrix.target }} --release --features std
       - run: cross test --target ${{ matrix.target }} --release --features zeroize
       - run: cross test --target ${{ matrix.target }} --release --all-features
