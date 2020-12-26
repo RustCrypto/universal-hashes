@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.4.5 (2020-12-26)
+### Changed
+- Use `u128` to impl `mulx` ([#111])
+
+[#111]: https://github.com/RustCrypto/universal-hashes/pull/111
+
 ## 0.4.4 (2020-12-26)
 ### Added
 - `Debug` impl using `opaque-debug` ([#105])
