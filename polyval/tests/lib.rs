@@ -1,6 +1,4 @@
-#[macro_use]
-extern crate hex_literal;
-
+use hex_literal::hex;
 use polyval::{
     universal_hash::{NewUniversalHash, UniversalHash},
     Polyval, BLOCK_SIZE,
