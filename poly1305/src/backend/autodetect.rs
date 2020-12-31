@@ -2,6 +2,7 @@
 //! to the "soft" backend when it's unavailable.
 
 use crate::{backend, Block, Key, Tag};
+use core::mem::ManuallyDrop;
 
 cpuid_bool::new!(avx2_cpuid, "avx2");
 
@@ -11,8 +12,8 @@ pub struct State {
 }
 
 union Inner {
-    avx2: backend::avx2::State,
-    soft: backend::soft::State,
+    avx2: ManuallyDrop<backend::avx2::State>,
+    soft: ManuallyDrop<backend::soft::State>,
 }
 
 impl State {
@@ -23,11 +24,11 @@ impl State {
 
         let inner = if avx2_present {
             Inner {
-                avx2: backend::avx2::State::new(key),
+                avx2: ManuallyDrop::new(backend::avx2::State::new(key)),
             }
         } else {
             Inner {
-                soft: backend::soft::State::new(key),
+                soft: ManuallyDrop::new(backend::soft::State::new(key)),
             }
         };
 
@@ -38,9 +39,9 @@ impl State {
     #[inline]
     pub(crate) fn reset(&mut self) {
         if self.token.get() {
-            unsafe { self.inner.avx2.reset() }
+            unsafe { (*self.inner.avx2).reset() }
         } else {
-            unsafe { self.inner.soft.reset() }
+            unsafe { (*self.inner.soft).reset() }
         }
     }
 
@@ -48,9 +49,9 @@ impl State {
     #[inline]
     pub(crate) fn compute_block(&mut self, block: &Block, partial: bool) {
         if self.token.get() {
-            unsafe { self.inner.avx2.compute_block(block, partial) }
+            unsafe { (*self.inner.avx2).compute_block(block, partial) }
         } else {
-            unsafe { self.inner.soft.compute_block(block, partial) }
+            unsafe { (*self.inner.soft).compute_block(block, partial) }
         }
     }
 
@@ -58,9 +59,9 @@ impl State {
     #[inline]
     pub(crate) fn finalize(&mut self) -> Tag {
         if self.token.get() {
-            unsafe { self.inner.avx2.finalize() }
+            unsafe { (*self.inner.avx2).finalize() }
         } else {
-            unsafe { self.inner.soft.finalize() }
+            unsafe { (*self.inner.soft).finalize() }
         }
     }
 }
@@ -69,11 +70,11 @@ impl Clone for State {
     fn clone(&self) -> Self {
         let inner = if self.token.get() {
             Inner {
-                avx2: unsafe { self.inner.avx2 },
+                avx2: ManuallyDrop::new(unsafe { (*self.inner.avx2).clone() }),
             }
         } else {
             Inner {
-                soft: unsafe { self.inner.soft },
+                soft: ManuallyDrop::new(unsafe { (*self.inner.soft).clone() }),
             }
         };
 

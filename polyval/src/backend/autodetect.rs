@@ -84,14 +84,12 @@ impl UniversalHash for Polyval {
 impl Clone for Polyval {
     fn clone(&self) -> Self {
         let inner = if self.token.get() {
-            let clmul = unsafe { (*self.inner.clmul).clone() };
             Inner {
-                clmul: ManuallyDrop::new(clmul),
+                clmul: ManuallyDrop::new(unsafe { (*self.inner.clmul).clone() }),
             }
         } else {
-            let soft = unsafe { (*self.inner.soft).clone() };
             Inner {
-                soft: ManuallyDrop::new(soft),
+                soft: ManuallyDrop::new(unsafe { (*self.inner.soft).clone() }),
             }
         };
 

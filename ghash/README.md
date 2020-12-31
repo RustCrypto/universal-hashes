@@ -49,7 +49,7 @@ dual licensed as above, without any additional terms or conditions.
 [docs-image]: https://docs.rs/ghash/badge.svg
 [docs-link]: https://docs.rs/ghash/
 [license-image]: https://img.shields.io/badge/license-Apache2.0/MIT-blue.svg
-[rustc-image]: https://img.shields.io/badge/rustc-1.41+-blue.svg
+[rustc-image]: https://img.shields.io/badge/rustc-1.49+-blue.svg
 [build-image]: https://github.com/RustCrypto/universal-hashes/workflows/ghash/badge.svg?branch=master&event=push
 [build-link]: https://github.com/RustCrypto/universal-hashes/actions?query=workflow%3Aghash
 
