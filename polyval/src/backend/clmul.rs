@@ -13,13 +13,6 @@ use core::arch::x86_64::*;
 
 /// **POLYVAL**: GHASH-like universal hash over GF(2^128).
 #[derive(Clone)]
-#[cfg_attr(
-    all(
-        any(target_arch = "x86", target_arch = "x86_64"),
-        not(feature = "force-soft")
-    ),
-    derive(Copy)
-)] // TODO(tarcieri): switch to ManuallyDrop on MSRV 1.49+
 pub struct Polyval {
     h: __m128i,
     y: __m128i,
@@ -124,6 +117,15 @@ impl Polyval {
         );
 
         self.y = _mm_unpacklo_epi64(v2, v3);
+    }
+}
+
+#[cfg(feature = "zeroize")]
+impl Drop for Polyval {
+    fn drop(&mut self) {
+        use zeroize::Zeroize;
+        self.h.zeroize();
+        self.y.zeroize();
     }
 }
 

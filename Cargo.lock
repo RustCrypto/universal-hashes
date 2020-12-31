@@ -17,7 +17,7 @@ dependencies = [
 
 [[package]]
 name = "ghash"
-version = "0.3.1"
+version = "0.4.0-pre"
 dependencies = [
  "hex-literal",
  "opaque-debug",
@@ -63,7 +63,7 @@ dependencies = [
 
 [[package]]
 name = "polyval"
-version = "0.4.5"
+version = "0.5.0-pre"
 dependencies = [
  "cpuid-bool",
  "hex-literal",

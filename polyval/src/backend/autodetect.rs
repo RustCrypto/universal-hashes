@@ -2,6 +2,7 @@
 //! to the "soft" backend when it's unavailable.
 
 use crate::{backend, Block, Key};
+use core::mem::ManuallyDrop;
 use universal_hash::{consts::U16, NewUniversalHash, Output, UniversalHash};
 
 cpuid_bool::new!(clmul_cpuid, "pclmulqdq", "sse4.1");
@@ -13,8 +14,8 @@ pub struct Polyval {
 }
 
 union Inner {
-    clmul: backend::clmul::Polyval,
-    soft: backend::soft::Polyval,
+    clmul: ManuallyDrop<backend::clmul::Polyval>,
+    soft: ManuallyDrop<backend::soft::Polyval>,
 }
 
 impl NewUniversalHash for Polyval {
@@ -26,11 +27,11 @@ impl NewUniversalHash for Polyval {
 
         let inner = if clmul_present {
             Inner {
-                clmul: backend::clmul::Polyval::new(h),
+                clmul: ManuallyDrop::new(backend::clmul::Polyval::new(h)),
             }
         } else {
             Inner {
-                soft: backend::soft::Polyval::new(h),
+                soft: ManuallyDrop::new(backend::soft::Polyval::new(h)),
             }
         };
 
@@ -45,27 +46,35 @@ impl UniversalHash for Polyval {
     #[inline]
     fn update(&mut self, x: &Block) {
         if self.token.get() {
-            unsafe { self.inner.clmul.update(x) }
+            unsafe { (*self.inner.clmul).update(x) }
         } else {
-            unsafe { self.inner.soft.update(x) }
+            unsafe { (*self.inner.soft).update(x) }
         }
     }
 
     /// Reset internal state
     fn reset(&mut self) {
         if self.token.get() {
-            unsafe { self.inner.clmul.reset() }
+            unsafe { (*self.inner.clmul).reset() }
         } else {
-            unsafe { self.inner.soft.reset() }
+            unsafe { (*self.inner.soft).reset() }
         }
     }
 
     /// Get POLYVAL result (i.e. computed `S` field element)
     fn finalize(self) -> Output<Self> {
         let output_bytes = if self.token.get() {
-            unsafe { self.inner.clmul.finalize().into_bytes() }
+            unsafe {
+                ManuallyDrop::into_inner(self.inner.clmul)
+                    .finalize()
+                    .into_bytes()
+            }
         } else {
-            unsafe { self.inner.soft.finalize().into_bytes() }
+            unsafe {
+                ManuallyDrop::into_inner(self.inner.soft)
+                    .finalize()
+                    .into_bytes()
+            }
         };
 
         Output::new(output_bytes)
@@ -75,12 +84,14 @@ impl UniversalHash for Polyval {
 impl Clone for Polyval {
     fn clone(&self) -> Self {
         let inner = if self.token.get() {
+            let clmul = unsafe { (*self.inner.clmul).clone() };
             Inner {
-                clmul: unsafe { self.inner.clmul.clone() },
+                clmul: ManuallyDrop::new(clmul),
             }
         } else {
+            let soft = unsafe { (*self.inner.soft).clone() };
             Inner {
-                soft: unsafe { self.inner.soft.clone() },
+                soft: ManuallyDrop::new(soft),
             }
         };
 
@@ -88,15 +99,5 @@ impl Clone for Polyval {
             inner,
             token: self.token,
         }
-    }
-}
-
-#[cfg(feature = "zeroize")]
-impl Drop for Polyval {
-    fn drop(&mut self) {
-        use zeroize::Zeroize;
-        const SIZE: usize = core::mem::size_of::<Polyval>();
-        let state = unsafe { &mut *(self as *mut Polyval as *mut [u8; SIZE]) };
-        state.zeroize();
     }
 }
