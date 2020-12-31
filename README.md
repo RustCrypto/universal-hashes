@@ -12,7 +12,7 @@ Collection of [Universal Hash Functions][1] written in pure Rust.
 
 ### Minimum Supported Rust Version
 
-All crates in this repository support **Rust 1.41** or higher.
+All crates in this repository support **Rust 1.49** or higher.
 
 In the future, we reserve the right to change the Minimum Supported Rust
 Version, but it will be done with the minor version bump.
@@ -39,7 +39,7 @@ dual licensed as above, without any additional terms or conditions.
 
 [//]: # (badges)
 
-[rustc-image]: https://img.shields.io/badge/rustc-1.41+-blue.svg
+[rustc-image]: https://img.shields.io/badge/rustc-1.49+-blue.svg
 
 [//]: # (crates)
 

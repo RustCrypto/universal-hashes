@@ -12,14 +12,10 @@
 // ...and was originally a port of Andrew Moons poly1305-donna
 // https://github.com/floodyberry/poly1305-donna
 
+use crate::{Block, Key, Tag};
 use core::convert::TryInto;
 
-#[cfg(feature = "zeroize")]
-use zeroize::Zeroize;
-
-use crate::{Block, Key, Tag};
-
-#[derive(Copy, Clone, Default)]
+#[derive(Clone, Default)]
 pub(crate) struct State {
     r: [u32; 5],
     h: [u32; 5],
@@ -237,8 +233,9 @@ impl State {
 }
 
 #[cfg(feature = "zeroize")]
-impl Zeroize for State {
-    fn zeroize(&mut self) {
+impl Drop for State {
+    fn drop(&mut self) {
+        use zeroize::Zeroize;
         self.r.zeroize();
         self.h.zeroize();
         self.pad.zeroize();

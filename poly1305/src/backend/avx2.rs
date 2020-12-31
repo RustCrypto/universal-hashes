@@ -30,7 +30,7 @@ struct Initialized {
     r4: PrecomputedMultiplier,
 }
 
-#[derive(Copy, Clone)]
+#[derive(Clone)]
 pub(crate) struct State {
     k: AdditionKey,
     r1: PrecomputedMultiplier,
