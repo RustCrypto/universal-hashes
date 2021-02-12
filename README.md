@@ -1,4 +1,4 @@
-# RustCrypto: Universal Hash Functions ![Rust Version][rustc-image]
+# RustCrypto: Universal Hash Functions ![Rust Version][rustc-image] [![dependency status][deps-image]][deps-link]
 
 Collection of [Universal Hash Functions][1] written in pure Rust.
 
@@ -40,6 +40,8 @@ dual licensed as above, without any additional terms or conditions.
 [//]: # (badges)
 
 [rustc-image]: https://img.shields.io/badge/rustc-1.49+-blue.svg
+[deps-image]: https://deps.rs/repo/github/RustCrypto/universal-hashes/status.svg
+[deps-link]: https://deps.rs/repo/github/RustCrypto/universal-hashes
 
 [//]: # (crates)
 
