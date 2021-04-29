@@ -4,7 +4,7 @@
 use crate::{backend, Block, Key, Tag};
 use core::mem::ManuallyDrop;
 
-cpuid_bool::new!(avx2_cpuid, "avx2");
+cpufeatures::new!(avx2_cpuid, "avx2");
 
 pub struct State {
     inner: Inner,
