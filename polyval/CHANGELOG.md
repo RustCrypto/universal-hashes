@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.5.0 (2021-04-29)
+### Changed
+- Use `ManuallyDrop` unions; MSRV 1.49+ ([#113], [#114])
+- Replace `cpuid-bool` with `cpufeatures` ([#116])
+
+### Removed
+- `mulx` feature: now always built-in ([#118])
+
+[#113]: https://github.com/RustCrypto/universal-hashes/pull/113
+[#114]: https://github.com/RustCrypto/universal-hashes/pull/114
+[#116]: https://github.com/RustCrypto/universal-hashes/pull/116
+[#118]: https://github.com/RustCrypto/universal-hashes/pull/118
+
 ## 0.4.5 (2020-12-26)
 ### Changed
 - Use `u128` to impl `mulx` ([#111])
