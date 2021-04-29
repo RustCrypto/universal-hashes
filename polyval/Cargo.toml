@@ -27,7 +27,6 @@ hex-literal = "0.2"
 
 [features]
 force-soft = [] # Disable support for hardware intrinsics (CLMUL)
-mulx = []
 std = ["universal-hash/std"]
 
 [package.metadata.docs.rs]
