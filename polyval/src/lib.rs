@@ -59,16 +59,10 @@
 #![warn(missing_docs, rust_2018_idioms)]
 
 mod backend;
-
-#[cfg(feature = "mulx")]
 mod mulx;
 
+pub use crate::{backend::Polyval, mulx::mulx};
 pub use universal_hash;
-
-pub use crate::backend::Polyval;
-
-#[cfg(feature = "mulx")]
-pub use crate::mulx::mulx;
 
 opaque_debug::implement!(Polyval);
 
