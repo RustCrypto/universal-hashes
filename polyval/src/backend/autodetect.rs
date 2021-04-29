@@ -5,7 +5,7 @@ use crate::{backend, Block, Key};
 use core::mem::ManuallyDrop;
 use universal_hash::{consts::U16, NewUniversalHash, Output, UniversalHash};
 
-cpuid_bool::new!(clmul_cpuid, "pclmulqdq", "sse4.1");
+cpufeatures::new!(clmul_cpuid, "pclmulqdq", "sse4.1");
 
 /// **POLYVAL**: GHASH-like universal hash over GF(2^128).
 pub struct Polyval {
