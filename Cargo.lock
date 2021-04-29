@@ -52,7 +52,7 @@ checksum = "624a8340c38c1b80fd549087862da4ba43e08858af025b236e509b6649fc13d5"
 
 [[package]]
 name = "poly1305"
-version = "0.7.0-pre"
+version = "0.7.0"
 dependencies = [
  "cpufeatures",
  "hex-literal",
