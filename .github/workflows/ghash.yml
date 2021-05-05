@@ -39,6 +39,7 @@ jobs:
           target: ${{ matrix.target }}
           override: true
       - run: cargo build --no-default-features --release --target ${{ matrix.target }}
+
   benches:
     runs-on: ubuntu-latest
     steps:
@@ -49,6 +50,7 @@ jobs:
           toolchain: nightly
           override: true
       - run: cargo build --benches
+
   test:
     runs-on: ubuntu-latest
     strategy:

@@ -24,3 +24,4 @@ hex-literal = "0.2"
 
 [features]
 std = ["polyval/std"]
+force-soft = ["polyval/force-soft"]
