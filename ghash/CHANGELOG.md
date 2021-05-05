@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.4.1 (2021-05-05)
+### Added
+- `force-soft` feature ([#121])
+
+[#121]: https://github.com/RustCrypto/universal-hashes/pull/121
+
 ## 0.4.0 (2021-04-29)
 ### Changed
 - Bump `polyval` crate dependency to v0.5; MSRV 1.49+ ([#114], [#119])
