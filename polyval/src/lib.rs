@@ -11,17 +11,40 @@
 //! input data data by a field element `H`, POLYVAL can be used to authenticate
 //! the message sequence as powers (in the finite field sense) of `H`.
 //!
-//! ## Minimum Supported Rust Version
-//!
-//! Rust *1.49* or higher.
+//! # Minimum Supported Rust Version
+//! Rust **1.49** or higher.
 //!
 //! In the future the minimum supported Rust version may be changed, but it
 //! be will be accompanied with a minor version bump.
 //!
-//! ## Performance Notes
+//! # Supported backends
+//! This crate provides multiple backends including a portable pure Rust
+//! backend as well as ones based on CPU intrinsics.
 //!
-//! On x86(-64) platforms, set `target-cpu` in `RUSTFLAGS` to `sandybridge` or
-//! newer for optimum performance:
+//! ## "soft" portable backend
+//! As a baseline implementation, this crate provides a constant-time pure Rust
+//! implementation based on [BearSSL], which is a straightforward and
+//! compact implementation which uses a clever but simple technique to avoid
+//! carry-spilling.
+//!
+//! ## ARMv8 intrinsics (`PMULL`, nightly-only)
+//! On `aarch64` targets including `aarch64-apple-darwin` (Apple M1) and Linux
+//! targets such as `aarch64-unknown-linux-gnu` and `aarch64-unknown-linux-musl`,
+//! support for using the `PMULL` instructions in ARMv8's Cryptography Extensions
+//! is available when using the nightly compiler, and can be enabled using the
+//! `armv8` crate feature.
+//!
+//! On Linux and macOS, when the `armv8` feature is enabled support for AES
+//! intrinsics is autodetected at runtime. On other platforms the `crypto`
+//! target feature must be enabled via RUSTFLAGS.
+//!
+//! ## `x86`/`x86_64` intrinsics (`CMLMUL`)
+//! By default this crate uses runtime detection on `i686`/`x86_64` targets
+//! in order to determine if `CLMUL` is available, and if it is not, it will
+//! fallback to using a constant-time software implementation.
+//!
+//! For optimal performance, set `target-cpu` in `RUSTFLAGS` to `sandybridge`
+//! or newer:
 //!
 //! Example:
 //!
@@ -29,8 +52,7 @@
 //! $ RUSTFLAGS="-Ctarget-cpu=sandybridge" cargo bench
 //! ```
 //!
-//! ## Relationship to GHASH
-//!
+//! # Relationship to GHASH
 //! POLYVAL can be thought of as the little endian equivalent of GHASH, which
 //! affords it a small performance advantage over GHASH when used on little
 //! endian architectures.
@@ -47,11 +69,16 @@
 //!
 //! [AES-GCM-SIV]: https://en.wikipedia.org/wiki/AES-GCM-SIV
 //! [AES-GCM/GMAC]: https://en.wikipedia.org/wiki/Galois/Counter_Mode
+//! [BearSSL]: https://www.bearssl.org/constanttime.html#ghash-for-gcm
 //! [RFC 8452 Section 3]: https://tools.ietf.org/html/rfc8452#section-3
 //! [RFC 8452 Appendix A]: https://tools.ietf.org/html/rfc8452#appendix-A
 
 #![no_std]
 #![cfg_attr(docsrs, feature(doc_cfg))]
+#![cfg_attr(
+    all(feature = "armv8", target_arch = "aarch64"),
+    feature(stdsimd, aarch64_target_feature)
+)]
 #![doc(
     html_logo_url = "https://raw.githubusercontent.com/RustCrypto/meta/master/logo.svg",
     html_favicon_url = "https://raw.githubusercontent.com/RustCrypto/meta/master/logo.svg"

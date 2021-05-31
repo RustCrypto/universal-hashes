@@ -1,6 +1,4 @@
-//! **POLYVAL**: GHASH-like universal hash over GF(2^128).
-//!
-//! CLMUL-accelerated implementation for modern x86/x86_64 CPUs
+//! Intel `CLMUL`-accelerated implementation for modern x86/x86_64 CPUs
 //! (i.e. Intel Sandy Bridge-compatible or newer)
 
 use crate::{Block, Key};
@@ -26,9 +24,10 @@ impl NewUniversalHash for Polyval {
         unsafe {
             // `_mm_loadu_si128` performs an unaligned load
             #[allow(clippy::cast_ptr_alignment)]
-            let h = _mm_loadu_si128(h.as_ptr() as *const __m128i);
-            let y = _mm_setzero_si128();
-            Self { h, y }
+            Self {
+                h: _mm_loadu_si128(h.as_ptr() as *const __m128i),
+                y: _mm_setzero_si128(),
+            }
         }
     }
 }

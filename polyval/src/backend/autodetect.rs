@@ -1,21 +1,31 @@
-//! Autodetection for (P)CLMUL(QDQ) CPU intrinsics on x86 CPUs, with fallback
-//! to the "soft" backend when it's unavailable.
+//! Autodetection for CPU intrinsics, with fallback to the "soft" backend when
+//! they are unavailable.
 
-use crate::{backend, Block, Key};
+use crate::{backend::soft, Block, Key};
 use core::mem::ManuallyDrop;
 use universal_hash::{consts::U16, NewUniversalHash, Output, UniversalHash};
 
-cpufeatures::new!(clmul_cpuid, "pclmulqdq", "sse4.1");
+#[cfg(all(target_arch = "aarch64", feature = "armv8"))]
+use super::pmull as intrinsics;
+
+#[cfg(any(target_arch = "x86_64", target_arch = "x86"))]
+use super::clmul as intrinsics;
+
+#[cfg(all(target_arch = "aarch64", feature = "armv8"))]
+cpufeatures::new!(mul_intrinsics, "aes"); // `aes` implies PMULL
+
+#[cfg(any(target_arch = "x86_64", target_arch = "x86"))]
+cpufeatures::new!(mul_intrinsics, "pclmulqdq", "sse4.1");
 
 /// **POLYVAL**: GHASH-like universal hash over GF(2^128).
 pub struct Polyval {
     inner: Inner,
-    token: clmul_cpuid::InitToken,
+    token: mul_intrinsics::InitToken,
 }
 
 union Inner {
-    clmul: ManuallyDrop<backend::clmul::Polyval>,
-    soft: ManuallyDrop<backend::soft::Polyval>,
+    intrinsics: ManuallyDrop<intrinsics::Polyval>,
+    soft: ManuallyDrop<soft::Polyval>,
 }
 
 impl NewUniversalHash for Polyval {
@@ -23,15 +33,15 @@ impl NewUniversalHash for Polyval {
 
     /// Initialize POLYVAL with the given `H` field element
     fn new(h: &Key) -> Self {
-        let (token, clmul_present) = clmul_cpuid::init_get();
+        let (token, has_intrinsics) = mul_intrinsics::init_get();
 
-        let inner = if clmul_present {
+        let inner = if has_intrinsics {
             Inner {
-                clmul: ManuallyDrop::new(backend::clmul::Polyval::new(h)),
+                intrinsics: ManuallyDrop::new(intrinsics::Polyval::new(h)),
             }
         } else {
             Inner {
-                soft: ManuallyDrop::new(backend::soft::Polyval::new(h)),
+                soft: ManuallyDrop::new(soft::Polyval::new(h)),
             }
         };
 
@@ -46,7 +56,7 @@ impl UniversalHash for Polyval {
     #[inline]
     fn update(&mut self, x: &Block) {
         if self.token.get() {
-            unsafe { (*self.inner.clmul).update(x) }
+            unsafe { (*self.inner.intrinsics).update(x) }
         } else {
             unsafe { (*self.inner.soft).update(x) }
         }
@@ -55,7 +65,7 @@ impl UniversalHash for Polyval {
     /// Reset internal state
     fn reset(&mut self) {
         if self.token.get() {
-            unsafe { (*self.inner.clmul).reset() }
+            unsafe { (*self.inner.intrinsics).reset() }
         } else {
             unsafe { (*self.inner.soft).reset() }
         }
@@ -65,7 +75,7 @@ impl UniversalHash for Polyval {
     fn finalize(self) -> Output<Self> {
         let output_bytes = if self.token.get() {
             unsafe {
-                ManuallyDrop::into_inner(self.inner.clmul)
+                ManuallyDrop::into_inner(self.inner.intrinsics)
                     .finalize()
                     .into_bytes()
             }
@@ -85,7 +95,7 @@ impl Clone for Polyval {
     fn clone(&self) -> Self {
         let inner = if self.token.get() {
             Inner {
-                clmul: ManuallyDrop::new(unsafe { (*self.inner.clmul).clone() }),
+                intrinsics: ManuallyDrop::new(unsafe { (*self.inner.intrinsics).clone() }),
             }
         } else {
             Inner {

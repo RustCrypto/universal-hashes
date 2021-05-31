@@ -180,4 +180,27 @@ jobs:
       - run: cross test --target ${{ matrix.target }} --release --features force-soft
       - run: cross test --target ${{ matrix.target }} --release --features std
       - run: cross test --target ${{ matrix.target }} --release --features zeroize
-      - run: cross test --target ${{ matrix.target }} --release --all-features
+
+  # ARMv8 cross-compiled tests for PMULL intrinsics (nightly-only)
+  armv8:
+    strategy:
+      matrix:
+        include:
+          - target: aarch64-unknown-linux-gnu
+            rust: nightly
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v1
+      - run: ${{ matrix.deps }}
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: ${{ matrix.rust }}
+          target: ${{ matrix.target }}
+          profile: minimal
+          override: true
+      - run: cargo install cross
+      - run: cross test --release --target ${{ matrix.target }} --features armv8
+      - run: cross test --release --target ${{ matrix.target }} --features armv8,force-soft
+      - run: cross test --release --target ${{ matrix.target }} --features armv8,std
+      - run: cross test --release --target ${{ matrix.target }} --features armv8,zeroize
+      - run: cross test --release --target ${{ matrix.target }} --all-features
