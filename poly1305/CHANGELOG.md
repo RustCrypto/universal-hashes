@@ -7,9 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## 0.7.1 (2021-07-20)
 ### Changed
-- Pin `zeroize` dependency to v1.3 ([#132])
+- Pin `zeroize` dependency to v1.3 ([#134])
 
-[#132]: https://github.com/RustCrypto/universal-hashes/pull/132
+[#134]: https://github.com/RustCrypto/universal-hashes/pull/134
 
 ## 0.7.0 (2021-04-29)
 ### Changed
