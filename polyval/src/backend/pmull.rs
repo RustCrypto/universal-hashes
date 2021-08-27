@@ -68,7 +68,6 @@ impl Polyval {
     // TODO(tarcieri): investigate ordering optimizations and fusions e.g.`fuse-crypto-eor`
     #[inline]
     #[target_feature(enable = "neon")]
-    #[target_feature(enable = "crypto")]
     unsafe fn mul(&mut self, x: &Block) {
         let h = self.h;
         let y = veorq_u8(self.y, vld1q_u8(x.as_ptr()));
