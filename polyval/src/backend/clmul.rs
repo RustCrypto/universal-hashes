@@ -58,7 +58,6 @@ impl UniversalHash for Polyval {
 impl Polyval {
     #[inline]
     #[target_feature(enable = "pclmulqdq")]
-    #[target_feature(enable = "sse4.1")]
     unsafe fn mul(&mut self, x: &Block) {
         let h = self.h;
 

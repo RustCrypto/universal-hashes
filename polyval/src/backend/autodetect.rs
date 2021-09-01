@@ -15,7 +15,7 @@ use super::clmul as intrinsics;
 cpufeatures::new!(mul_intrinsics, "aes"); // `aes` implies PMULL
 
 #[cfg(any(target_arch = "x86_64", target_arch = "x86"))]
-cpufeatures::new!(mul_intrinsics, "pclmulqdq", "sse4.1");
+cpufeatures::new!(mul_intrinsics, "pclmulqdq");
 
 /// **POLYVAL**: GHASH-like universal hash over GF(2^128).
 pub struct Polyval {
