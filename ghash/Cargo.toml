@@ -19,7 +19,7 @@ opaque-debug = "0.3"
 polyval = { version = "0.5.1", path = "../polyval" }
 
 # optional dependencies
-zeroize = { version = ">=1, <1.4", optional = true, default-features = false }
+zeroize = { version = ">=1, <1.6", optional = true, default-features = false }
 
 [dev-dependencies]
 hex-literal = "0.3"
