@@ -15,7 +15,6 @@
 // optimisations provided by Bhattacharyya and Sarkar. The latter require the message
 // length to be known, which is incompatible with the streaming API of UniversalHash.
 
-use core::convert::TryInto;
 use universal_hash::generic_array::GenericArray;
 
 use crate::{Block, Key, Tag};

@@ -8,9 +8,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Unreleased
 ### Changed
 - Remove `sse4.1` from CPU feature requirements for PCLMUL backend ([#143])
+- Relax `zeroize` constraints ([#147])
+- Upgrade to Rust 2021 edition ([#147])
 
 [#143]: https://github.com/RustCrypto/universal-hashes/pull/143
-
+[#147]: https://github.com/RustCrypto/universal-hashes/pull/147
 
 ## 0.5.3 (2021-08-27)
 ### Changed

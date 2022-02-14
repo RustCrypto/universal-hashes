@@ -25,7 +25,7 @@ jobs:
     strategy:
       matrix:
         rust:
-          - 1.49.0 # MSRV
+          - 1.56.1 # MSRV
           - stable
         target:
           - thumbv7em-none-eabi
@@ -50,7 +50,7 @@ jobs:
         include:
           # 32-bit Linux
           - target: i686-unknown-linux-gnu
-            rust: 1.49.0 # MSRV
+            rust: 1.56.1 # MSRV
             deps: sudo apt update && sudo apt install gcc-multilib
           - target: i686-unknown-linux-gnu
             rust: stable
@@ -58,7 +58,7 @@ jobs:
 
           # 64-bit Linux
           - target: x86_64-unknown-linux-gnu
-            rust: 1.49.0 # MSRV
+            rust: 1.56.1 # MSRV
           - target: x86_64-unknown-linux-gnu
             rust: stable
     steps:
@@ -86,7 +86,7 @@ jobs:
         include:
           # 32-bit Linux
           - target: i686-unknown-linux-gnu
-            rust: 1.49.0 # MSRV
+            rust: 1.56.1 # MSRV
             deps: sudo apt update && sudo apt install gcc-multilib
           - target: i686-unknown-linux-gnu
             rust: stable
@@ -94,7 +94,7 @@ jobs:
 
           # 64-bit Linux
           - target: x86_64-unknown-linux-gnu
-            rust: 1.49.0 # MSRV
+            rust: 1.56.1 # MSRV
           - target: x86_64-unknown-linux-gnu
             rust: stable
     steps:
@@ -121,7 +121,7 @@ jobs:
         include:
           # 32-bit Linux
           - target: i686-unknown-linux-gnu
-            rust: 1.49.0 # MSRV
+            rust: 1.56.1 # MSRV
             deps: sudo apt update && sudo apt install gcc-multilib
           - target: i686-unknown-linux-gnu
             rust: stable
@@ -129,7 +129,7 @@ jobs:
 
           # 64-bit Linux
           - target: x86_64-unknown-linux-gnu
-            rust: 1.49.0 # MSRV
+            rust: 1.56.1 # MSRV
           - target: x86_64-unknown-linux-gnu
             rust: stable
     steps:
@@ -154,13 +154,13 @@ jobs:
         include:
           # ARM64
           - target: aarch64-unknown-linux-gnu
-            rust: 1.49.0 # MSRV
+            rust: 1.56.1 # MSRV
           - target: aarch64-unknown-linux-gnu
             rust: stable
 
           # PPC32
           - target: powerpc-unknown-linux-gnu
-            rust: 1.49.0 # MSRV
+            rust: 1.56.1 # MSRV
           - target: powerpc-unknown-linux-gnu
             rust: stable
 
