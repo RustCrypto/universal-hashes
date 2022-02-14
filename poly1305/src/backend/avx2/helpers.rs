@@ -76,8 +76,6 @@ pub(super) struct Aligned130(pub(super) __m256i);
 
 impl fmt::Display for Aligned130 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        use core::convert::TryInto;
-
         let mut v0 = [0u8; 32];
         unsafe {
             _mm256_storeu_si256(v0.as_mut_ptr() as *mut _, self.0);
@@ -416,8 +414,6 @@ pub(super) struct Unreduced130 {
 
 impl fmt::Display for Unreduced130 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        use core::convert::TryInto;
-
         let mut v0 = [0u8; 32];
         let mut v1 = [0u8; 32];
         unsafe {
@@ -897,8 +893,6 @@ pub(super) struct Aligned4x130 {
 
 impl fmt::Display for Aligned4x130 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        use core::convert::TryInto;
-
         let mut v0 = [0u8; 32];
         let mut v1 = [0u8; 32];
         let mut v2 = [0u8; 32];
@@ -1577,8 +1571,6 @@ pub(super) struct Unreduced4x130 {
 
 impl fmt::Display for Unreduced4x130 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        use core::convert::TryInto;
-
         let mut v0 = [0u8; 32];
         let mut v1 = [0u8; 32];
         let mut v2 = [0u8; 32];

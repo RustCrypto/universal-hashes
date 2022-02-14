@@ -27,7 +27,6 @@
 
 use crate::{Block, Key};
 use core::{
-    convert::TryInto,
     num::Wrapping,
     ops::{Add, Mul},
 };

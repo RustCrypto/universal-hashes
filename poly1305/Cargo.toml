@@ -9,12 +9,13 @@ repository = "https://github.com/RustCrypto/universal-hashes"
 keywords = ["crypto", "chacha20", "mac", "salsa20", "universal-hashing"]
 categories = ["cryptography", "no-std"]
 readme = "README.md"
-edition = "2018"
+rust-version = "1.56"
+edition = "2021"
 
 [dependencies]
 opaque-debug = "0.3"
 universal-hash = { version = "0.4", default-features = false }
-zeroize = { version = "1.5", optional = true, default-features = false }
+zeroize = { version = "1", optional = true, default-features = false }
 
 [target.'cfg(any(target_arch = "x86_64", target_arch = "x86"))'.dependencies]
 cpufeatures = "0.2"

@@ -13,7 +13,6 @@
 // https://github.com/floodyberry/poly1305-donna
 
 use crate::{Block, Key, Tag};
-use core::convert::TryInto;
 
 #[derive(Clone, Default)]
 pub(crate) struct State {
