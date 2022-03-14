@@ -8,6 +8,7 @@ use crate::Block;
 /// This is useful for implementing GHASH in terms of POLYVAL.
 ///
 /// [1]: https://tools.ietf.org/html/rfc8452#appendix-A
+#[inline(always)]
 pub fn mulx(block: &Block) -> Block {
     let mut v = u128::from_le_bytes((*block).into());
     let v_hi = v >> 127;

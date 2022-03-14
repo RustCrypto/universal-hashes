@@ -29,7 +29,7 @@ dependencies = [
 
 [[package]]
 name = "ghash"
-version = "0.4.4"
+version = "0.5.0"
 dependencies = [
  "hex-literal",
  "opaque-debug",
@@ -57,7 +57,7 @@ checksum = "624a8340c38c1b80fd549087862da4ba43e08858af025b236e509b6649fc13d5"
 
 [[package]]
 name = "poly1305"
-version = "0.7.2"
+version = "0.8.0"
 dependencies = [
  "cpufeatures",
  "hex-literal",
@@ -68,12 +68,11 @@ dependencies = [
 
 [[package]]
 name = "polyval"
-version = "0.5.3"
+version = "0.6.0"
 dependencies = [
  "cfg-if",
  "cpufeatures",
  "hex-literal",
- "opaque-debug",
  "universal-hash",
  "zeroize",
 ]
@@ -111,3 +110,8 @@ name = "zeroize"
 version = "1.5.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7c88870063c39ee00ec285a2f8d6a966e5b6fb2becc4e8dac77ed0d370ed6006"
+
+[[patch.unused]]
+name = "universal-hash"
+version = "0.5.0"
+source = "git+https://github.com/RustCrypto/traits?branch=uhf/v0.5#5ab0d10f40e89c93592ffb3c5e628d0cad176ce3"

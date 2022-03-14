@@ -82,9 +82,11 @@
 #![doc(
     html_logo_url = "https://raw.githubusercontent.com/RustCrypto/media/8f1a9894/logo.svg",
     html_favicon_url = "https://raw.githubusercontent.com/RustCrypto/media/8f1a9894/logo.svg",
-    html_root_url = "https://docs.rs/polyval/0.5.3"
+    html_root_url = "https://docs.rs/polyval/0.6.0"
 )]
 #![warn(missing_docs, rust_2018_idioms)]
+
+use core::fmt;
 
 mod backend;
 mod mulx;
@@ -92,7 +94,11 @@ mod mulx;
 pub use crate::{backend::Polyval, mulx::mulx};
 pub use universal_hash;
 
-opaque_debug::implement!(Polyval);
+impl fmt::Debug for Polyval {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str("Polyval { ... }")
+    }
+}
 
 /// Size of a POLYVAL block in bytes
 pub const BLOCK_SIZE: usize = 16;
@@ -105,6 +111,3 @@ pub type Key = universal_hash::Key<Polyval>;
 
 /// POLYVAL blocks (16-bytes)
 pub type Block = universal_hash::Block<Polyval>;
-
-/// POLYVAL tags (16-bytes)
-pub type Tag = universal_hash::Output<Polyval>;
