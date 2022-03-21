@@ -3,6 +3,7 @@ name: poly1305
 on:
   pull_request:
     paths:
+      - ".github/workflows/poly1305.yml"
       - "poly1305/**"
       - "Cargo.*"
   push:

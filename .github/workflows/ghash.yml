@@ -3,6 +3,7 @@ name: ghash
 on:
   pull_request:
     paths:
+      - ".github/workflows/ghash.yml"
       - "ghash/**"
       - "Cargo.*"
   push:
