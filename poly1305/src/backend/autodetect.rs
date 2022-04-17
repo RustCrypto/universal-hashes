@@ -1,6 +1,8 @@
 //! Autodetection support for AVX2 CPU intrinsics on x86 CPUs, with fallback
 //! to the "soft" backend when it's unavailable.
 
+use universal_hash::{consts::U16, crypto_common::BlockSizeUser, UniversalHash};
+
 use crate::{backend, Block, Key, Tag};
 use core::mem::ManuallyDrop;
 
@@ -14,6 +16,10 @@ pub struct State {
 union Inner {
     avx2: ManuallyDrop<backend::avx2::State>,
     soft: ManuallyDrop<backend::soft::State>,
+}
+
+impl BlockSizeUser for State {
+    type BlockSize = U16;
 }
 
 impl State {
@@ -35,16 +41,6 @@ impl State {
         Self { inner, token }
     }
 
-    /// Reset internal state
-    #[inline]
-    pub(crate) fn reset(&mut self) {
-        if self.token.get() {
-            unsafe { (*self.inner.avx2).reset() }
-        } else {
-            unsafe { (*self.inner.soft).reset() }
-        }
-    }
-
     /// Compute a Poly1305 block
     #[inline]
     pub(crate) fn compute_block(&mut self, block: &Block, partial: bool) {
@@ -54,14 +50,27 @@ impl State {
             unsafe { (*self.inner.soft).compute_block(block, partial) }
         }
     }
+}
+
+impl UniversalHash for State {
+    fn update_with_backend(
+        &mut self,
+        f: impl universal_hash::UhfClosure<BlockSize = Self::BlockSize>,
+    ) {
+        if self.token.get() {
+            unsafe { f.call(&mut *self.inner.avx2) }
+        } else {
+            unsafe { f.call(&mut *self.inner.soft) }
+        }
+    }
 
     /// Finalize output producing a [`Tag`]
     #[inline]
-    pub(crate) fn finalize(&mut self) -> Tag {
+    fn finalize(mut self) -> Tag {
         if self.token.get() {
             unsafe { (*self.inner.avx2).finalize() }
         } else {
-            unsafe { (*self.inner.soft).finalize() }
+            unsafe { (*self.inner.soft).finalize_mut() }
         }
     }
 }

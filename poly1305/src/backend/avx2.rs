@@ -15,7 +15,12 @@
 // optimisations provided by Bhattacharyya and Sarkar. The latter require the message
 // length to be known, which is incompatible with the streaming API of UniversalHash.
 
-use universal_hash::generic_array::GenericArray;
+use universal_hash::{
+    consts::{U1, U16},
+    crypto_common::{BlockSizeUser, ParBlocksSizeUser},
+    generic_array::GenericArray,
+    UhfBackend,
+};
 
 use crate::{Block, Key, Tag};
 
@@ -58,12 +63,6 @@ impl State {
             num_cached_blocks: 0,
             partial_block: None,
         }
-    }
-
-    /// Reset internal state
-    pub(crate) fn reset(&mut self) {
-        self.initialized = None;
-        self.num_cached_blocks = 0;
     }
 
     /// Compute a Poly1305 block
@@ -152,6 +151,20 @@ impl State {
         };
         tag_int.write(tag.as_mut_slice());
 
-        Tag::new(tag)
+        tag
+    }
+}
+
+impl BlockSizeUser for State {
+    type BlockSize = U16;
+}
+
+impl ParBlocksSizeUser for State {
+    type ParBlocksSize = U1;
+}
+
+impl UhfBackend for State {
+    fn proc_block(&mut self, block: &Block) {
+        unsafe { self.compute_block(block, false) };
     }
 }

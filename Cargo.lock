@@ -18,6 +18,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "crypto-common"
+version = "0.1.4"
+source = "git+https://github.com/RustCrypto/traits?rev=74ce6e7a9ab1243f574b6c37e747a6e54c01f376#74ce6e7a9ab1243f574b6c37e747a6e54c01f376"
+dependencies = [
+ "generic-array",
+ "typenum",
+]
+
+[[package]]
 name = "generic-array"
 version = "0.14.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -86,17 +95,16 @@ checksum = "6bdef32e8150c2a081110b42772ffe7d7c9032b606bc226c8260fd97e0976601"
 
 [[package]]
 name = "typenum"
-version = "1.13.0"
+version = "1.15.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "879f6906492a7cd215bfa4cf595b600146ccfac0c79bcbd1f3000162af5e8b06"
+checksum = "dcf81ac59edc17cc8697ff311e8f5ef2d99fcbd9817b34cec66f90b6c3dfd987"
 
 [[package]]
 name = "universal-hash"
-version = "0.4.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9f214e8f697e925001e66ec2c6e37a4ef93f0f78c2eed7814394e10c62025b05"
+version = "0.5.0"
+source = "git+https://github.com/RustCrypto/traits?rev=74ce6e7a9ab1243f574b6c37e747a6e54c01f376#74ce6e7a9ab1243f574b6c37e747a6e54c01f376"
 dependencies = [
- "generic-array",
+ "crypto-common",
  "subtle",
 ]
 

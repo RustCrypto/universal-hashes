@@ -3,7 +3,7 @@
 extern crate test;
 
 use polyval::{
-    universal_hash::{NewUniversalHash, UniversalHash},
+    universal_hash::{KeyInit, UniversalHash},
     Polyval,
 };
 use test::Bencher;

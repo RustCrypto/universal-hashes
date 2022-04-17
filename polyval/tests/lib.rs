@@ -1,6 +1,6 @@
 use hex_literal::hex;
 use polyval::{
-    universal_hash::{NewUniversalHash, UniversalHash},
+    universal_hash::{KeyInit, UniversalHash},
     Polyval, BLOCK_SIZE,
 };
 
@@ -19,9 +19,8 @@ const POLYVAL_RESULT: [u8; BLOCK_SIZE] = hex!("f7a3b47b846119fae5b7866cf5e5b77e"
 #[test]
 fn polyval_test_vector() {
     let mut poly = Polyval::new(&H.into());
-    poly.update(&X_1.into());
-    poly.update(&X_2.into());
+    poly.update(&[X_1.into(), X_2.into()]);
 
     let result = poly.finalize();
-    assert_eq!(&POLYVAL_RESULT[..], result.into_bytes().as_slice());
+    assert_eq!(&POLYVAL_RESULT[..], result.as_slice());
 }
