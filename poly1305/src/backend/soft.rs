@@ -41,11 +41,6 @@ impl State {
         poly
     }
 
-    /// Reset internal state
-    pub(crate) fn reset(&mut self) {
-        self.h = Default::default();
-    }
-
     /// Compute a Poly1305 block
     pub(crate) fn compute_block(&mut self, block: &Block, partial: bool) {
         let hibit = if partial { 0 } else { 1 << 24 };
@@ -227,7 +222,7 @@ impl State {
         tag[8..12].copy_from_slice(&h2.to_le_bytes());
         tag[12..16].copy_from_slice(&h3.to_le_bytes());
 
-        Tag::new(tag)
+        tag.into()
     }
 }
 

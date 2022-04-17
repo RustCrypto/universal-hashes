@@ -25,12 +25,16 @@
 //! In other words, if we bit-reverse (over 32 bits) the operands, then we
 //! bit-reverse (over 64 bits) the result.
 
-use crate::{Block, Key};
+use crate::{Block, Key, Tag};
 use core::{
     num::Wrapping,
     ops::{Add, Mul},
 };
-use universal_hash::{consts::U16, NewUniversalHash, Output, UniversalHash};
+use universal_hash::{
+    consts::U16,
+    crypto_common::{BlockSizeUser, KeySizeUser, ParBlocksSizeUser},
+    KeyInit, UhfBackend, UniversalHash,
+};
 
 #[cfg(feature = "zeroize")]
 use zeroize::Zeroize;
@@ -45,9 +49,11 @@ pub struct Polyval {
     s: U32x4,
 }
 
-impl NewUniversalHash for Polyval {
+impl KeySizeUser for Polyval {
     type KeySize = U16;
+}
 
+impl KeyInit for Polyval {
     /// Initialize POLYVAL with the given `H` field element
     fn new(h: &Key) -> Self {
         Self {
@@ -57,22 +63,31 @@ impl NewUniversalHash for Polyval {
     }
 }
 
-impl UniversalHash for Polyval {
+impl BlockSizeUser for Polyval {
     type BlockSize = U16;
+}
 
-    /// Input a field element `X` to be authenticated
-    fn update(&mut self, x: &Block) {
+impl ParBlocksSizeUser for Polyval {
+    type ParBlocksSize = U16;
+}
+
+impl UhfBackend for Polyval {
+    fn proc_block(&mut self, x: &Block) {
         let x = U32x4::from(x);
         self.s = (self.s + x) * self.h;
     }
+}
 
-    /// Reset internal state
-    fn reset(&mut self) {
-        self.s = U32x4::default();
+impl UniversalHash for Polyval {
+    fn update_with_backend(
+        &mut self,
+        f: impl universal_hash::UhfClosure<BlockSize = Self::BlockSize>,
+    ) {
+        f.call(self);
     }
 
     /// Get POLYVAL result (i.e. computed `S` field element)
-    fn finalize(self) -> Output<Self> {
+    fn finalize(self) -> Tag {
         let mut block = Block::default();
 
         for (chunk, i) in block
@@ -82,7 +97,7 @@ impl UniversalHash for Polyval {
             chunk.copy_from_slice(&i.to_le_bytes());
         }
 
-        Output::new(block)
+        block.into()
     }
 }
 

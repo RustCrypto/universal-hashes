@@ -33,7 +33,11 @@
 pub use polyval::universal_hash;
 
 use polyval::Polyval;
-use universal_hash::{consts::U16, NewUniversalHash, UniversalHash};
+use universal_hash::{
+    consts::U16,
+    crypto_common::{BlockSizeUser, KeySizeUser, ParBlocksSizeUser},
+    KeyInit, UhfBackend, UniversalHash,
+};
 
 #[cfg(feature = "zeroize")]
 use zeroize::Zeroize;
@@ -45,7 +49,7 @@ pub type Key = universal_hash::Key<GHash>;
 pub type Block = universal_hash::Block<GHash>;
 
 /// GHASH tags (16-bytes)
-pub type Tag = universal_hash::Output<GHash>;
+pub type Tag = universal_hash::Block<GHash>;
 
 /// **GHASH**: universal hash over GF(2^128) used by AES-GCM.
 ///
@@ -54,9 +58,11 @@ pub type Tag = universal_hash::Output<GHash>;
 #[derive(Clone)]
 pub struct GHash(Polyval);
 
-impl NewUniversalHash for GHash {
+impl KeySizeUser for GHash {
     type KeySize = U16;
+}
 
+impl KeyInit for GHash {
     /// Initialize GHASH with the given `H` field element
     #[inline]
     fn new(h: &Key) -> Self {
@@ -79,29 +85,36 @@ impl NewUniversalHash for GHash {
     }
 }
 
-impl UniversalHash for GHash {
+impl BlockSizeUser for GHash {
     type BlockSize = U16;
+}
 
-    /// Input a field element `X` to be authenticated
-    #[inline]
-    fn update(&mut self, x: &Block) {
+impl ParBlocksSizeUser for GHash {
+    type ParBlocksSize = U16;
+}
+
+impl UhfBackend for GHash {
+    fn proc_block(&mut self, x: &Block) {
         let mut x = *x;
         x.reverse();
-        self.0.update(&x);
+        self.0.proc_block(&x);
     }
+}
 
-    /// Reset internal state
-    #[inline]
-    fn reset(&mut self) {
-        self.0.reset();
+impl UniversalHash for GHash {
+    fn update_with_backend(
+        &mut self,
+        f: impl universal_hash::UhfClosure<BlockSize = Self::BlockSize>,
+    ) {
+        f.call(self);
     }
 
     /// Get GHASH output
     #[inline]
     fn finalize(self) -> Tag {
-        let mut output = self.0.finalize().into_bytes();
+        let mut output = self.0.finalize();
         output.reverse();
-        Tag::new(output)
+        output.into()
     }
 }
 

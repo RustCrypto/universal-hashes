@@ -5,3 +5,6 @@ members = [
     "polyval"
 ]
 resolver = "2"
+
+[patch.crates-io]
+universal-hash = { git = "https://github.com/RustCrypto/traits", rev = "74ce6e7a9ab1243f574b6c37e747a6e54c01f376" }

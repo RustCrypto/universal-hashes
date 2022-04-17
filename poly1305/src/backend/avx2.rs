@@ -60,12 +60,6 @@ impl State {
         }
     }
 
-    /// Reset internal state
-    pub(crate) fn reset(&mut self) {
-        self.initialized = None;
-        self.num_cached_blocks = 0;
-    }
-
     /// Compute a Poly1305 block
     #[target_feature(enable = "avx2")]
     pub(crate) unsafe fn compute_block(&mut self, block: &Block, partial: bool) {
@@ -152,6 +146,6 @@ impl State {
         };
         tag_int.write(tag.as_mut_slice());
 
-        Tag::new(tag)
+        tag.into()
     }
 }

@@ -1,9 +1,13 @@
 //! Autodetection for CPU intrinsics, with fallback to the "soft" backend when
 //! they are unavailable.
 
-use crate::{backend::soft, Block, Key};
+use crate::{backend::soft, Block, Key, Tag};
 use core::mem::ManuallyDrop;
-use universal_hash::{consts::U16, NewUniversalHash, Output, UniversalHash};
+use universal_hash::{
+    consts::U16,
+    crypto_common::{BlockSizeUser, KeySizeUser, ParBlocksSizeUser},
+    KeyInit, UhfBackend, UniversalHash,
+};
 
 #[cfg(all(target_arch = "aarch64", feature = "armv8"))]
 use super::pmull as intrinsics;
@@ -28,9 +32,11 @@ union Inner {
     soft: ManuallyDrop<soft::Polyval>,
 }
 
-impl NewUniversalHash for Polyval {
+impl KeySizeUser for Polyval {
     type KeySize = U16;
+}
 
+impl KeyInit for Polyval {
     /// Initialize POLYVAL with the given `H` field element
     fn new(h: &Key) -> Self {
         let (token, has_intrinsics) = mul_intrinsics::init_get();
@@ -49,45 +55,41 @@ impl NewUniversalHash for Polyval {
     }
 }
 
-impl UniversalHash for Polyval {
+impl BlockSizeUser for Polyval {
     type BlockSize = U16;
+}
 
-    /// Input a field element `X` to be authenticated
-    #[inline]
-    fn update(&mut self, x: &Block) {
+impl ParBlocksSizeUser for Polyval {
+    type ParBlocksSize = U16;
+}
+
+impl UhfBackend for Polyval {
+    fn proc_block(&mut self, x: &Block) {
         if self.token.get() {
-            unsafe { (*self.inner.intrinsics).update(x) }
+            unsafe { (*self.inner.intrinsics).proc_block(x) }
         } else {
-            unsafe { (*self.inner.soft).update(x) }
+            unsafe { (*self.inner.soft).proc_block(x) }
         }
     }
+}
 
-    /// Reset internal state
-    fn reset(&mut self) {
-        if self.token.get() {
-            unsafe { (*self.inner.intrinsics).reset() }
-        } else {
-            unsafe { (*self.inner.soft).reset() }
-        }
+impl UniversalHash for Polyval {
+    fn update_with_backend(
+        &mut self,
+        f: impl universal_hash::UhfClosure<BlockSize = Self::BlockSize>,
+    ) {
+        f.call(self);
     }
 
     /// Get POLYVAL result (i.e. computed `S` field element)
-    fn finalize(self) -> Output<Self> {
+    fn finalize(self) -> Tag {
         let output_bytes = if self.token.get() {
-            unsafe {
-                ManuallyDrop::into_inner(self.inner.intrinsics)
-                    .finalize()
-                    .into_bytes()
-            }
+            unsafe { ManuallyDrop::into_inner(self.inner.intrinsics).finalize() }
         } else {
-            unsafe {
-                ManuallyDrop::into_inner(self.inner.soft)
-                    .finalize()
-                    .into_bytes()
-            }
+            unsafe { ManuallyDrop::into_inner(self.inner.soft).finalize() }
         };
 
-        Output::new(output_bytes)
+        output_bytes.into()
     }
 }
 

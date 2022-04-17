@@ -35,16 +35,6 @@ impl State {
         Self { inner, token }
     }
 
-    /// Reset internal state
-    #[inline]
-    pub(crate) fn reset(&mut self) {
-        if self.token.get() {
-            unsafe { (*self.inner.avx2).reset() }
-        } else {
-            unsafe { (*self.inner.soft).reset() }
-        }
-    }
-
     /// Compute a Poly1305 block
     #[inline]
     pub(crate) fn compute_block(&mut self, block: &Block, partial: bool) {

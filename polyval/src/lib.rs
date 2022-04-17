@@ -107,4 +107,4 @@ pub type Key = universal_hash::Key<Polyval>;
 pub type Block = universal_hash::Block<Polyval>;
 
 /// POLYVAL tags (16-bytes)
-pub type Tag = universal_hash::Output<Polyval>;
+pub type Tag = universal_hash::Block<Polyval>;
