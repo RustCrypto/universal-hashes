@@ -75,10 +75,7 @@
 
 #![no_std]
 #![cfg_attr(docsrs, feature(doc_cfg))]
-#![cfg_attr(
-    all(feature = "armv8", target_arch = "aarch64"),
-    feature(stdsimd, aarch64_target_feature)
-)]
+#![cfg_attr(all(feature = "armv8", target_arch = "aarch64"), feature(stdsimd))]
 #![doc(
     html_logo_url = "https://raw.githubusercontent.com/RustCrypto/media/8f1a9894/logo.svg",
     html_favicon_url = "https://raw.githubusercontent.com/RustCrypto/media/8f1a9894/logo.svg",
