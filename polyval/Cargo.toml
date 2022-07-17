@@ -1,6 +1,6 @@
 [package]
 name = "polyval"
-version = "0.5.3" # Also update html_root_url in lib.rs when bumping this
+version = "0.6.0-pre" # Also update html_root_url in lib.rs when bumping this
 authors = ["RustCrypto Developers"]
 license = "Apache-2.0 OR MIT"
 description = """
@@ -18,23 +18,18 @@ edition = "2021"
 [dependencies]
 cfg-if = "1"
 opaque-debug = "0.3"
-#universal-hash = { version = "0.5", default-features = false }
+universal-hash = { version = "=0.5.0-pre", default-features = false }
 zeroize = { version = "1", optional = true, default-features = false }
 
 [target.'cfg(any(target_arch = "aarch64", target_arch = "x86_64", target_arch = "x86"))'.dependencies]
 cpufeatures = "0.2"
 
-[dependencies.universal-hash]
-git = "https://github.com/RustCrypto/traits"
-rev = "74ce6e7a9ab1243f574b6c37e747a6e54c01f376"
-default-features = false
-
 [dev-dependencies]
 hex-literal = "0.3"
 
 [features]
-std = ["universal-hash/std"]
-armv8 = [] # Enable nightly-only ARMv8 intrinsics support
+std        = ["universal-hash/std"]
+armv8      = [] # Enable nightly-only ARMv8 intrinsics support
 force-soft = [] # Disable support for hardware intrinsics
 
 [package.metadata.docs.rs]
