@@ -8,6 +8,7 @@ use core::arch::x86::*;
 #[cfg(target_arch = "x86_64")]
 use core::arch::x86_64::*;
 
+use super::ParBlocks;
 use crate::{Block, Key};
 
 const fn set02(x3: u8, x2: u8, x1: u8, x0: u8) -> i32 {
@@ -964,15 +965,37 @@ impl Aligned4x130 {
     /// Panics if `src.len() < 64`.
     #[target_feature(enable = "avx2")]
     pub(super) unsafe fn from_blocks(src: &[Block; 4]) -> Self {
+        let (lo, hi) = src.split_at(2);
+        let blocks_23 = _mm256_loadu_si256(hi.as_ptr() as *const _);
+        let blocks_01 = _mm256_loadu_si256(lo.as_ptr() as *const _);
+
+        Self::from_loaded_blocks(blocks_01, blocks_23)
+    }
+
+    /// Aligns four 16-byte Poly1305 blocks at 26-bit boundaries within 32-bit words, and
+    /// sets the high bit for each block.
+    #[target_feature(enable = "avx2")]
+    pub(super) unsafe fn from_par_blocks(src: &ParBlocks) -> Self {
+        let (lo, hi) = src.split_at(2);
+        let blocks_23 = _mm256_loadu_si256(hi.as_ptr() as *const _);
+        let blocks_01 = _mm256_loadu_si256(lo.as_ptr() as *const _);
+
+        Self::from_loaded_blocks(blocks_01, blocks_23)
+    }
+
+    /// Aligns four 16-byte Poly1305 blocks at 26-bit boundaries within 32-bit words, and
+    /// sets the high bit for each block.
+    ///
+    /// The four blocks must be in the following 32-bit word layout:
+    ///      [b33, b32, b31, b30, b23, b22, b21, b20]
+    ///      [b13, b12, b11, b10, b03, b02, b01, b00]
+    #[target_feature(enable = "avx2")]
+    unsafe fn from_loaded_blocks(blocks_01: __m256i, blocks_23: __m256i) -> Self {
         // 26-bit mask on each 32-bit word.
         let mask_26 = _mm256_set1_epi32(0x3ffffff);
         // Sets bit 24 of each 32-bit word.
         let set_hibit = _mm256_set1_epi32(1 << 24);
 
-        // - Load the four blocks into the following 32-bit word layout:
-        //      [b33, b32, b31, b30, b23, b22, b21, b20]
-        //      [b13, b12, b11, b10, b03, b02, b01, b00]
-        //
         // - Unpack the upper and lower 64 bits:
         //      [b33, b32, b13, b12, b23, b22, b03, b02]
         //      [b31, b30, b11, b10, b21, b20, b01, b00]
@@ -980,9 +1003,6 @@ impl Aligned4x130 {
         // - Swap the middle two 64-bit words:
         // a0 = [b33, b32, b23, b22, b13, b12, b03, b02]
         // a1 = [b31, b30, b21, b20, b11, b10, b01, b00]
-        let (lo, hi) = src.split_at(2);
-        let blocks_23 = _mm256_loadu_si256(hi.as_ptr() as *const _);
-        let blocks_01 = _mm256_loadu_si256(lo.as_ptr() as *const _);
         let a0 = _mm256_permute4x64_epi64(
             _mm256_unpackhi_epi64(blocks_01, blocks_23),
             set02(3, 1, 2, 0),

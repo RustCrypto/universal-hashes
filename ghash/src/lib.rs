@@ -25,15 +25,18 @@
 #![no_std]
 #![doc(
     html_logo_url = "https://raw.githubusercontent.com/RustCrypto/media/8f1a9894/logo.svg",
-    html_favicon_url = "https://raw.githubusercontent.com/RustCrypto/media/8f1a9894/logo.svg",
-    html_root_url = "https://docs.rs/ghash/0.4.3"
+    html_favicon_url = "https://raw.githubusercontent.com/RustCrypto/media/8f1a9894/logo.svg"
 )]
 #![warn(missing_docs, rust_2018_idioms)]
 
 pub use polyval::universal_hash;
 
 use polyval::Polyval;
-use universal_hash::{consts::U16, NewUniversalHash, UniversalHash};
+use universal_hash::{
+    consts::U16,
+    crypto_common::{BlockSizeUser, KeySizeUser, ParBlocksSizeUser},
+    KeyInit, UhfBackend, UhfClosure, UniversalHash,
+};
 
 #[cfg(feature = "zeroize")]
 use zeroize::Zeroize;
@@ -45,7 +48,7 @@ pub type Key = universal_hash::Key<GHash>;
 pub type Block = universal_hash::Block<GHash>;
 
 /// GHASH tags (16-bytes)
-pub type Tag = universal_hash::Output<GHash>;
+pub type Tag = universal_hash::Block<GHash>;
 
 /// **GHASH**: universal hash over GF(2^128) used by AES-GCM.
 ///
@@ -54,9 +57,11 @@ pub type Tag = universal_hash::Output<GHash>;
 #[derive(Clone)]
 pub struct GHash(Polyval);
 
-impl NewUniversalHash for GHash {
+impl KeySizeUser for GHash {
     type KeySize = U16;
+}
 
+impl KeyInit for GHash {
     /// Initialize GHASH with the given `H` field element
     #[inline]
     fn new(h: &Key) -> Self {
@@ -79,29 +84,51 @@ impl NewUniversalHash for GHash {
     }
 }
 
-impl UniversalHash for GHash {
-    type BlockSize = U16;
+struct GHashBackend<'b, B: UhfBackend>(&'b mut B);
 
-    /// Input a field element `X` to be authenticated
-    #[inline]
-    fn update(&mut self, x: &Block) {
-        let mut x = *x;
+impl<'b, B: UhfBackend> BlockSizeUser for GHashBackend<'b, B> {
+    type BlockSize = B::BlockSize;
+}
+
+impl<'b, B: UhfBackend> ParBlocksSizeUser for GHashBackend<'b, B> {
+    type ParBlocksSize = B::ParBlocksSize;
+}
+
+impl<'b, B: UhfBackend> UhfBackend for GHashBackend<'b, B> {
+    fn proc_block(&mut self, x: &universal_hash::Block<B>) {
+        let mut x = x.clone();
         x.reverse();
-        self.0.update(&x);
+        self.0.proc_block(&x);
     }
+}
 
-    /// Reset internal state
-    #[inline]
-    fn reset(&mut self) {
-        self.0.reset();
+impl BlockSizeUser for GHash {
+    type BlockSize = U16;
+}
+
+impl UniversalHash for GHash {
+    fn update_with_backend(&mut self, f: impl UhfClosure<BlockSize = Self::BlockSize>) {
+        struct GHashClosure<C: UhfClosure>(C);
+
+        impl<C: UhfClosure> BlockSizeUser for GHashClosure<C> {
+            type BlockSize = C::BlockSize;
+        }
+
+        impl<C: UhfClosure> UhfClosure for GHashClosure<C> {
+            fn call<B: UhfBackend<BlockSize = Self::BlockSize>>(self, backend: &mut B) {
+                self.0.call(&mut GHashBackend(backend));
+            }
+        }
+
+        self.0.update_with_backend(GHashClosure(f));
     }
 
     /// Get GHASH output
     #[inline]
     fn finalize(self) -> Tag {
-        let mut output = self.0.finalize().into_bytes();
+        let mut output = self.0.finalize();
         output.reverse();
-        Tag::new(output)
+        output
     }
 }
 

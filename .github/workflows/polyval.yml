@@ -154,17 +154,8 @@ jobs:
     strategy:
       matrix:
         include:
-          # ARM64
           - target: aarch64-unknown-linux-gnu
-            rust: 1.56.1 # MSRV
-          - target: aarch64-unknown-linux-gnu
-            rust: stable
-
-          # PPC32
           - target: powerpc-unknown-linux-gnu
-            rust: 1.56.1 # MSRV
-          - target: powerpc-unknown-linux-gnu
-            rust: stable
 
     runs-on: ubuntu-latest
     steps:
@@ -172,7 +163,7 @@ jobs:
       - run: ${{ matrix.deps }}
       - uses: actions-rs/toolchain@v1
         with:
-          toolchain: ${{ matrix.rust }}
+          toolchain: stable
           target: ${{ matrix.target }}
           profile: minimal
           override: true

@@ -12,6 +12,12 @@
 // ...and was originally a port of Andrew Moons poly1305-donna
 // https://github.com/floodyberry/poly1305-donna
 
+use universal_hash::{
+    consts::{U1, U16},
+    crypto_common::{BlockSizeUser, ParBlocksSizeUser},
+    UhfBackend, UniversalHash,
+};
+
 use crate::{Block, Key, Tag};
 
 #[derive(Clone, Default)]
@@ -39,11 +45,6 @@ impl State {
         poly.pad[3] = u32::from_le_bytes(key[28..32].try_into().unwrap());
 
         poly
-    }
-
-    /// Reset internal state
-    pub(crate) fn reset(&mut self) {
-        self.h = Default::default();
     }
 
     /// Compute a Poly1305 block
@@ -139,7 +140,7 @@ impl State {
     }
 
     /// Finalize output producing a [`Tag`]
-    pub(crate) fn finalize(&mut self) -> Tag {
+    pub(crate) fn finalize_mut(&mut self) -> Tag {
         // fully carry h
         let mut h0 = self.h[0];
         let mut h1 = self.h[1];
@@ -227,7 +228,7 @@ impl State {
         tag[8..12].copy_from_slice(&h2.to_le_bytes());
         tag[12..16].copy_from_slice(&h3.to_le_bytes());
 
-        Tag::new(tag)
+        tag
     }
 }
 
@@ -238,5 +239,33 @@ impl Drop for State {
         self.r.zeroize();
         self.h.zeroize();
         self.pad.zeroize();
+    }
+}
+
+impl BlockSizeUser for State {
+    type BlockSize = U16;
+}
+
+impl ParBlocksSizeUser for State {
+    type ParBlocksSize = U1;
+}
+
+impl UhfBackend for State {
+    fn proc_block(&mut self, block: &Block) {
+        self.compute_block(block, false);
+    }
+}
+
+impl UniversalHash for State {
+    fn update_with_backend(
+        &mut self,
+        f: impl universal_hash::UhfClosure<BlockSize = Self::BlockSize>,
+    ) {
+        f.call(self);
+    }
+
+    /// Finalize output producing a [`Tag`]
+    fn finalize(mut self) -> Tag {
+        self.finalize_mut()
     }
 }

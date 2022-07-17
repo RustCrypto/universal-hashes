@@ -44,8 +44,7 @@
 #![no_std]
 #![doc(
     html_logo_url = "https://raw.githubusercontent.com/RustCrypto/media/8f1a9894/logo.svg",
-    html_favicon_url = "https://raw.githubusercontent.com/RustCrypto/media/8f1a9894/logo.svg",
-    html_root_url = "https://docs.rs/poly1305/0.7.1"
+    html_favicon_url = "https://raw.githubusercontent.com/RustCrypto/media/8f1a9894/logo.svg"
 )]
 #![warn(missing_docs, rust_2018_idioms)]
 
@@ -56,8 +55,9 @@ pub use universal_hash;
 
 use universal_hash::{
     consts::{U16, U32},
+    crypto_common::{BlockSizeUser, KeySizeUser},
     generic_array::GenericArray,
-    NewUniversalHash, UniversalHash,
+    KeyInit, UniversalHash,
 };
 
 mod backend;
@@ -95,7 +95,7 @@ pub type Key = universal_hash::Key<Poly1305>;
 pub type Block = universal_hash::Block<Poly1305>;
 
 /// Poly1305 tags (16-bytes)
-pub type Tag = universal_hash::Output<Poly1305>;
+pub type Tag = universal_hash::Block<Poly1305>;
 
 /// The Poly1305 universal hash function.
 ///
@@ -108,9 +108,11 @@ pub struct Poly1305 {
     state: State,
 }
 
-impl NewUniversalHash for Poly1305 {
+impl KeySizeUser for Poly1305 {
     type KeySize = U32;
+}
 
+impl KeyInit for Poly1305 {
     /// Initialize Poly1305 with the given key
     fn new(key: &Key) -> Poly1305 {
         Poly1305 {
@@ -119,21 +121,20 @@ impl NewUniversalHash for Poly1305 {
     }
 }
 
-impl UniversalHash for Poly1305 {
+impl BlockSizeUser for Poly1305 {
     type BlockSize = U16;
+}
 
-    /// Input data into the Poly1305 universal hash function
-    fn update(&mut self, block: &Block) {
-        self.state.compute_block(block, false);
-    }
-
-    /// Reset internal state
-    fn reset(&mut self) {
-        self.state.reset();
+impl UniversalHash for Poly1305 {
+    fn update_with_backend(
+        &mut self,
+        f: impl universal_hash::UhfClosure<BlockSize = Self::BlockSize>,
+    ) {
+        self.state.update_with_backend(f);
     }
 
     /// Get the hashed output
-    fn finalize(mut self) -> Tag {
+    fn finalize(self) -> Tag {
         self.state.finalize()
     }
 }

@@ -78,8 +78,7 @@
 #![cfg_attr(all(feature = "armv8", target_arch = "aarch64"), feature(stdsimd))]
 #![doc(
     html_logo_url = "https://raw.githubusercontent.com/RustCrypto/media/8f1a9894/logo.svg",
-    html_favicon_url = "https://raw.githubusercontent.com/RustCrypto/media/8f1a9894/logo.svg",
-    html_root_url = "https://docs.rs/polyval/0.5.3"
+    html_favicon_url = "https://raw.githubusercontent.com/RustCrypto/media/8f1a9894/logo.svg"
 )]
 #![warn(missing_docs, rust_2018_idioms)]
 
@@ -104,4 +103,4 @@ pub type Key = universal_hash::Key<Polyval>;
 pub type Block = universal_hash::Block<Polyval>;
 
 /// POLYVAL tags (16-bytes)
-pub type Tag = universal_hash::Output<Polyval>;
+pub type Tag = universal_hash::Block<Polyval>;

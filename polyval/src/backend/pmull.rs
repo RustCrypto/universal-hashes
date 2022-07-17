@@ -11,9 +11,13 @@
 //! - <https://developer.arm.com/documentation/100069/0608/A64-SIMD-Vector-Instructions/PMULL--PMULL2--vector->
 //! - <https://eprint.iacr.org/2015/688.pdf>
 
-use crate::{Block, Key};
+use crate::{Block, Key, Tag};
 use core::{arch::aarch64::*, mem};
-use universal_hash::{consts::U16, NewUniversalHash, Output, UniversalHash};
+use universal_hash::{
+    consts::{U1, U16},
+    crypto_common::{BlockSizeUser, KeySizeUser, ParBlocksSizeUser},
+    KeyInit, UhfBackend,
+};
 
 /// **POLYVAL**: GHASH-like universal hash over GF(2^128).
 #[derive(Clone)]
@@ -22,9 +26,11 @@ pub struct Polyval {
     y: uint8x16_t,
 }
 
-impl NewUniversalHash for Polyval {
+impl KeySizeUser for Polyval {
     type KeySize = U16;
+}
 
+impl KeyInit for Polyval {
     /// Initialize POLYVAL with the given `H` field element
     fn new(h: &Key) -> Self {
         unsafe {
@@ -36,25 +42,25 @@ impl NewUniversalHash for Polyval {
     }
 }
 
-impl UniversalHash for Polyval {
+impl BlockSizeUser for Polyval {
     type BlockSize = U16;
+}
 
-    #[inline]
-    fn update(&mut self, x: &Block) {
+impl ParBlocksSizeUser for Polyval {
+    type ParBlocksSize = U1;
+}
+
+impl UhfBackend for Polyval {
+    fn proc_block(&mut self, x: &Block) {
         unsafe {
             self.mul(x);
         }
     }
+}
 
-    /// Reset internal state
-    fn reset(&mut self) {
-        unsafe {
-            self.y = vdupq_n_u8(0);
-        }
-    }
-
+impl Polyval {
     /// Get GHASH output
-    fn finalize(self) -> Output<Self> {
+    pub(crate) fn finalize(self) -> Tag {
         unsafe { mem::transmute(self.y) }
     }
 }

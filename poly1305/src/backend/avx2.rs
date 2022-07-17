@@ -15,12 +15,20 @@
 // optimisations provided by Bhattacharyya and Sarkar. The latter require the message
 // length to be known, which is incompatible with the streaming API of UniversalHash.
 
-use universal_hash::generic_array::GenericArray;
+use universal_hash::{
+    consts::{U16, U4},
+    crypto_common::{BlockSizeUser, ParBlocksSizeUser},
+    generic_array::GenericArray,
+    UhfBackend,
+};
 
 use crate::{Block, Key, Tag};
 
 mod helpers;
 use self::helpers::*;
+
+/// Four Poly1305 blocks (64-bytes)
+type ParBlocks = universal_hash::ParBlocks<State>;
 
 #[derive(Copy, Clone)]
 struct Initialized {
@@ -60,10 +68,13 @@ impl State {
         }
     }
 
-    /// Reset internal state
-    pub(crate) fn reset(&mut self) {
-        self.initialized = None;
-        self.num_cached_blocks = 0;
+    /// Process four Poly1305 blocks at once.
+    #[target_feature(enable = "avx2")]
+    pub(crate) unsafe fn compute_par_blocks(&mut self, blocks: &ParBlocks) {
+        assert!(self.partial_block.is_none());
+        assert_eq!(self.num_cached_blocks, 0);
+
+        self.process_blocks(Aligned4x130::from_par_blocks(blocks));
     }
 
     /// Compute a Poly1305 block
@@ -84,13 +95,18 @@ impl State {
             self.num_cached_blocks = 0;
         }
 
+        self.process_blocks(Aligned4x130::from_blocks(&self.cached_blocks));
+    }
+
+    /// Compute a Poly1305 block
+    #[target_feature(enable = "avx2")]
+    unsafe fn process_blocks(&mut self, blocks: Aligned4x130) {
         if let Some(inner) = &mut self.initialized {
             // P <-- R^4 * P + blocks
-            inner.p =
-                (&inner.p * inner.r4).reduce() + Aligned4x130::from_blocks(&self.cached_blocks);
+            inner.p = (&inner.p * inner.r4).reduce() + blocks;
         } else {
             // Initialize the polynomial.
-            let p = Aligned4x130::from_blocks(&self.cached_blocks);
+            let p = blocks;
 
             // Initialize the multiplier (used to merge down the polynomial during
             // finalization).
@@ -152,6 +168,32 @@ impl State {
         };
         tag_int.write(tag.as_mut_slice());
 
-        Tag::new(tag)
+        tag
+    }
+}
+
+impl BlockSizeUser for State {
+    type BlockSize = U16;
+}
+
+impl ParBlocksSizeUser for State {
+    type ParBlocksSize = U4;
+}
+
+impl UhfBackend for State {
+    fn proc_block(&mut self, block: &Block) {
+        unsafe { self.compute_block(block, false) };
+    }
+
+    fn proc_par_blocks(&mut self, blocks: &ParBlocks) {
+        if self.num_cached_blocks == 0 {
+            // Fast path.
+            unsafe { self.compute_par_blocks(blocks) };
+        } else {
+            // We are unaligned; use the slow fallback.
+            for block in blocks {
+                self.proc_block(block);
+            }
+        }
     }
 }
