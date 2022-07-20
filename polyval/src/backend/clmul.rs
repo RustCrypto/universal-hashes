@@ -5,7 +5,7 @@ use crate::{Block, Key, Tag};
 use universal_hash::{
     consts::{U1, U16},
     crypto_common::{BlockSizeUser, KeySizeUser, ParBlocksSizeUser},
-    KeyInit, UhfBackend,
+    KeyInit, Reset, UhfBackend,
 };
 
 #[cfg(target_arch = "x86")]
@@ -121,6 +121,14 @@ impl Polyval {
         );
 
         self.y = _mm_unpacklo_epi64(v2, v3);
+    }
+}
+
+impl Reset for Polyval {
+    fn reset(&mut self) {
+        unsafe {
+            self.y = _mm_setzero_si128();
+        }
     }
 }
 

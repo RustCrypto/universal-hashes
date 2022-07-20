@@ -16,7 +16,7 @@ use core::{arch::aarch64::*, mem};
 use universal_hash::{
     consts::{U1, U16},
     crypto_common::{BlockSizeUser, KeySizeUser, ParBlocksSizeUser},
-    KeyInit, UhfBackend,
+    KeyInit, Reset, UhfBackend,
 };
 
 /// **POLYVAL**: GHASH-like universal hash over GF(2^128).
@@ -58,10 +58,11 @@ impl UhfBackend for Polyval {
     }
 }
 
-impl Polyval {
-    /// Get GHASH output
-    pub(crate) fn finalize(self) -> Tag {
-        unsafe { mem::transmute(self.y) }
+impl Reset for Polyval {
+    fn reset(&mut self) {
+        unsafe {
+            self.y = vdupq_n_u8(0);
+        }
     }
 }
 
@@ -69,6 +70,11 @@ impl Polyval {
     /// Mask value used when performing reduction.
     /// This corresponds to POLYVAL's polynomial with the highest bit unset.
     const MASK: u128 = 1 << 127 | 1 << 126 | 1 << 121 | 1;
+
+    /// Get POLYVAL output.
+    pub(crate) fn finalize(self) -> Tag {
+        unsafe { mem::transmute(self.y) }
+    }
 
     /// POLYVAL carryless multiplication.
     // TODO(tarcieri): investigate ordering optimizations and fusions e.g.`fuse-crypto-eor`

@@ -6,7 +6,7 @@ use core::mem::ManuallyDrop;
 use universal_hash::{
     consts::U16,
     crypto_common::{BlockSizeUser, KeySizeUser},
-    KeyInit, UniversalHash,
+    KeyInit, Reset, UniversalHash,
 };
 
 #[cfg(all(target_arch = "aarch64", feature = "armv8"))]
@@ -98,6 +98,16 @@ impl Clone for Polyval {
         Self {
             inner,
             token: self.token,
+        }
+    }
+}
+
+impl Reset for Polyval {
+    fn reset(&mut self) {
+        if self.token.get() {
+            unsafe { (*self.inner.intrinsics).reset() }
+        } else {
+            unsafe { (*self.inner.soft).reset() }
         }
     }
 }
