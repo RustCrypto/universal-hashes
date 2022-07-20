@@ -13,7 +13,7 @@ use core::{
 use universal_hash::{
     consts::{U1, U16},
     crypto_common::{BlockSizeUser, KeySizeUser, ParBlocksSizeUser},
-    KeyInit, UhfBackend, UniversalHash,
+    KeyInit, Reset, UhfBackend, UniversalHash,
 };
 
 #[cfg(feature = "zeroize")]
@@ -75,6 +75,12 @@ impl UniversalHash for Polyval {
         }
 
         block
+    }
+}
+
+impl Reset for Polyval {
+    fn reset(&mut self) {
+        self.s = U64x2::default();
     }
 }
 
