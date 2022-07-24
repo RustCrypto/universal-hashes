@@ -9,13 +9,13 @@ use universal_hash::{
     KeyInit, Reset, UniversalHash,
 };
 
-#[cfg(all(target_arch = "aarch64", feature = "armv8"))]
+#[cfg(all(target_arch = "aarch64", polyval_armv8))]
 use super::pmull as intrinsics;
 
 #[cfg(any(target_arch = "x86_64", target_arch = "x86"))]
 use super::clmul as intrinsics;
 
-#[cfg(all(target_arch = "aarch64", feature = "armv8"))]
+#[cfg(all(target_arch = "aarch64", polyval_armv8))]
 cpufeatures::new!(mul_intrinsics, "aes"); // `aes` implies PMULL
 
 #[cfg(any(target_arch = "x86_64", target_arch = "x86"))]
@@ -64,22 +64,24 @@ impl UniversalHash for Polyval {
         &mut self,
         f: impl universal_hash::UhfClosure<BlockSize = Self::BlockSize>,
     ) {
-        if self.token.get() {
-            unsafe { f.call(&mut *self.inner.intrinsics) }
-        } else {
-            unsafe { f.call(&mut *self.inner.soft) }
+        unsafe {
+            if self.token.get() {
+                f.call(&mut *self.inner.intrinsics)
+            } else {
+                f.call(&mut *self.inner.soft)
+            }
         }
     }
 
     /// Get POLYVAL result (i.e. computed `S` field element)
     fn finalize(self) -> Tag {
-        let output_bytes = if self.token.get() {
-            unsafe { ManuallyDrop::into_inner(self.inner.intrinsics).finalize() }
-        } else {
-            unsafe { ManuallyDrop::into_inner(self.inner.soft).finalize() }
-        };
-
-        output_bytes
+        unsafe {
+            if self.token.get() {
+                ManuallyDrop::into_inner(self.inner.intrinsics).finalize()
+            } else {
+                ManuallyDrop::into_inner(self.inner.soft).finalize()
+            }
+        }
     }
 }
 
