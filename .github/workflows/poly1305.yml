@@ -40,7 +40,6 @@ jobs:
           target: ${{ matrix.target }}
           override: true
       - run: cargo build --target ${{ matrix.target }} --release
-      - run: cargo build --target ${{ matrix.target }} --release --features force-soft
       - run: cargo build --target ${{ matrix.target }} --release --features zeroize
 
   # Tests for runtime AVX2 detection
@@ -109,13 +108,14 @@ jobs:
       - run: ${{ matrix.deps }}
       - run: cargo check --target ${{ matrix.target }} --all-features
       - run: cargo test --target ${{ matrix.target }} --release
-      - run: cargo test --target ${{ matrix.target }} --release --features force-soft
       - run: cargo test --target ${{ matrix.target }} --release --features std
       - run: cargo test --target ${{ matrix.target }} --release --features zeroize
       - run: cargo test --target ${{ matrix.target }} --release --all-features
 
   # Tests for the portable software backend
   soft:
+    env:
+      RUSTFLAGS: "-Dwarnings --cfg poly1305_force_soft"
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -143,9 +143,9 @@ jobs:
           override: true
       - run: ${{ matrix.deps }}
       - run: cargo check --target ${{ matrix.target }} --all-features
-      - run: cargo test --target ${{ matrix.target }} --release --features force-soft
-      - run: cargo test --target ${{ matrix.target }} --release --features force-soft,std
-      - run: cargo test --target ${{ matrix.target }} --release --features force-soft,zeroize
+      - run: cargo test --target ${{ matrix.target }} --release
+      - run: cargo test --target ${{ matrix.target }} --release --features std
+      - run: cargo test --target ${{ matrix.target }} --release --features zeroize
       - run: cargo test --target ${{ matrix.target }} --release --all-features
 
   # Cross-compiled tests
@@ -168,6 +168,5 @@ jobs:
           override: true
       - run: cargo install cross
       - run: cross test --target ${{ matrix.target }} --release
-      - run: cross test --target ${{ matrix.target }} --release --features force-soft
       - run: cross test --target ${{ matrix.target }} --release --features std
       - run: cross test --target ${{ matrix.target }} --release --all-features

@@ -28,9 +28,7 @@ cpufeatures = "0.2"
 hex-literal = "0.3"
 
 [features]
-std        = ["universal-hash/std"]
-armv8      = [] # Enable nightly-only ARMv8 intrinsics support
-force-soft = [] # Disable support for hardware intrinsics
+std = ["universal-hash/std"]
 
 [package.metadata.docs.rs]
 all-features = true

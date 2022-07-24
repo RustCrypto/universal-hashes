@@ -7,13 +7,13 @@ mod soft;
 use cfg_if::cfg_if;
 
 cfg_if! {
-    if #[cfg(all(target_arch = "aarch64", feature = "armv8", not(feature = "force-soft")))] {
+    if #[cfg(all(target_arch = "aarch64", polyval_armv8, not(polyval_force_soft)))] {
         mod autodetect;
         mod pmull;
         pub use crate::backend::autodetect::Polyval;
     } else if #[cfg(all(
         any(target_arch = "x86_64", target_arch = "x86"),
-        not(feature = "force-soft")
+        not(polyval_force_soft)
     ))] {
         mod autodetect;
         mod clmul;

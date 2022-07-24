@@ -27,5 +27,3 @@ hex-literal = "0.3"
 
 [features]
 std = ["polyval/std"]
-armv8 = ["polyval/armv8"]
-force-soft = ["polyval/force-soft"]

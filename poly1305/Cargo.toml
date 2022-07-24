@@ -24,5 +24,4 @@ cpufeatures = "0.2"
 hex-literal = "0.3"
 
 [features]
-force-soft = []
 std = ["universal-hash/std"]
