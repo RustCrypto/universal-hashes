@@ -196,4 +196,8 @@ impl UhfBackend for State {
             }
         }
     }
+
+    fn blocks_needed_to_align(&self) -> usize {
+        self.cached_blocks.len() - self.num_cached_blocks
+    }
 }
