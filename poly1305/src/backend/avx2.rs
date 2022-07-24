@@ -196,4 +196,14 @@ impl UhfBackend for State {
             }
         }
     }
+
+    fn blocks_needed_to_align(&self) -> usize {
+        if self.num_cached_blocks == 0 {
+            // There are no cached blocks; fast path is available.
+            0
+        } else {
+            // There are cached blocks; report how many more we need.
+            self.cached_blocks.len() - self.num_cached_blocks
+        }
+    }
 }
