@@ -5,14 +5,25 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## Unreleased
+## 0.6.0 (2022-07-31)
+### Added
+- Impl `Reset` ([#157])
+
 ### Changed
 - Remove `sse4.1` from CPU feature requirements for PCLMUL backend ([#143])
 - Relax `zeroize` constraints ([#147])
 - Upgrade to Rust 2021 edition ([#147])
+- Use stable `aarch64_target_feature` ([#154])
+- Replace `armv8`/`force-soft` features with `cfg` attributes ([#159])
+- Bump `universal-hash` to v0.5 ([#155], [#162])
 
 [#143]: https://github.com/RustCrypto/universal-hashes/pull/143
 [#147]: https://github.com/RustCrypto/universal-hashes/pull/147
+[#154]: https://github.com/RustCrypto/universal-hashes/pull/154
+[#155]: https://github.com/RustCrypto/universal-hashes/pull/155
+[#157]: https://github.com/RustCrypto/universal-hashes/pull/157
+[#159]: https://github.com/RustCrypto/universal-hashes/pull/159
+[#162]: https://github.com/RustCrypto/universal-hashes/pull/162
 
 ## 0.5.3 (2021-08-27)
 ### Changed
