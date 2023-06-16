@@ -27,14 +27,17 @@
 //! compact implementation which uses a clever but simple technique to avoid
 //! carry-spilling.
 //!
-//! ## ARMv8 intrinsics (`PMULL`, nightly-only)
+//! ## ARMv8 intrinsics (`PMULL`, MSRV 1.61+)
 //! On `aarch64` targets including `aarch64-apple-darwin` (Apple M1) and Linux
 //! targets such as `aarch64-unknown-linux-gnu` and `aarch64-unknown-linux-musl`,
 //! support for using the `PMULL` instructions in ARMv8's Cryptography Extensions
-//! is available when using the nightly compiler, and can be enabled using the
-//! `armv8` crate feature.
+//! with the following `RUSTFLAGS`:
 //!
-//! On Linux and macOS, when the `armv8` feature is enabled support for AES
+//! ```text
+//! --cfg polyval_armv8
+//! ```
+//!
+//! On Linux and macOS when the ARMv8 features are enabled, support for `PMULL`  
 //! intrinsics is autodetected at runtime. On other platforms the `crypto`
 //! target feature must be enabled via RUSTFLAGS.
 //!
@@ -75,7 +78,6 @@
 
 #![no_std]
 #![cfg_attr(docsrs, feature(doc_cfg))]
-#![cfg_attr(all(polyval_armv8, target_arch = "aarch64"), feature(stdsimd))]
 #![doc(
     html_logo_url = "https://raw.githubusercontent.com/RustCrypto/media/8f1a9894/logo.svg",
     html_favicon_url = "https://raw.githubusercontent.com/RustCrypto/media/8f1a9894/logo.svg"
