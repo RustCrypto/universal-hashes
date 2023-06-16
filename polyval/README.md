@@ -2,9 +2,9 @@
 
 [![crate][crate-image]][crate-link]
 [![Docs][docs-image]][docs-link]
+[![Build Status][build-image]][build-link]
 ![Apache2/MIT licensed][license-image]
 ![Rust Version][rustc-image]
-[![Build Status][build-image]][build-link]
 
 [POLYVAL][1] ([RFC 8452][2]) is a [universal hash function][3] which operates
 over GF(2^128) and can be used for constructing a
@@ -47,14 +47,14 @@ dual licensed as above, without any additional terms or conditions.
 
 [//]: # (badges)
 
-[crate-image]: https://img.shields.io/crates/v/polyval.svg
+[crate-image]: https://buildstats.info/crate/polyval
 [crate-link]: https://crates.io/crates/polyval
 [docs-image]: https://docs.rs/polyval/badge.svg
 [docs-link]: https://docs.rs/polyval/
-[license-image]: https://img.shields.io/badge/license-Apache2.0/MIT-blue.svg
-[rustc-image]: https://img.shields.io/badge/rustc-1.56+-blue.svg
 [build-image]: https://github.com/RustCrypto/universal-hashes/workflows/polyval/badge.svg?branch=master&event=push
 [build-link]: https://github.com/RustCrypto/universal-hashes/actions?query=workflow%3Apolyval
+[license-image]: https://img.shields.io/badge/license-Apache2.0/MIT-blue.svg
+[rustc-image]: https://img.shields.io/badge/rustc-1.56+-blue.svg
 
 [//]: # (footnotes)
 
