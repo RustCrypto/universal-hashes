@@ -162,7 +162,8 @@ unsafe fn mont_reduce(x23: uint8x16_t, x01: uint8x16_t) -> uint8x16_t {
 }
 
 /// Multiplies the low bits in `a` and `b`.
-#[inline(always)]
+#[inline]
+#[target_feature(enable = "neon")]
 unsafe fn pmull(a: uint8x16_t, b: uint8x16_t) -> uint8x16_t {
     mem::transmute(vmull_p64(
         vgetq_lane_u64(vreinterpretq_u64_u8(a), 0),
@@ -171,7 +172,8 @@ unsafe fn pmull(a: uint8x16_t, b: uint8x16_t) -> uint8x16_t {
 }
 
 /// Multiplies the high bits in `a` and `b`.
-#[inline(always)]
+#[inline]
+#[target_feature(enable = "neon")]
 unsafe fn pmull2(a: uint8x16_t, b: uint8x16_t) -> uint8x16_t {
     mem::transmute(vmull_p64(
         vgetq_lane_u64(vreinterpretq_u64_u8(a), 1),
