@@ -60,7 +60,7 @@ fn donna_self_test2() {
 
         let msg: Vec<u8> = repeat(i as u8).take(256).collect();
         let tag = Poly1305::new(key.as_ref().into()).compute_unpadded(&msg[..i]);
-        tpoly.update(&[tag.into()]);
+        tpoly.update(&[tag]);
     }
 
     assert_eq!(&total_mac[..], tpoly.finalize().as_slice());
@@ -77,7 +77,7 @@ fn test_tls_vectors() {
 
     let blocks = msg
         .chunks(BLOCK_SIZE)
-        .map(|chunk| Block::clone_from_slice(chunk))
+        .map(Block::clone_from_slice)
         .collect::<Vec<_>>();
     poly.update(&blocks);
 
