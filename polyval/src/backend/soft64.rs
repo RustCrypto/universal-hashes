@@ -29,6 +29,16 @@ pub struct Polyval {
     s: U64x2,
 }
 
+impl Polyval {
+    /// Initialize POLYVAL with the given `H` field element and initial block
+    pub fn new_with_init_block(h: &Key, init_block: u128) -> Self {
+        Self {
+            h: h.into(),
+            s: U64x2(init_block as u64, (init_block >> 64) as u64),
+        }
+    }
+}
+
 impl KeySizeUser for Polyval {
     type KeySize = U16;
 }
@@ -94,7 +104,7 @@ impl Drop for Polyval {
 
 /// 2 x `u64` values
 #[derive(Copy, Clone, Debug, Default, Eq, PartialEq)]
-struct U64x2(u64, u64);
+pub struct U64x2(u64, u64);
 
 impl From<&Block> for U64x2 {
     fn from(bytes: &Block) -> U64x2 {
@@ -102,6 +112,12 @@ impl From<&Block> for U64x2 {
             u64::from_le_bytes(bytes[..8].try_into().unwrap()),
             u64::from_le_bytes(bytes[8..].try_into().unwrap()),
         )
+    }
+}
+
+impl From<u128> for U64x2 {
+    fn from(x: u128) -> Self {
+        U64x2(x as u64, (x >> 64) as u64)
     }
 }
 

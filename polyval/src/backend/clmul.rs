@@ -24,6 +24,21 @@ impl KeySizeUser for Polyval {
     type KeySize = U16;
 }
 
+impl Polyval {
+    /// Initialize POLYVAL with the given `H` field element and initial block
+    pub fn new_with_init_block(h: &Key, init_block: u128) -> Self {
+        unsafe {
+            // `_mm_loadu_si128` performs an unaligned load
+            #[allow(clippy::cast_ptr_alignment)]
+            Self {
+                h: _mm_loadu_si128(h.as_ptr() as *const __m128i),
+                y: _mm_loadu_si128(&init_block.to_be_bytes()[..] as *const _ as *const __m128i),
+            }
+        }
+    }
+
+}
+
 impl KeyInit for Polyval {
     /// Initialize POLYVAL with the given `H` field element
     fn new(h: &Key) -> Self {

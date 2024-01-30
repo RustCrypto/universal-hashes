@@ -30,6 +30,18 @@ impl KeySizeUser for Polyval {
     type KeySize = U16;
 }
 
+impl Polyval {
+    /// Initialize POLYVAL with the given `H` field element and initial block
+    pub fn new_with_init_block(h: &Key, init_block: u128) -> Self {
+        unsafe {
+            Self {
+                h: vld1q_u8(h.as_ptr()),
+                y: vld1q_u8(&init_block.to_be_bytes()[..]),
+            }
+        }
+    }
+}
+
 impl KeyInit for Polyval {
     /// Initialize POLYVAL with the given `H` field element
     fn new(h: &Key) -> Self {
