@@ -32,9 +32,11 @@ pub struct Polyval {
 impl Polyval {
     /// Initialize POLYVAL with the given `H` field element and initial block
     pub fn new_with_init_block(h: &Key, init_block: u128) -> Self {
+        let mut init_block = init_block;
+        // init_block = init_block.swap_bytes();
         Self {
             h: h.into(),
-            s: U64x2(init_block as u64, (init_block >> 64) as u64),
+            s: init_block.into(),
         }
     }
 }
@@ -104,7 +106,7 @@ impl Drop for Polyval {
 
 /// 2 x `u64` values
 #[derive(Copy, Clone, Debug, Default, Eq, PartialEq)]
-pub struct U64x2(u64, u64);
+struct U64x2(u64, u64);
 
 impl From<&Block> for U64x2 {
     fn from(bytes: &Block) -> U64x2 {
@@ -117,7 +119,7 @@ impl From<&Block> for U64x2 {
 
 impl From<u128> for U64x2 {
     fn from(x: u128) -> Self {
-        U64x2(x as u64, (x >> 64) as u64)
+        U64x2((x >> 64) as u64, (x) as u64)
     }
 }
 
