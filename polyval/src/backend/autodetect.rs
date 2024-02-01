@@ -36,22 +36,31 @@ impl KeySizeUser for Polyval {
     type KeySize = U16;
 }
 
-impl KeyInit for Polyval {
-    /// Initialize POLYVAL with the given `H` field element
-    fn new(h: &Key) -> Self {
+impl Polyval {
+    /// Initialize POLYVAL with the given `H` field element and initial block
+    pub fn new_with_init_block(h: &Key, init_block: u128) -> Self {
         let (token, has_intrinsics) = mul_intrinsics::init_get();
 
         let inner = if has_intrinsics {
             Inner {
-                intrinsics: ManuallyDrop::new(intrinsics::Polyval::new(h)),
+                intrinsics: ManuallyDrop::new(intrinsics::Polyval::new_with_init_block(
+                    h, init_block,
+                )),
             }
         } else {
             Inner {
-                soft: ManuallyDrop::new(soft::Polyval::new(h)),
+                soft: ManuallyDrop::new(soft::Polyval::new_with_init_block(h, init_block)),
             }
         };
 
         Self { inner, token }
+    }
+}
+
+impl KeyInit for Polyval {
+    /// Initialize POLYVAL with the given `H` field element
+    fn new(h: &Key) -> Self {
+        Self::new_with_init_block(h, 0)
     }
 }
 
