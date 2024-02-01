@@ -32,8 +32,6 @@ pub struct Polyval {
 impl Polyval {
     /// Initialize POLYVAL with the given `H` field element and initial block
     pub fn new_with_init_block(h: &Key, init_block: u128) -> Self {
-        let mut init_block = init_block;
-        // init_block = init_block.swap_bytes();
         Self {
             h: h.into(),
             s: init_block.into(),
@@ -48,10 +46,7 @@ impl KeySizeUser for Polyval {
 impl KeyInit for Polyval {
     /// Initialize POLYVAL with the given `H` field element
     fn new(h: &Key) -> Self {
-        Self {
-            h: h.into(),
-            s: U64x2::default(),
-        }
+        Self::new_with_init_block(h, 0)
     }
 }
 

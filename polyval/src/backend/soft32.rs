@@ -67,10 +67,7 @@ impl Polyval {
 impl KeyInit for Polyval {
     /// Initialize POLYVAL with the given `H` field element
     fn new(h: &Key) -> Self {
-        Self {
-            h: h.into(),
-            s: U32x4::default(),
-        }
+        Self::new_with_init_block(h, 0)
     }
 }
 

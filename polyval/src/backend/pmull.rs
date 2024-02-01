@@ -36,7 +36,7 @@ impl Polyval {
         unsafe {
             Self {
                 h: vld1q_u8(h.as_ptr()),
-                y: vld1q_u8(&init_block.to_be_bytes()[..]),
+                y: vld1q_u8(init_block.to_be_bytes()[..].as_ptr()),
             }
         }
     }
