@@ -5,11 +5,11 @@
 //!
 //! Copyright (c) 2016 Thomas Pornin <pornin@bolet.org>
 
-use crate::{Block, Key, Tag};
 use core::{
     num::Wrapping,
     ops::{Add, Mul},
 };
+
 use universal_hash::{
     consts::{U1, U16},
     crypto_common::{BlockSizeUser, KeySizeUser, ParBlocksSizeUser},
@@ -18,6 +18,8 @@ use universal_hash::{
 
 #[cfg(feature = "zeroize")]
 use zeroize::Zeroize;
+
+use crate::{Block, Key, Tag};
 
 /// **POLYVAL**: GHASH-like universal hash over GF(2^128).
 #[derive(Clone)]
@@ -32,9 +34,14 @@ pub struct Polyval {
 impl Polyval {
     /// Initialize POLYVAL with the given `H` field element and initial block
     pub fn new_with_init_block(h: &Key, init_block: u128) -> Self {
+        let mut init_block = init_block.to_be_bytes();
+        init_block.iter_mut().zip(h).for_each(|(a, b)| *a ^= b);
+
+        let block = Block::from_slice(&init_block);
+
         Self {
             h: h.into(),
-            s: init_block.into(),
+            s: block.into(),
         }
     }
 }
