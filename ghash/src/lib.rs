@@ -61,10 +61,10 @@ impl KeySizeUser for GHash {
     type KeySize = U16;
 }
 
-impl KeyInit for GHash {
-    /// Initialize GHASH with the given `H` field element
+impl GHash {
+    /// Initialize GHASH with the given `H` field element and initial block
     #[inline]
-    fn new(h: &Key) -> Self {
+    pub fn new_with_init_block(h: &Key, init_block: u128) -> Self {
         let mut h = *h;
         h.reverse();
 
@@ -75,12 +75,20 @@ impl KeyInit for GHash {
         h.zeroize();
 
         #[allow(clippy::let_and_return)]
-        let result = GHash(Polyval::new(&h_polyval));
+        let result = GHash(Polyval::new_with_init_block(&h_polyval, init_block));
 
         #[cfg(feature = "zeroize")]
         h_polyval.zeroize();
 
         result
+    }
+}
+
+impl KeyInit for GHash {
+    /// Initialize GHASH with the given `H` field element
+    #[inline]
+    fn new(h: &Key) -> Self {
+        Self::new_with_init_block(h, 0)
     }
 }
 

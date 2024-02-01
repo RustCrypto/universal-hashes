@@ -53,13 +53,20 @@ impl KeySizeUser for Polyval {
     type KeySize = U16;
 }
 
+impl Polyval {
+    /// Initialize POLYVAL with the given `H` field element and initial block
+    pub fn new_with_init_block(h: &Key, init_block: u128) -> Self {
+        Self {
+            h: h.into(),
+            s: init_block.into(),
+        }
+    }
+}
+
 impl KeyInit for Polyval {
     /// Initialize POLYVAL with the given `H` field element
     fn new(h: &Key) -> Self {
-        Self {
-            h: h.into(),
-            s: U32x4::default(),
-        }
+        Self::new_with_init_block(h, 0)
     }
 }
 
@@ -126,6 +133,17 @@ impl From<&Block> for U32x4 {
             u32::from_le_bytes(bytes[4..8].try_into().unwrap()),
             u32::from_le_bytes(bytes[8..12].try_into().unwrap()),
             u32::from_le_bytes(bytes[12..].try_into().unwrap()),
+        )
+    }
+}
+
+impl From<u128> for U32x4 {
+    fn from(x: u128) -> Self {
+        U32x4(
+            x as u32,
+            (x >> 32) as u32,
+            (x >> 64) as u32,
+            (x >> 96) as u32,
         )
     }
 }

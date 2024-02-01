@@ -5,11 +5,11 @@
 //!
 //! Copyright (c) 2016 Thomas Pornin <pornin@bolet.org>
 
-use crate::{Block, Key, Tag};
 use core::{
     num::Wrapping,
     ops::{Add, Mul},
 };
+
 use universal_hash::{
     consts::{U1, U16},
     crypto_common::{BlockSizeUser, KeySizeUser, ParBlocksSizeUser},
@@ -18,6 +18,8 @@ use universal_hash::{
 
 #[cfg(feature = "zeroize")]
 use zeroize::Zeroize;
+
+use crate::{Block, Key, Tag};
 
 /// **POLYVAL**: GHASH-like universal hash over GF(2^128).
 #[derive(Clone)]
@@ -29,6 +31,16 @@ pub struct Polyval {
     s: U64x2,
 }
 
+impl Polyval {
+    /// Initialize POLYVAL with the given `H` field element and initial block
+    pub fn new_with_init_block(h: &Key, init_block: u128) -> Self {
+        Self {
+            h: h.into(),
+            s: init_block.into(),
+        }
+    }
+}
+
 impl KeySizeUser for Polyval {
     type KeySize = U16;
 }
@@ -36,10 +48,7 @@ impl KeySizeUser for Polyval {
 impl KeyInit for Polyval {
     /// Initialize POLYVAL with the given `H` field element
     fn new(h: &Key) -> Self {
-        Self {
-            h: h.into(),
-            s: U64x2::default(),
-        }
+        Self::new_with_init_block(h, 0)
     }
 }
 
@@ -102,6 +111,12 @@ impl From<&Block> for U64x2 {
             u64::from_le_bytes(bytes[..8].try_into().unwrap()),
             u64::from_le_bytes(bytes[8..].try_into().unwrap()),
         )
+    }
+}
+
+impl From<u128> for U64x2 {
+    fn from(x: u128) -> Self {
+        U64x2((x >> 64) as u64, (x) as u64)
     }
 }
 

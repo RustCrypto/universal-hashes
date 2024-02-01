@@ -1,17 +1,18 @@
 //! Intel `CLMUL`-accelerated implementation for modern x86/x86_64 CPUs
 //! (i.e. Intel Sandy Bridge-compatible or newer)
 
-use crate::{Block, Key, Tag};
+#[cfg(target_arch = "x86")]
+use core::arch::x86::*;
+#[cfg(target_arch = "x86_64")]
+use core::arch::x86_64::*;
+
 use universal_hash::{
     consts::{U1, U16},
     crypto_common::{BlockSizeUser, KeySizeUser, ParBlocksSizeUser},
     KeyInit, Reset, UhfBackend,
 };
 
-#[cfg(target_arch = "x86")]
-use core::arch::x86::*;
-#[cfg(target_arch = "x86_64")]
-use core::arch::x86_64::*;
+use crate::{Block, Key, Tag};
 
 /// **POLYVAL**: GHASH-like universal hash over GF(2^128).
 #[derive(Clone)]
@@ -24,17 +25,24 @@ impl KeySizeUser for Polyval {
     type KeySize = U16;
 }
 
-impl KeyInit for Polyval {
-    /// Initialize POLYVAL with the given `H` field element
-    fn new(h: &Key) -> Self {
+impl Polyval {
+    /// Initialize POLYVAL with the given `H` field element and initial block
+    pub fn new_with_init_block(h: &Key, init_block: u128) -> Self {
         unsafe {
             // `_mm_loadu_si128` performs an unaligned load
             #[allow(clippy::cast_ptr_alignment)]
             Self {
                 h: _mm_loadu_si128(h.as_ptr() as *const __m128i),
-                y: _mm_setzero_si128(),
+                y: _mm_loadu_si128(&init_block.to_be_bytes()[..] as *const _ as *const __m128i),
             }
         }
+    }
+}
+
+impl KeyInit for Polyval {
+    /// Initialize POLYVAL with the given `H` field element
+    fn new(h: &Key) -> Self {
+        Self::new_with_init_block(h, 0)
     }
 }
 
