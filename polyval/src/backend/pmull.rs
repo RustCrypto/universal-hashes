@@ -11,13 +11,15 @@
 //! - <https://developer.arm.com/documentation/100069/0608/A64-SIMD-Vector-Instructions/PMULL--PMULL2--vector->
 //! - <https://eprint.iacr.org/2015/688.pdf>
 
-use crate::{Block, Key, Tag};
 use core::{arch::aarch64::*, mem};
+
 use universal_hash::{
     consts::{U1, U16},
     crypto_common::{BlockSizeUser, KeySizeUser, ParBlocksSizeUser},
     KeyInit, Reset, UhfBackend,
 };
+
+use crate::{Block, Key, Tag};
 
 /// **POLYVAL**: GHASH-like universal hash over GF(2^128).
 #[derive(Clone)]
@@ -45,12 +47,7 @@ impl Polyval {
 impl KeyInit for Polyval {
     /// Initialize POLYVAL with the given `H` field element
     fn new(h: &Key) -> Self {
-        unsafe {
-            Self {
-                h: vld1q_u8(h.as_ptr()),
-                y: vdupq_n_u8(0), // all zeroes
-            }
-        }
+        unsafe { Self::new_with_init_block(h, 0) }
     }
 }
 

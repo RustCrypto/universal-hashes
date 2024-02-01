@@ -37,18 +37,12 @@ impl Polyval {
             }
         }
     }
-
 }
 
 impl KeyInit for Polyval {
     /// Initialize POLYVAL with the given `H` field element
     fn new(h: &Key) -> Self {
-        unsafe {
-            Self::new_with_init_block(
-                _mm_loadu_si128(h.as_ptr() as *const __m128i),
-                _mm_setzero_si128()
-            )
-        }
+        unsafe { Self::new_with_init_block(h, 0) }
     }
 }
 

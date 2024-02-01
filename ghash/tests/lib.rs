@@ -24,10 +24,3 @@ fn ghash_test_vector() {
     let result = ghash.finalize();
     assert_eq!(&GHASH_RESULT[..], result.as_slice());
 }
-
-
-#[test]
-fn test() {
-
-    // let ghash = GHash::new()
-}
