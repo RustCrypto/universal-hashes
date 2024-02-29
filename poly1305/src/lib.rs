@@ -54,9 +54,9 @@ extern crate std;
 pub use universal_hash;
 
 use universal_hash::{
+    array::Array,
     consts::{U16, U32},
     crypto_common::{BlockSizeUser, KeySizeUser},
-    generic_array::GenericArray,
     KeyInit, UniversalHash,
 };
 
@@ -146,7 +146,7 @@ impl Poly1305 {
     pub fn compute_unpadded(mut self, data: &[u8]) -> Tag {
         for chunk in data.chunks(BLOCK_SIZE) {
             if chunk.len() == BLOCK_SIZE {
-                let block = GenericArray::from_slice(chunk);
+                let block = Array::from_slice(chunk);
                 self.state.compute_block(block, false);
             } else {
                 let mut block = Block::default();

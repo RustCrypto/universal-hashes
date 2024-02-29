@@ -1,6 +1,6 @@
 [package]
 name = "ghash"
-version = "0.5.1"
+version = "0.6.0-pre"
 authors = ["RustCrypto Developers"]
 license = "Apache-2.0 OR MIT"
 description = """
@@ -12,12 +12,12 @@ repository = "https://github.com/RustCrypto/universal-hashes"
 readme = "README.md"
 keywords = ["aes-gcm", "crypto", "universal-hashing"]
 categories = ["cryptography", "no-std"]
-rust-version = "1.56"
+rust-version = "1.65"
 edition = "2021"
 
 [dependencies]
 opaque-debug = "0.3"
-polyval = { version = "0.6.2", path = "../polyval" }
+polyval = { version = "=0.7.0-pre", path = "../polyval" }
 
 # optional dependencies
 zeroize = { version = "1", optional = true, default-features = false }
