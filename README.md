@@ -1,4 +1,4 @@
-# RustCrypto: Universal Hash Functions ![Rust Version][rustc-image] [![dependency status][deps-image]][deps-link]
+# RustCrypto: Universal Hash Functions ![Rust Version][rustc-image] [![dependency status][deps-image]][deps-link] [![HAZMAT][hazmat-image]][hazmat-link]
 
 Collection of [Universal Hash Functions][1] written in pure Rust.
 
@@ -10,17 +10,24 @@ Collection of [Universal Hash Functions][1] written in pure Rust.
 | [`poly1305`] | [![crates.io](https://img.shields.io/crates/v/poly1305.svg)](https://crates.io/crates/poly1305) | [![Documentation](https://docs.rs/poly1305/badge.svg)](https://docs.rs/poly1305) | ![build](https://github.com/RustCrypto/universal-hashes/workflows/poly1305/badge.svg?branch=master&event=push) |
 | [`polyval`]  | [![crates.io](https://img.shields.io/crates/v/polyval.svg)](https://crates.io/crates/polyval) | [![Documentation](https://docs.rs/polyval/badge.svg)](https://docs.rs/polyval) | ![build](https://github.com/RustCrypto/universal-hashes/workflows/polyval/badge.svg?branch=master&event=push) |
 
+## ⚠️ Security Warning: [Hazmat!][hazmat-link]
+
+Universal hash functions have subtle security properties and are primarily intended as a 
+building block for constructions like AEAD algorithms.
+
+USE AT YOUR OWN RISK!
+
+## Usage
+
+Crates functionality is expressed in terms of traits defined in the [`universal-hash`][2]
+crate.
+
 ### Minimum Supported Rust Version
 
 All crates in this repository support **Rust 1.56** or higher.
 
 In the future, we reserve the right to change the Minimum Supported Rust
 Version, but it will be done with the minor version bump.
-
-## Usage
-
-Crates functionality is expressed in terms of traits defined in the [`universal-hash`][2]
-crate.
 
 ## License
 
@@ -42,6 +49,8 @@ dual licensed as above, without any additional terms or conditions.
 [rustc-image]: https://img.shields.io/badge/rustc-1.56+-blue.svg
 [deps-image]: https://deps.rs/repo/github/RustCrypto/universal-hashes/status.svg
 [deps-link]: https://deps.rs/repo/github/RustCrypto/universal-hashes
+[hazmat-image]: https://img.shields.io/badge/crypto-hazmat%E2%9A%A0-red.svg
+[hazmat-link]: https://github.com/RustCrypto/meta/blob/master/HAZMAT.md
 
 [//]: # (crates)
 

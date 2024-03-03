@@ -5,6 +5,7 @@
 ![Apache2/MIT licensed][license-image]
 ![Rust Version][rustc-image]
 [![Build Status][build-image]][build-link]
+[![HAZMAT][hazmat-image]][hazmat-link]
 
 [GHASH][1] is a [universal hash function][2] which operates over GF(2^128) and
 can be used for constructing a [Message Authentication Code (MAC)][3].
@@ -13,7 +14,17 @@ Its primary intended use is for implementing [AES-GCM][4].
 
 [Documentation][docs-link]
 
-## Security Notes
+## Security
+
+### ⚠️ Warning: [Hazmat!][hazmat-link]
+
+Universal hash functions have subtle security properties and using them
+correctly is difficult. See the [toplevel README.md](../README.md) for more
+information.
+
+USE AT YOUR OWN RISK!
+
+### Notes
 
 This crate has received one [security audit by NCC Group][5], with no significant
 findings. We would like to thank [MobileCoin][6] for funding the audit.
@@ -52,6 +63,8 @@ dual licensed as above, without any additional terms or conditions.
 [rustc-image]: https://img.shields.io/badge/rustc-1.56+-blue.svg
 [build-image]: https://github.com/RustCrypto/universal-hashes/workflows/ghash/badge.svg?branch=master&event=push
 [build-link]: https://github.com/RustCrypto/universal-hashes/actions?query=workflow%3Aghash
+[hazmat-image]: https://img.shields.io/badge/crypto-hazmat%E2%9A%A0-red.svg
+[hazmat-link]: https://github.com/RustCrypto/meta/blob/master/HAZMAT.md
 
 [//]: # (footnotes)
 
