@@ -1,4 +1,8 @@
-# RustCrypto: Universal Hash Functions ![Rust Version][rustc-image] [![dependency status][deps-image]][deps-link] [![HAZMAT][hazmat-image]][hazmat-link]
+# RustCrypto: Universal Hash Functions
+
+![Rust Version][rustc-image]
+[![dependency status][deps-image]][deps-link]
+[![HAZMAT][hazmat-image]][hazmat-link]
 
 Collection of [Universal Hash Functions][1] written in pure Rust.
 
