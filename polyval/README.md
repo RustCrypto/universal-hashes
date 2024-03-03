@@ -5,6 +5,7 @@
 [![Build Status][build-image]][build-link]
 ![Apache2/MIT licensed][license-image]
 ![Rust Version][rustc-image]
+[![HAZMAT][hazmat-image]][hazmat-link]
 
 [POLYVAL][1] ([RFC 8452][2]) is a [universal hash function][3] which operates
 over GF(2^128) and can be used for constructing a
@@ -16,7 +17,17 @@ closely related to [GHASH][6] and therefore can also be used to implement
 
 [Documentation][docs-link]
 
-## Security Notes
+## Security
+
+### ⚠️ Warning: [Hazmat!][hazmat-link]
+
+Universal hash functions have subtle security properties and using them
+correctly is difficult. See the [toplevel README.md](../README.md) for more
+information.
+
+USE AT YOUR OWN RISK!
+
+### Notes
 
 This crate has received one [security audit by NCC Group][8], with no significant
 findings. We would like to thank [MobileCoin][9] for funding the audit.
@@ -55,6 +66,8 @@ dual licensed as above, without any additional terms or conditions.
 [build-link]: https://github.com/RustCrypto/universal-hashes/actions?query=workflow%3Apolyval
 [license-image]: https://img.shields.io/badge/license-Apache2.0/MIT-blue.svg
 [rustc-image]: https://img.shields.io/badge/rustc-1.56+-blue.svg
+[hazmat-image]: https://img.shields.io/badge/crypto-hazmat%E2%9A%A0-red.svg
+[hazmat-link]: https://github.com/RustCrypto/meta/blob/master/HAZMAT.md
 
 [//]: # (footnotes)
 

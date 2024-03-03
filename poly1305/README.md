@@ -5,6 +5,7 @@
 ![Apache2/MIT licensed][license-image]
 ![Rust Version][rustc-image]
 [![Build Status][build-image]][build-link]
+[![HAZMAT][hazmat-image]][hazmat-link]
 
 [Poly1305][1] is a [universal hash function][2] which, when combined with a cipher,
 can be used as a [Message Authentication Code (MAC)][3].
@@ -15,7 +16,17 @@ In practice, Poly1305 is primarily combined with ciphers from the
 
 [Documentation][docs-link]
 
-## Security Notes
+## Security
+
+### ⚠️ Warning: [Hazmat!][hazmat-link]
+
+Universal hash functions have subtle security properties and using them
+correctly is difficult. See the [toplevel README.md](../README.md) for more
+information.
+
+USE AT YOUR OWN RISK!
+
+### Notes
 
 This crate has received one [security audit by NCC Group][7], with no significant
 findings. We would like to thank [MobileCoin][8] for funding the audit.
@@ -56,6 +67,8 @@ dual licensed as above, without any additional terms or conditions.
 [rustc-image]: https://img.shields.io/badge/rustc-1.56+-blue.svg
 [build-image]: https://github.com/RustCrypto/universal-hashes/workflows/poly1305/badge.svg?branch=master&event=push
 [build-link]: https://github.com/RustCrypto/universal-hashes/actions?query=workflow%3Apoly1305
+[hazmat-image]: https://img.shields.io/badge/crypto-hazmat%E2%9A%A0-red.svg
+[hazmat-link]: https://github.com/RustCrypto/meta/blob/master/HAZMAT.md
 
 [//]: # (footnotes)
 
