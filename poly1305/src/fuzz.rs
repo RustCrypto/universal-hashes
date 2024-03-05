@@ -1,4 +1,4 @@
-use universal_hash::{generic_array::GenericArray, UniversalHash};
+use universal_hash::{array::Array, UniversalHash};
 
 use crate::{backend, Block, Key, BLOCK_SIZE};
 
@@ -9,7 +9,7 @@ pub fn fuzz_avx2(key: &Key, data: &[u8]) {
 
     for (_i, chunk) in data.chunks(BLOCK_SIZE).enumerate() {
         if chunk.len() == BLOCK_SIZE {
-            let block = GenericArray::from_slice(chunk);
+            let block = Array::from_slice(chunk);
             unsafe {
                 avx2.compute_block(block, false);
             }
@@ -38,7 +38,7 @@ pub fn fuzz_avx2(key: &Key, data: &[u8]) {
 }
 
 fn avx2_fuzzer_test_case(data: &[u8]) {
-    fuzz_avx2(data[0..32].into(), &data[32..]);
+    fuzz_avx2(Array::from_slice(&data[0..32]).into(), &data[32..]);
 }
 
 #[test]

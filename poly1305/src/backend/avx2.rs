@@ -16,9 +16,9 @@
 // length to be known, which is incompatible with the streaming API of UniversalHash.
 
 use universal_hash::{
+    array::Array,
     consts::{U16, U4},
     crypto_common::{BlockSizeUser, ParBlocksSizeUser},
-    generic_array::GenericArray,
     UhfBackend,
 };
 
@@ -160,7 +160,7 @@ impl State {
         }
 
         // Compute tag: p + k mod 2^128
-        let mut tag = GenericArray::<u8, _>::default();
+        let mut tag = Array::<u8, _>::default();
         let tag_int = if let Some(p) = p {
             self.k + p
         } else {
