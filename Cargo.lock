@@ -41,7 +41,7 @@ dependencies = [
 
 [[package]]
 name = "ghash"
-version = "0.6.0-pre"
+version = "0.6.0-pre.0"
 dependencies = [
  "hex-literal",
  "opaque-debug",
@@ -89,7 +89,7 @@ dependencies = [
 
 [[package]]
 name = "polyval"
-version = "0.7.0-pre"
+version = "0.7.0-pre.0"
 dependencies = [
  "cfg-if",
  "cpufeatures",
@@ -122,8 +122,9 @@ checksum = "42ff0bf0c66b8238c6f3b578df37d0b7848e55df8577b3f74f92a69acceeb825"
 
 [[package]]
 name = "universal-hash"
-version = "0.6.0-pre"
-source = "git+https://github.com/RustCrypto/traits.git?branch=master#b2e31d8df293026390b6315c10844eed8b54a185"
+version = "0.6.0-pre.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a05336f34009f6bb1c24794e2c04df87f4a0ced7a091692e395119f34fd3f4c5"
 dependencies = [
  "crypto-common",
  "subtle",
