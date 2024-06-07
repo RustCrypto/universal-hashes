@@ -32,7 +32,7 @@ impl State {
     pub(crate) fn new(key: &Key) -> State {
         let mut poly = State::default();
 
-        // r &= 0x0ffffffc_0ffffffc_0ffffffc_0fffffff        
+        // r &= 0x0ffffffc_0ffffffc_0ffffffc_0fffffff
         poly.r[0] = (u32::from_le_bytes(key[0..4].try_into().unwrap())) & 0x3ff_ffff;
         poly.r[1] = (u32::from_le_bytes(key[3..7].try_into().unwrap()) >> 2) & 0x3ff_ff03;
         poly.r[2] = (u32::from_le_bytes(key[6..10].try_into().unwrap()) >> 4) & 0x3ff_c0ff;
