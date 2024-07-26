@@ -68,7 +68,7 @@ fn donna_self_test2() {
 
 #[test]
 fn test_tls_vectors() {
-    // from http://tools.ietf.org/html/draft-agl-tls-chacha20poly1305-04
+    // from https://datatracker.ietf.org/doc/html/draft-agl-tls-chacha20poly1305-04#section-7
     let key = b"this is 32-byte key for Poly1305";
     let msg = [0u8; 32];
     let expected = hex!("49ec78090e481ec6c26b33b91ccc0307");
