@@ -1,7 +1,7 @@
 use hex_literal::hex;
 use poly1305::{
     universal_hash::{KeyInit, UniversalHash},
-    Block, Poly1305, BLOCK_SIZE, KEY_SIZE,
+    Block, Poly1305, KEY_SIZE,
 };
 use std::iter::repeat;
 
@@ -43,7 +43,7 @@ fn donna_self_test1() {
     let expected = hex!("03000000000000000000000000000000");
 
     let mut poly = Poly1305::new(key.as_ref());
-    poly.update(&[Block::clone_from_slice(msg.as_ref())]);
+    poly.update(&[msg.into()]);
     assert_eq!(&expected[..], poly.finalize().as_slice());
 }
 
@@ -75,10 +75,7 @@ fn test_tls_vectors() {
 
     let mut poly = Poly1305::new(key.as_ref());
 
-    let blocks = msg
-        .chunks(BLOCK_SIZE)
-        .map(Block::clone_from_slice)
-        .collect::<Vec<_>>();
+    let blocks = Block::slice_as_chunks(&msg).0;
     poly.update(&blocks);
 
     assert_eq!(&expected[..], poly.finalize().as_slice());

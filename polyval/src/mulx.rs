@@ -46,7 +46,7 @@ mod tests {
 
         for vector in MULX_TEST_VECTORS {
             r = mulx(&r);
-            assert_eq!(&r, Block::from_slice(vector));
+            assert_eq!(&r, vector);
         }
     }
 
