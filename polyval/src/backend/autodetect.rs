@@ -9,13 +9,13 @@ use universal_hash::{
     KeyInit, Reset, UhfClosure, UniversalHash,
 };
 
-#[cfg(all(target_arch = "aarch64", polyval_armv8))]
+#[cfg(target_arch = "aarch64")]
 use super::pmull as intrinsics;
 
 #[cfg(any(target_arch = "x86_64", target_arch = "x86"))]
 use super::clmul as intrinsics;
 
-#[cfg(all(target_arch = "aarch64", polyval_armv8))]
+#[cfg(target_arch = "aarch64")]
 cpufeatures::new!(mul_intrinsics, "aes"); // `aes` implies PMULL
 
 #[cfg(any(target_arch = "x86_64", target_arch = "x86"))]

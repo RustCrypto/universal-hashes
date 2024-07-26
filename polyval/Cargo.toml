@@ -32,7 +32,7 @@ std = ["universal-hash/std"]
 
 [lints.rust.unexpected_cfgs]
 level = "warn"
-check-cfg = ["cfg(polyval_armv8)", "cfg(polyval_force_soft)"]
+check-cfg = ["cfg(polyval_force_soft)"]
 
 [package.metadata.docs.rs]
 all-features = true
