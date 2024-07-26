@@ -7,7 +7,7 @@ mod soft;
 use cfg_if::cfg_if;
 
 cfg_if! {
-    if #[cfg(all(target_arch = "aarch64", polyval_armv8, not(polyval_force_soft)))] {
+    if #[cfg(all(target_arch = "aarch64", not(polyval_force_soft)))] {
         mod autodetect;
         mod pmull;
         pub use crate::backend::autodetect::Polyval;

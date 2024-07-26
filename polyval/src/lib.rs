@@ -30,16 +30,10 @@
 //! ## ARMv8 intrinsics (`PMULL`, MSRV 1.61+)
 //! On `aarch64` targets including `aarch64-apple-darwin` (Apple M1) and Linux
 //! targets such as `aarch64-unknown-linux-gnu` and `aarch64-unknown-linux-musl`,
-//! support for using the `PMULL` instructions in ARMv8's Cryptography Extensions
-//! with the following `RUSTFLAGS`:
+//! support for using the `PMULL` instructions in ARMv8's Cryptography Extensions.
 //!
-//! ```text
-//! --cfg polyval_armv8
-//! ```
-//!
-//! On Linux and macOS when the ARMv8 features are enabled, support for `PMULL`  
-//! intrinsics is autodetected at runtime. On other platforms the `crypto`
-//! target feature must be enabled via RUSTFLAGS.
+//! On Linux and macOS, support for `PMULL` intrinsics is autodetected at runtime.
+//! On other platforms the `crypto` target feature must be enabled via RUSTFLAGS.
 //!
 //! ## `x86`/`x86_64` intrinsics (`CMLMUL`)
 //! By default this crate uses runtime detection on `i686`/`x86_64` targets
