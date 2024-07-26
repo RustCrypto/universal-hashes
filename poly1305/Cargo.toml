@@ -25,3 +25,7 @@ hex-literal = "0.3"
 
 [features]
 std = ["universal-hash/std"]
+
+[lints.rust.unexpected_cfgs]
+level = "warn"
+check-cfg = ["cfg(fuzzing)", "cfg(poly1305_force_soft)"]
