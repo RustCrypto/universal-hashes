@@ -54,7 +54,6 @@ extern crate std;
 pub use universal_hash;
 
 use universal_hash::{
-    array::Array,
     consts::{U16, U32},
     crypto_common::{BlockSizeUser, KeySizeUser},
     KeyInit, UniversalHash,
@@ -144,16 +143,17 @@ impl Poly1305 {
     ///
     /// The main use case for this is XSalsa20Poly1305.
     pub fn compute_unpadded(mut self, data: &[u8]) -> Tag {
-        for chunk in data.chunks(BLOCK_SIZE) {
-            if chunk.len() == BLOCK_SIZE {
-                let block = Array::from_slice(chunk);
-                self.state.compute_block(block, false);
-            } else {
-                let mut block = Block::default();
-                block[..chunk.len()].copy_from_slice(chunk);
-                block[chunk.len()] = 1;
-                self.state.compute_block(&block, true)
-            }
+        let (blocks, remaining) = Block::slice_as_chunks(data);
+
+        for block in blocks {
+            self.state.compute_block(block, false);
+        }
+
+        if !remaining.is_empty() {
+            let mut block = Block::default();
+            block[..remaining.len()].copy_from_slice(remaining);
+            block[remaining.len()] = 1;
+            self.state.compute_block(&block, true);
         }
 
         self.state.finalize()
