@@ -23,7 +23,7 @@ polyval = { version = "=0.7.0-pre.0", path = "../polyval" }
 zeroize = { version = "1", optional = true, default-features = false }
 
 [dev-dependencies]
-hex-literal = "0.3"
+hex-literal = "0.4"
 
 [features]
 std = ["polyval/std"]
