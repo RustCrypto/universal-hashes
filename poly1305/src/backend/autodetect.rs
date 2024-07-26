@@ -1,7 +1,7 @@
 //! Autodetection support for AVX2 CPU intrinsics on x86 CPUs, with fallback
 //! to the "soft" backend when it's unavailable.
 
-use universal_hash::{consts::U16, crypto_common::BlockSizeUser, UniversalHash};
+use universal_hash::{consts::U16, crypto_common::BlockSizeUser, UhfClosure, UniversalHash};
 
 use crate::{backend, Block, Key, Tag};
 use core::mem::ManuallyDrop;
@@ -53,10 +53,7 @@ impl State {
 }
 
 impl UniversalHash for State {
-    fn update_with_backend(
-        &mut self,
-        f: impl universal_hash::UhfClosure<BlockSize = Self::BlockSize>,
-    ) {
+    fn update_with_backend(&mut self, f: impl UhfClosure<BlockSize = Self::BlockSize>) {
         if self.token.get() {
             unsafe { f.call(&mut *self.inner.avx2) }
         } else {

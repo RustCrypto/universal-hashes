@@ -15,7 +15,7 @@
 use universal_hash::{
     consts::{U1, U16},
     crypto_common::{BlockSizeUser, ParBlocksSizeUser},
-    UhfBackend, UniversalHash,
+    UhfBackend, UhfClosure, UniversalHash,
 };
 
 use crate::{Block, Key, Tag};
@@ -257,10 +257,7 @@ impl UhfBackend for State {
 }
 
 impl UniversalHash for State {
-    fn update_with_backend(
-        &mut self,
-        f: impl universal_hash::UhfClosure<BlockSize = Self::BlockSize>,
-    ) {
+    fn update_with_backend(&mut self, f: impl UhfClosure<BlockSize = Self::BlockSize>) {
         f.call(self);
     }
 
