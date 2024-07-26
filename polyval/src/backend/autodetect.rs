@@ -6,7 +6,7 @@ use core::mem::ManuallyDrop;
 use universal_hash::{
     consts::U16,
     crypto_common::{BlockSizeUser, KeySizeUser},
-    KeyInit, Reset, UniversalHash,
+    KeyInit, Reset, UhfClosure, UniversalHash,
 };
 
 #[cfg(all(target_arch = "aarch64", polyval_armv8))]
@@ -69,10 +69,7 @@ impl BlockSizeUser for Polyval {
 }
 
 impl UniversalHash for Polyval {
-    fn update_with_backend(
-        &mut self,
-        f: impl universal_hash::UhfClosure<BlockSize = Self::BlockSize>,
-    ) {
+    fn update_with_backend(&mut self, f: impl UhfClosure<BlockSize = Self::BlockSize>) {
         unsafe {
             if self.token.get() {
                 f.call(&mut *self.inner.intrinsics)

@@ -56,7 +56,7 @@ pub use universal_hash;
 use universal_hash::{
     consts::{U16, U32},
     crypto_common::{BlockSizeUser, KeySizeUser},
-    KeyInit, UniversalHash,
+    KeyInit, UhfClosure, UniversalHash,
 };
 
 mod backend;
@@ -125,10 +125,7 @@ impl BlockSizeUser for Poly1305 {
 }
 
 impl UniversalHash for Poly1305 {
-    fn update_with_backend(
-        &mut self,
-        f: impl universal_hash::UhfClosure<BlockSize = Self::BlockSize>,
-    ) {
+    fn update_with_backend(&mut self, f: impl UhfClosure<BlockSize = Self::BlockSize>) {
         self.state.update_with_backend(f);
     }
 
