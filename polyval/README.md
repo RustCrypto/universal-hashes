@@ -58,7 +58,7 @@ dual licensed as above, without any additional terms or conditions.
 
 [//]: # (badges)
 
-[crate-image]: https://buildstats.info/crate/polyval
+[crate-image]: https://img.shields.io/crates/v/polyval
 [crate-link]: https://crates.io/crates/polyval
 [docs-image]: https://docs.rs/polyval/badge.svg
 [docs-link]: https://docs.rs/polyval/
