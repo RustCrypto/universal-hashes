@@ -14,8 +14,6 @@ In practice, Poly1305 is primarily combined with ciphers from the
 [Salsa20 Family][4] such as in [ChaCha20Poly1305][5] and [XSalsa20Poly1305][6]
 (a.k.a. NaCl `crypto_secretbox`).
 
-[Documentation][docs-link]
-
 ## Security
 
 ### ⚠️ Warning: [Hazmat!][hazmat-link]
@@ -64,7 +62,7 @@ dual licensed as above, without any additional terms or conditions.
 [docs-image]: https://docs.rs/poly1305/badge.svg
 [docs-link]: https://docs.rs/poly1305/
 [license-image]: https://img.shields.io/badge/license-Apache2.0/MIT-blue.svg
-[rustc-image]: https://img.shields.io/badge/rustc-1.56+-blue.svg
+[rustc-image]: https://img.shields.io/badge/rustc-1.81+-blue.svg
 [build-image]: https://github.com/RustCrypto/universal-hashes/workflows/poly1305/badge.svg?branch=master&event=push
 [build-link]: https://github.com/RustCrypto/universal-hashes/actions?query=workflow%3Apoly1305
 [hazmat-image]: https://img.shields.io/badge/crypto-hazmat%E2%9A%A0-red.svg

@@ -9,7 +9,7 @@ repository = "https://github.com/RustCrypto/universal-hashes"
 keywords = ["crypto", "chacha20", "mac", "salsa20", "universal-hashing"]
 categories = ["cryptography", "no-std"]
 readme = "README.md"
-rust-version = "1.65"
+rust-version = "1.81"
 edition = "2021"
 
 [dependencies]
