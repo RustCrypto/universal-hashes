@@ -12,7 +12,7 @@ repository = "https://github.com/RustCrypto/universal-hashes"
 readme = "README.md"
 keywords = ["aes-gcm", "aes-gcm-siv", "crypto", "ghash", "universal-hashing"]
 categories = ["cryptography", "no-std"]
-rust-version = "1.65"
+rust-version = "1.81"
 edition = "2021"
 
 [dependencies]

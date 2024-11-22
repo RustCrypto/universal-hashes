@@ -15,8 +15,6 @@ Its primary intended use is for implementing [AES-GCM-SIV][5], however it is
 closely related to [GHASH][6] and therefore can also be used to implement
 [AES-GCM][7] at no cost to performance on little endian architectures.
 
-[Documentation][docs-link]
-
 ## Security
 
 ### ⚠️ Warning: [Hazmat!][hazmat-link]
@@ -65,7 +63,7 @@ dual licensed as above, without any additional terms or conditions.
 [build-image]: https://github.com/RustCrypto/universal-hashes/workflows/polyval/badge.svg?branch=master&event=push
 [build-link]: https://github.com/RustCrypto/universal-hashes/actions?query=workflow%3Apolyval
 [license-image]: https://img.shields.io/badge/license-Apache2.0/MIT-blue.svg
-[rustc-image]: https://img.shields.io/badge/rustc-1.56+-blue.svg
+[rustc-image]: https://img.shields.io/badge/rustc-1.81+-blue.svg
 [hazmat-image]: https://img.shields.io/badge/crypto-hazmat%E2%9A%A0-red.svg
 [hazmat-link]: https://github.com/RustCrypto/meta/blob/master/HAZMAT.md
 

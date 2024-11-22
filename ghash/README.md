@@ -12,8 +12,6 @@ can be used for constructing a [Message Authentication Code (MAC)][3].
 
 Its primary intended use is for implementing [AES-GCM][4].
 
-[Documentation][docs-link]
-
 ## Security
 
 ### ⚠️ Warning: [Hazmat!][hazmat-link]
@@ -60,7 +58,7 @@ dual licensed as above, without any additional terms or conditions.
 [docs-image]: https://docs.rs/ghash/badge.svg
 [docs-link]: https://docs.rs/ghash/
 [license-image]: https://img.shields.io/badge/license-Apache2.0/MIT-blue.svg
-[rustc-image]: https://img.shields.io/badge/rustc-1.56+-blue.svg
+[rustc-image]: https://img.shields.io/badge/rustc-1.81+-blue.svg
 [build-image]: https://github.com/RustCrypto/universal-hashes/workflows/ghash/badge.svg?branch=master&event=push
 [build-link]: https://github.com/RustCrypto/universal-hashes/actions?query=workflow%3Aghash
 [hazmat-image]: https://img.shields.io/badge/crypto-hazmat%E2%9A%A0-red.svg
