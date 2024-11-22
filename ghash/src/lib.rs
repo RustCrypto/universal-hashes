@@ -94,15 +94,15 @@ impl KeyInit for GHash {
 
 struct GHashBackend<'b, B: UhfBackend>(&'b mut B);
 
-impl<'b, B: UhfBackend> BlockSizeUser for GHashBackend<'b, B> {
+impl<B: UhfBackend> BlockSizeUser for GHashBackend<'_, B> {
     type BlockSize = B::BlockSize;
 }
 
-impl<'b, B: UhfBackend> ParBlocksSizeUser for GHashBackend<'b, B> {
+impl<B: UhfBackend> ParBlocksSizeUser for GHashBackend<'_, B> {
     type ParBlocksSize = B::ParBlocksSize;
 }
 
-impl<'b, B: UhfBackend> UhfBackend for GHashBackend<'b, B> {
+impl<B: UhfBackend> UhfBackend for GHashBackend<'_, B> {
     fn proc_block(&mut self, x: &universal_hash::Block<B>) {
         let mut x = x.clone();
         x.reverse();

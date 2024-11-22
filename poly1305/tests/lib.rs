@@ -76,7 +76,7 @@ fn test_tls_vectors() {
     let mut poly = Poly1305::new(key.as_ref());
 
     let blocks = Block::slice_as_chunks(&msg).0;
-    poly.update(&blocks);
+    poly.update(blocks);
 
     assert_eq!(&expected[..], poly.finalize().as_slice());
 }
