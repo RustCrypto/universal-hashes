@@ -99,7 +99,7 @@ impl Polyval {
 unsafe fn karatsuba1(x: uint8x16_t, y: uint8x16_t) -> (uint8x16_t, uint8x16_t, uint8x16_t) {
     // First Karatsuba step: decompose x and y.
     //
-    // (x1*y0 + x0*y1) = (x1+x0) * (y1+x0) + (x1*y1) + (x0*y0)
+    // (x1*y0 + x0*y1) = (x1+x0) * (y1+y0) + (x1*y1) + (x0*y0)
     //        M                                 H         L
     //
     // m = x.hi^x.lo * y.hi^y.lo
