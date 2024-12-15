@@ -21,10 +21,7 @@ use universal_hash::{
 
 use crate::{Block, Key, Tag};
 
-/// Montgomery reduction polynomial `p(x)` defined as:
-/// \[
-///     p(x) = x^{127} + x^{126} + x^{121} + x^{63} + x^{62} + x^{57}
-/// \]
+/// Montgomery reduction polynomial
 const POLY: u128 = (1 << 127) | (1 << 126) | (1 << 121) | (1 << 63) | (1 << 62) | (1 << 57);
 
 /// **POLYVAL**: GHASH-like universal hash over GF(2^128).
