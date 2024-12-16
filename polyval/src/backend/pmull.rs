@@ -21,6 +21,9 @@ use universal_hash::{
 
 use crate::{Block, Key, Tag};
 
+/// Montgomery reduction polynomial
+const POLY: u128 = (1 << 127) | (1 << 126) | (1 << 121) | (1 << 63) | (1 << 62) | (1 << 57);
+
 /// **POLYVAL**: GHASH-like universal hash over GF(2^128).
 #[derive(Clone)]
 pub struct Polyval {
@@ -163,7 +166,7 @@ unsafe fn mont_reduce(x23: uint8x16_t, x01: uint8x16_t) -> uint8x16_t {
     //    [C1:C0] = B0 • poly
     //    [D1:D0] = [B0 ⊕ C1 : B1 ⊕ C0]
     // Output: [D1 ⊕ X3 : D0 ⊕ X2]
-    let poly = vreinterpretq_u8_p128(1 << 127 | 1 << 126 | 1 << 121 | 1 << 63 | 1 << 62 | 1 << 57);
+    let poly = vreinterpretq_u8_p128(POLY);
     let a = pmull(x01, poly);
     let b = veorq_u8(x01, vextq_u8(a, a, 8));
     let c = pmull2(b, poly);
