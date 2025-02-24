@@ -39,6 +39,7 @@ jobs:
           targets: ${{ matrix.target }}
       - run: cargo build --target ${{ matrix.target }} --release
       - run: cargo build --target ${{ matrix.target }} --release --features zeroize
+      - run: cargo build --target ${{ matrix.target }} --release --all-features
 
   # Tests for runtime AVX2 detection
   autodetect:
@@ -68,9 +69,8 @@ jobs:
       - run: ${{ matrix.deps }}
       - run: cargo check --target ${{ matrix.target }} --all-features
       - run: cargo test --target ${{ matrix.target }} --release
-      - run: cargo test --target ${{ matrix.target }} --release --features std
       - run: cargo test --target ${{ matrix.target }} --release --features zeroize
-      - run: cargo test --target ${{ matrix.target }} --release --features std,zeroize
+      - run: cargo test --target ${{ matrix.target }} --release --all-features
 
   # Tests for the AVX2 backend
   avx2:
@@ -102,7 +102,6 @@ jobs:
       - run: ${{ matrix.deps }}
       - run: cargo check --target ${{ matrix.target }} --all-features
       - run: cargo test --target ${{ matrix.target }} --release
-      - run: cargo test --target ${{ matrix.target }} --release --features std
       - run: cargo test --target ${{ matrix.target }} --release --features zeroize
       - run: cargo test --target ${{ matrix.target }} --release --all-features
 
@@ -136,7 +135,6 @@ jobs:
       - run: ${{ matrix.deps }}
       - run: cargo check --target ${{ matrix.target }} --all-features
       - run: cargo test --target ${{ matrix.target }} --release
-      - run: cargo test --target ${{ matrix.target }} --release --features std
       - run: cargo test --target ${{ matrix.target }} --release --features zeroize
       - run: cargo test --target ${{ matrix.target }} --release --all-features
 
@@ -158,5 +156,5 @@ jobs:
           targets: ${{ matrix.target }}
       - run: cargo install cross
       - run: cross test --target ${{ matrix.target }} --release
-      - run: cross test --target ${{ matrix.target }} --release --features std
+      - run: cross test --target ${{ matrix.target }} --release --features zeroize
       - run: cross test --target ${{ matrix.target }} --release --all-features
