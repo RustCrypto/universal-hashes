@@ -9,7 +9,7 @@ Collection of [Universal Hash Functions][1] written in pure Rust.
 ## Crates
 
 | Name         | Crates.io | Documentation | MSRV |
-|--------------|-----------|---------------|------|
+|--------------|:---------:|:-------------:|:----:|
 | [`ghash`]    | [![crates.io](https://img.shields.io/crates/v/ghash.svg)](https://crates.io/crates/ghash) | [![Documentation](https://docs.rs/ghash/badge.svg)](https://docs.rs/ghash) | ![MSRV 1.85][msrv-1.85] |
 | [`poly1305`] | [![crates.io](https://img.shields.io/crates/v/poly1305.svg)](https://crates.io/crates/poly1305) | [![Documentation](https://docs.rs/poly1305/badge.svg)](https://docs.rs/poly1305) | ![MSRV 1.85][msrv-1.85] |
 | [`polyval`]  | [![crates.io](https://img.shields.io/crates/v/polyval.svg)](https://crates.io/crates/polyval) | [![Documentation](https://docs.rs/polyval/badge.svg)](https://docs.rs/polyval) | ![MSRV 1.85][msrv-1.85] |
