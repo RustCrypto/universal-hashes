@@ -13,9 +13,9 @@
 // https://github.com/floodyberry/poly1305-donna
 
 use universal_hash::{
+    UhfBackend, UhfClosure, UniversalHash,
     consts::{U1, U16},
     crypto_common::{BlockSizeUser, ParBlocksSizeUser},
-    UhfBackend, UhfClosure, UniversalHash,
 };
 
 use crate::{Block, Key, Tag};

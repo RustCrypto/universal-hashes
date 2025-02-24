@@ -11,9 +11,9 @@ use core::{
 };
 
 use universal_hash::{
+    KeyInit, Reset, UhfBackend, UhfClosure, UniversalHash,
     consts::{U1, U16},
     crypto_common::{BlockSizeUser, KeySizeUser, ParBlocksSizeUser},
-    KeyInit, Reset, UhfBackend, UhfClosure, UniversalHash,
 };
 
 #[cfg(feature = "zeroize")]

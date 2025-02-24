@@ -1,9 +1,9 @@
 use hex_literal::hex;
 use poly1305::{
+    Block, KEY_SIZE, Poly1305,
     universal_hash::{KeyInit, UniversalHash},
-    Block, Poly1305, KEY_SIZE,
 };
-use std::iter::repeat;
+use std::iter::repeat_n;
 
 #[test]
 fn test_nacl_vector() {
@@ -56,9 +56,9 @@ fn donna_self_test2() {
 
     for i in 0..256 {
         let mut key = [0u8; KEY_SIZE];
-        key.copy_from_slice(&repeat(i as u8).take(KEY_SIZE).collect::<Vec<_>>());
+        key.copy_from_slice(&repeat_n(i as u8, KEY_SIZE).collect::<Vec<_>>());
 
-        let msg: Vec<u8> = repeat(i as u8).take(256).collect();
+        let msg: Vec<u8> = repeat_n(i as u8, 256).collect();
         let tag = Poly1305::new(key.as_ref()).compute_unpadded(&msg[..i]);
         tpoly.update(&[tag]);
     }

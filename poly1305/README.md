@@ -18,9 +18,8 @@ In practice, Poly1305 is primarily combined with ciphers from the
 
 ### ⚠️ Warning: [Hazmat!][hazmat-link]
 
-Universal hash functions have subtle security properties and using them
-correctly is difficult. See the [toplevel README.md](../README.md) for more
-information.
+Universal hash functions have subtle security properties and are primarily intended as a 
+building block for constructions like AEAD algorithms.
 
 USE AT YOUR OWN RISK!
 
@@ -62,7 +61,7 @@ dual licensed as above, without any additional terms or conditions.
 [docs-image]: https://docs.rs/poly1305/badge.svg
 [docs-link]: https://docs.rs/poly1305/
 [license-image]: https://img.shields.io/badge/license-Apache2.0/MIT-blue.svg
-[rustc-image]: https://img.shields.io/badge/rustc-1.81+-blue.svg
+[rustc-image]: https://img.shields.io/badge/rustc-1.85+-blue.svg
 [build-image]: https://github.com/RustCrypto/universal-hashes/workflows/poly1305/badge.svg?branch=master&event=push
 [build-link]: https://github.com/RustCrypto/universal-hashes/actions?query=workflow%3Apoly1305
 [hazmat-image]: https://img.shields.io/badge/crypto-hazmat%E2%9A%A0-red.svg

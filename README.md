@@ -8,11 +8,11 @@ Collection of [Universal Hash Functions][1] written in pure Rust.
 
 ## Crates
 
-| Name         | Crates.io | Documentation | Build Status |
-|--------------|-----------|---------------|--------------|
-| [`ghash`]    | [![crates.io](https://img.shields.io/crates/v/ghash.svg)](https://crates.io/crates/ghash) | [![Documentation](https://docs.rs/ghash/badge.svg)](https://docs.rs/ghash) | ![build](https://github.com/RustCrypto/universal-hashes/workflows/ghash/badge.svg?branch=master&event=push) |
-| [`poly1305`] | [![crates.io](https://img.shields.io/crates/v/poly1305.svg)](https://crates.io/crates/poly1305) | [![Documentation](https://docs.rs/poly1305/badge.svg)](https://docs.rs/poly1305) | ![build](https://github.com/RustCrypto/universal-hashes/workflows/poly1305/badge.svg?branch=master&event=push) |
-| [`polyval`]  | [![crates.io](https://img.shields.io/crates/v/polyval.svg)](https://crates.io/crates/polyval) | [![Documentation](https://docs.rs/polyval/badge.svg)](https://docs.rs/polyval) | ![build](https://github.com/RustCrypto/universal-hashes/workflows/polyval/badge.svg?branch=master&event=push) |
+| Name         | Crates.io | Documentation | MSRV |
+|--------------|-----------|---------------|------|
+| [`ghash`]    | [![crates.io](https://img.shields.io/crates/v/ghash.svg)](https://crates.io/crates/ghash) | [![Documentation](https://docs.rs/ghash/badge.svg)](https://docs.rs/ghash) | ![MSRV 1.85][msrv-1.85] |
+| [`poly1305`] | [![crates.io](https://img.shields.io/crates/v/poly1305.svg)](https://crates.io/crates/poly1305) | [![Documentation](https://docs.rs/poly1305/badge.svg)](https://docs.rs/poly1305) | ![MSRV 1.85][msrv-1.85] |
+| [`polyval`]  | [![crates.io](https://img.shields.io/crates/v/polyval.svg)](https://crates.io/crates/polyval) | [![Documentation](https://docs.rs/polyval/badge.svg)](https://docs.rs/polyval) | ![MSRV 1.85][msrv-1.85] |
 
 ## ⚠️ Security Warning: [Hazmat!][hazmat-link]
 
@@ -23,15 +23,7 @@ USE AT YOUR OWN RISK!
 
 ## Usage
 
-Crates functionality is expressed in terms of traits defined in the [`universal-hash`][2]
-crate.
-
-### Minimum Supported Rust Version
-
-All crates in this repository support **Rust 1.56** or higher.
-
-In the future, we reserve the right to change the Minimum Supported Rust
-Version, but it will be done with the minor version bump.
+Crates functionality is expressed in terms of traits defined in the [`universal-hash`][2] crate.
 
 ## License
 
@@ -55,6 +47,8 @@ dual licensed as above, without any additional terms or conditions.
 [deps-link]: https://deps.rs/repo/github/RustCrypto/universal-hashes
 [hazmat-image]: https://img.shields.io/badge/crypto-hazmat%E2%9A%A0-red.svg
 [hazmat-link]: https://github.com/RustCrypto/meta/blob/master/HAZMAT.md
+
+[msrv-1.85]: https://img.shields.io/badge/rustc-1.85.0+-blue.svg
 
 [//]: # (crates)
 

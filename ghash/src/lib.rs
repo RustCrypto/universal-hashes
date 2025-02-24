@@ -27,15 +27,15 @@
     html_logo_url = "https://raw.githubusercontent.com/RustCrypto/media/8f1a9894/logo.svg",
     html_favicon_url = "https://raw.githubusercontent.com/RustCrypto/media/8f1a9894/logo.svg"
 )]
-#![warn(missing_docs, rust_2018_idioms)]
+#![warn(missing_docs)]
 
 pub use polyval::universal_hash;
 
 use polyval::Polyval;
 use universal_hash::{
+    KeyInit, UhfBackend, UhfClosure, UniversalHash,
     consts::U16,
     crypto_common::{BlockSizeUser, KeySizeUser, ParBlocksSizeUser},
-    KeyInit, UhfBackend, UhfClosure, UniversalHash,
 };
 
 #[cfg(feature = "zeroize")]

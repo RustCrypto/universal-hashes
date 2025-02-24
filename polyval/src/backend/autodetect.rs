@@ -1,12 +1,12 @@
 //! Autodetection for CPU intrinsics, with fallback to the "soft" backend when
 //! they are unavailable.
 
-use crate::{backend::soft, Key, Tag};
+use crate::{Key, Tag, backend::soft};
 use core::mem::ManuallyDrop;
 use universal_hash::{
+    KeyInit, Reset, UhfClosure, UniversalHash,
     consts::U16,
     crypto_common::{BlockSizeUser, KeySizeUser},
-    KeyInit, Reset, UhfClosure, UniversalHash,
 };
 
 #[cfg(target_arch = "aarch64")]

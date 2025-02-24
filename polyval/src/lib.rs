@@ -76,7 +76,7 @@
     html_logo_url = "https://raw.githubusercontent.com/RustCrypto/media/8f1a9894/logo.svg",
     html_favicon_url = "https://raw.githubusercontent.com/RustCrypto/media/8f1a9894/logo.svg"
 )]
-#![warn(missing_docs, rust_2018_idioms)]
+#![warn(missing_docs)]
 
 mod backend;
 mod mulx;

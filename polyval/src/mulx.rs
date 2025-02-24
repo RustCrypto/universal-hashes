@@ -19,7 +19,7 @@ pub fn mulx(block: &Block) -> Block {
 
 #[cfg(test)]
 mod tests {
-    use super::{mulx, Block};
+    use super::{Block, mulx};
     use hex_literal::hex;
 
     /// Test vector given in RFC 8452 Appendix A.

@@ -12,8 +12,8 @@ repository = "https://github.com/RustCrypto/universal-hashes"
 readme = "README.md"
 keywords = ["aes-gcm", "crypto", "universal-hashing"]
 categories = ["cryptography", "no-std"]
-rust-version = "1.81"
-edition = "2021"
+rust-version = "1.85"
+edition = "2024"
 
 [dependencies]
 opaque-debug = "0.3"
@@ -23,7 +23,4 @@ polyval = { version = "0.7.0-rc.0", path = "../polyval" }
 zeroize = { version = "1", optional = true, default-features = false }
 
 [dev-dependencies]
-hex-literal = "0.4"
-
-[features]
-std = ["polyval/std"]
+hex-literal = "1"

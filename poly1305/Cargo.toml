@@ -9,8 +9,8 @@ repository = "https://github.com/RustCrypto/universal-hashes"
 keywords = ["crypto", "chacha20", "mac", "salsa20", "universal-hashing"]
 categories = ["cryptography", "no-std"]
 readme = "README.md"
-rust-version = "1.81"
-edition = "2021"
+rust-version = "1.85"
+edition = "2024"
 
 [dependencies]
 opaque-debug = "0.3"
@@ -21,10 +21,7 @@ zeroize = { version = "1", optional = true, default-features = false }
 cpufeatures = "0.2"
 
 [dev-dependencies]
-hex-literal = "0.4"
-
-[features]
-std = ["universal-hash/std"]
+hex-literal = "1"
 
 [lints.rust.unexpected_cfgs]
 level = "warn"

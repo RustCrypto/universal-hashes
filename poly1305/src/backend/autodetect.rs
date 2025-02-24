@@ -1,9 +1,9 @@
 //! Autodetection support for AVX2 CPU intrinsics on x86 CPUs, with fallback
 //! to the "soft" backend when it's unavailable.
 
-use universal_hash::{consts::U16, crypto_common::BlockSizeUser, UhfClosure, UniversalHash};
+use universal_hash::{UhfClosure, UniversalHash, consts::U16, crypto_common::BlockSizeUser};
 
-use crate::{backend, Block, Key, Tag};
+use crate::{Block, Key, Tag, backend};
 use core::mem::ManuallyDrop;
 
 cpufeatures::new!(avx2_cpuid, "avx2");

@@ -7,9 +7,9 @@ use core::arch::x86::*;
 use core::arch::x86_64::*;
 
 use universal_hash::{
+    KeyInit, Reset, UhfBackend,
     consts::{U1, U16},
     crypto_common::{BlockSizeUser, KeySizeUser, ParBlocksSizeUser},
-    KeyInit, Reset, UhfBackend,
 };
 
 use crate::{Block, Key, Tag};
@@ -72,7 +72,21 @@ impl Polyval {
 impl Polyval {
     #[inline]
     #[target_feature(enable = "pclmulqdq")]
+    #[allow(unsafe_op_in_unsafe_fn)]
     unsafe fn mul(&mut self, x: &Block) {
+        #[inline(always)]
+        unsafe fn xor4(e1: __m128i, e2: __m128i, e3: __m128i, e4: __m128i) -> __m128i {
+            _mm_xor_si128(_mm_xor_si128(e1, e2), _mm_xor_si128(e3, e4))
+        }
+
+        #[inline(always)]
+        unsafe fn xor5(e1: __m128i, e2: __m128i, e3: __m128i, e4: __m128i, e5: __m128i) -> __m128i {
+            _mm_xor_si128(
+                e1,
+                _mm_xor_si128(_mm_xor_si128(e2, e3), _mm_xor_si128(e4, e5)),
+            )
+        }
+
         let h = self.h;
 
         // `_mm_loadu_si128` performs an unaligned load
@@ -147,17 +161,4 @@ impl Drop for Polyval {
         self.h.zeroize();
         self.y.zeroize();
     }
-}
-
-#[inline(always)]
-unsafe fn xor4(e1: __m128i, e2: __m128i, e3: __m128i, e4: __m128i) -> __m128i {
-    _mm_xor_si128(_mm_xor_si128(e1, e2), _mm_xor_si128(e3, e4))
-}
-
-#[inline(always)]
-unsafe fn xor5(e1: __m128i, e2: __m128i, e3: __m128i, e4: __m128i, e5: __m128i) -> __m128i {
-    _mm_xor_si128(
-        e1,
-        _mm_xor_si128(_mm_xor_si128(e2, e3), _mm_xor_si128(e4, e5)),
-    )
 }

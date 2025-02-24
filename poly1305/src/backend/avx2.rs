@@ -14,12 +14,13 @@
 // Note that State only implements the original Goll-Gueron algorithm, not the
 // optimisations provided by Bhattacharyya and Sarkar. The latter require the message
 // length to be known, which is incompatible with the streaming API of UniversalHash.
+#![allow(unsafe_op_in_unsafe_fn)]
 
 use universal_hash::{
-    array::Array,
-    consts::{U16, U4},
-    crypto_common::{BlockSizeUser, ParBlocksSizeUser},
     UhfBackend,
+    array::Array,
+    consts::{U4, U16},
+    crypto_common::{BlockSizeUser, ParBlocksSizeUser},
 };
 
 use crate::{Block, Key, Tag};

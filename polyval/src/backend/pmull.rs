@@ -10,13 +10,14 @@
 //! For more information about PMULL, see:
 //! - <https://developer.arm.com/documentation/100069/0608/A64-SIMD-Vector-Instructions/PMULL--PMULL2--vector->
 //! - <https://eprint.iacr.org/2015/688.pdf>
+#![allow(unsafe_op_in_unsafe_fn)]
 
 use core::{arch::aarch64::*, mem};
 
 use universal_hash::{
+    KeyInit, Reset, UhfBackend,
     consts::{U1, U16},
     crypto_common::{BlockSizeUser, KeySizeUser, ParBlocksSizeUser},
-    KeyInit, Reset, UhfBackend,
 };
 
 use crate::{Block, Key, Tag};

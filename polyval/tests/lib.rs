@@ -1,7 +1,7 @@
 use hex_literal::hex;
 use polyval::{
+    BLOCK_SIZE, Polyval,
     universal_hash::{KeyInit, UniversalHash},
-    Polyval, BLOCK_SIZE,
 };
 
 //

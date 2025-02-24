@@ -12,8 +12,8 @@ repository = "https://github.com/RustCrypto/universal-hashes"
 readme = "README.md"
 keywords = ["aes-gcm", "aes-gcm-siv", "crypto", "ghash", "universal-hashing"]
 categories = ["cryptography", "no-std"]
-rust-version = "1.81"
-edition = "2021"
+rust-version = "1.85"
+edition = "2024"
 
 [dependencies]
 cfg-if = "1"
@@ -25,10 +25,7 @@ zeroize = { version = "1", optional = true, default-features = false }
 cpufeatures = "0.2"
 
 [dev-dependencies]
-hex-literal = "0.4"
-
-[features]
-std = ["universal-hash/std"]
+hex-literal = "1"
 
 [lints.rust.unexpected_cfgs]
 level = "warn"

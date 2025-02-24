@@ -19,9 +19,8 @@ closely related to [GHASH][6] and therefore can also be used to implement
 
 ### ⚠️ Warning: [Hazmat!][hazmat-link]
 
-Universal hash functions have subtle security properties and using them
-correctly is difficult. See the [toplevel README.md](../README.md) for more
-information.
+Universal hash functions have subtle security properties and are primarily intended as a 
+building block for constructions like AEAD algorithms.
 
 USE AT YOUR OWN RISK!
 
@@ -63,7 +62,7 @@ dual licensed as above, without any additional terms or conditions.
 [build-image]: https://github.com/RustCrypto/universal-hashes/workflows/polyval/badge.svg?branch=master&event=push
 [build-link]: https://github.com/RustCrypto/universal-hashes/actions?query=workflow%3Apolyval
 [license-image]: https://img.shields.io/badge/license-Apache2.0/MIT-blue.svg
-[rustc-image]: https://img.shields.io/badge/rustc-1.81+-blue.svg
+[rustc-image]: https://img.shields.io/badge/rustc-1.85+-blue.svg
 [hazmat-image]: https://img.shields.io/badge/crypto-hazmat%E2%9A%A0-red.svg
 [hazmat-link]: https://github.com/RustCrypto/meta/blob/master/HAZMAT.md
 

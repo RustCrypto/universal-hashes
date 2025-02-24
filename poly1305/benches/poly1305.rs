@@ -3,8 +3,8 @@
 extern crate test;
 
 use poly1305::{
-    universal_hash::{KeyInit, UniversalHash},
     Poly1305,
+    universal_hash::{KeyInit, UniversalHash},
 };
 use test::Bencher;
 
