@@ -1,4 +1,5 @@
 //! AVX2 helpers for implementing Poly1305 using 26-bit limbs.
+#![allow(unsafe_op_in_unsafe_fn)]
 
 use core::fmt;
 use core::ops::{Add, Mul};

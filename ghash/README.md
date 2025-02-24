@@ -16,9 +16,8 @@ Its primary intended use is for implementing [AES-GCM][4].
 
 ### ⚠️ Warning: [Hazmat!][hazmat-link]
 
-Universal hash functions have subtle security properties and using them
-correctly is difficult. See the [toplevel README.md](../README.md) for more
-information.
+Universal hash functions have subtle security properties and are primarily intended as a 
+building block for constructions like AEAD algorithms.
 
 USE AT YOUR OWN RISK!
 
@@ -58,7 +57,7 @@ dual licensed as above, without any additional terms or conditions.
 [docs-image]: https://docs.rs/ghash/badge.svg
 [docs-link]: https://docs.rs/ghash/
 [license-image]: https://img.shields.io/badge/license-Apache2.0/MIT-blue.svg
-[rustc-image]: https://img.shields.io/badge/rustc-1.81+-blue.svg
+[rustc-image]: https://img.shields.io/badge/rustc-1.85+-blue.svg
 [build-image]: https://github.com/RustCrypto/universal-hashes/workflows/ghash/badge.svg?branch=master&event=push
 [build-link]: https://github.com/RustCrypto/universal-hashes/actions?query=workflow%3Aghash
 [hazmat-image]: https://img.shields.io/badge/crypto-hazmat%E2%9A%A0-red.svg

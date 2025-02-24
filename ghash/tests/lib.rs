@@ -1,6 +1,6 @@
 use ghash::{
-    universal_hash::{KeyInit, UniversalHash},
     GHash,
+    universal_hash::{KeyInit, UniversalHash},
 };
 use hex_literal::hex;
 

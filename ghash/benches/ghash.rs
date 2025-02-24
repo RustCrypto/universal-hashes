@@ -3,8 +3,8 @@
 extern crate test;
 
 use ghash::{
-    universal_hash::{KeyInit, UniversalHash},
     GHash,
+    universal_hash::{KeyInit, UniversalHash},
 };
 use test::Bencher;
 

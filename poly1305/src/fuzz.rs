@@ -1,6 +1,6 @@
 use universal_hash::UniversalHash;
 
-use crate::{backend, Block, Key};
+use crate::{Block, Key, backend};
 
 /// Helper function for fuzzing the AVX2 backend.
 pub fn fuzz_avx2(key: &Key, data: &[u8]) {
