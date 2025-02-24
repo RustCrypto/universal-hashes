@@ -2,6 +2,7 @@
 
 [![crate][crate-image]][crate-link]
 [![Docs][docs-image]][docs-link]
+[![Project Chat][chat-image]][chat-link]
 ![Apache2/MIT licensed][license-image]
 ![Rust Version][rustc-image]
 [![Build Status][build-image]][build-link]
@@ -56,6 +57,8 @@ dual licensed as above, without any additional terms or conditions.
 [crate-link]: https://crates.io/crates/ghash
 [docs-image]: https://docs.rs/ghash/badge.svg
 [docs-link]: https://docs.rs/ghash/
+[chat-image]: https://img.shields.io/badge/zulip-join_chat-blue.svg
+[chat-link]: https://rustcrypto.zulipchat.com/#narrow/channel/260051-universal-hashes
 [license-image]: https://img.shields.io/badge/license-Apache2.0/MIT-blue.svg
 [rustc-image]: https://img.shields.io/badge/rustc-1.85+-blue.svg
 [build-image]: https://github.com/RustCrypto/universal-hashes/workflows/ghash/badge.svg?branch=master&event=push
