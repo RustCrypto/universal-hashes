@@ -62,7 +62,7 @@ dual licensed as above, without any additional terms or conditions.
 [license-image]: https://img.shields.io/badge/license-Apache2.0/MIT-blue.svg
 [rustc-image]: https://img.shields.io/badge/rustc-1.85+-blue.svg
 [build-image]: https://github.com/RustCrypto/universal-hashes/actions/workflows/ghash.yml/badge.svg?branch=master
-[build-link]: https://github.com/RustCrypto/universal-hashes/actions/workflows/ghash.yml
+[build-link]: https://github.com/RustCrypto/universal-hashes/actions/workflows/ghash.yml?query=branch:master
 [hazmat-image]: https://img.shields.io/badge/crypto-hazmat%E2%9A%A0-red.svg
 [hazmat-link]: https://github.com/RustCrypto/meta/blob/master/HAZMAT.md
 

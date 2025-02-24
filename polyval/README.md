@@ -63,7 +63,7 @@ dual licensed as above, without any additional terms or conditions.
 [chat-image]: https://img.shields.io/badge/zulip-join_chat-blue.svg
 [chat-link]: https://rustcrypto.zulipchat.com/#narrow/channel/260051-universal-hashes
 [build-image]: https://github.com/RustCrypto/universal-hashes/actions/workflows/polyval.yml/badge.svg?branch=master
-[build-link]: https://github.com/RustCrypto/universal-hashes/actions/workflows/polyval.yml
+[build-link]: https://github.com/RustCrypto/universal-hashes/actions/workflows/polyval.yml?query=branch:master
 [license-image]: https://img.shields.io/badge/license-Apache2.0/MIT-blue.svg
 [rustc-image]: https://img.shields.io/badge/rustc-1.85+-blue.svg
 [hazmat-image]: https://img.shields.io/badge/crypto-hazmat%E2%9A%A0-red.svg
