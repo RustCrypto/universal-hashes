@@ -61,7 +61,7 @@ dual licensed as above, without any additional terms or conditions.
 [chat-link]: https://rustcrypto.zulipchat.com/#narrow/channel/260051-universal-hashes
 [license-image]: https://img.shields.io/badge/license-Apache2.0/MIT-blue.svg
 [rustc-image]: https://img.shields.io/badge/rustc-1.85+-blue.svg
-[build-image]: https://github.com/RustCrypto/universal-hashes/actions/workflows/ghash.yml/badge.svg
+[build-image]: https://github.com/RustCrypto/universal-hashes/actions/workflows/ghash.yml/badge.svg?branch=master
 [build-link]: https://github.com/RustCrypto/universal-hashes/actions/workflows/ghash.yml
 [hazmat-image]: https://img.shields.io/badge/crypto-hazmat%E2%9A%A0-red.svg
 [hazmat-link]: https://github.com/RustCrypto/meta/blob/master/HAZMAT.md
