@@ -1,10 +1,11 @@
 # RustCrypto: Universal Hash Functions
 
-![Rust Version][rustc-image]
+[![Project Chat][chat-image]][chat-link]
 [![dependency status][deps-image]][deps-link]
+![Apache2/MIT licensed][license-image]
 [![HAZMAT][hazmat-image]][hazmat-link]
 
-Collection of [Universal Hash Functions][1] written in pure Rust.
+Collection of [Universal Hash Functions] written in pure Rust.
 
 ## Crates
 
@@ -23,7 +24,7 @@ USE AT YOUR OWN RISK!
 
 ## Usage
 
-Crates functionality is expressed in terms of traits defined in the [`universal-hash`][2] crate.
+Crates functionality is expressed in terms of traits defined in the [`universal-hash`] crate.
 
 ## License
 
@@ -42,9 +43,11 @@ dual licensed as above, without any additional terms or conditions.
 
 [//]: # (badges)
 
-[rustc-image]: https://img.shields.io/badge/rustc-1.56+-blue.svg
+[chat-image]: https://img.shields.io/badge/zulip-join_chat-blue.svg
+[chat-link]: https://rustcrypto.zulipchat.com/#narrow/channel/260051-universal-hashes
 [deps-image]: https://deps.rs/repo/github/RustCrypto/universal-hashes/status.svg
 [deps-link]: https://deps.rs/repo/github/RustCrypto/universal-hashes
+[license-image]: https://img.shields.io/badge/license-Apache2.0/MIT-blue.svg
 [hazmat-image]: https://img.shields.io/badge/crypto-hazmat%E2%9A%A0-red.svg
 [hazmat-link]: https://github.com/RustCrypto/meta/blob/master/HAZMAT.md
 
@@ -58,5 +61,5 @@ dual licensed as above, without any additional terms or conditions.
 
 [//]: # (footnotes)
 
-[1]: https://en.wikipedia.org/wiki/Universal_hashing
-[2]: https://docs.rs/universal-hash
+[Universal Hash Functions]: https://en.wikipedia.org/wiki/Universal_hashing
+[`universal-hash`]: https://docs.rs/universal-hash

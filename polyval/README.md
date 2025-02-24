@@ -2,6 +2,7 @@
 
 [![crate][crate-image]][crate-link]
 [![Docs][docs-image]][docs-link]
+[![Project Chat][chat-image]][chat-link]
 [![Build Status][build-image]][build-link]
 ![Apache2/MIT licensed][license-image]
 ![Rust Version][rustc-image]
@@ -59,8 +60,10 @@ dual licensed as above, without any additional terms or conditions.
 [crate-link]: https://crates.io/crates/polyval
 [docs-image]: https://docs.rs/polyval/badge.svg
 [docs-link]: https://docs.rs/polyval/
-[build-image]: https://github.com/RustCrypto/universal-hashes/workflows/polyval/badge.svg?branch=master&event=push
-[build-link]: https://github.com/RustCrypto/universal-hashes/actions?query=workflow%3Apolyval
+[chat-image]: https://img.shields.io/badge/zulip-join_chat-blue.svg
+[chat-link]: https://rustcrypto.zulipchat.com/#narrow/channel/260051-universal-hashes
+[build-image]: https://github.com/RustCrypto/universal-hashes/actions/workflows/polyval.yml/badge.svg?branch=master
+[build-link]: https://github.com/RustCrypto/universal-hashes/actions/workflows/polyval.yml?query=branch:master
 [license-image]: https://img.shields.io/badge/license-Apache2.0/MIT-blue.svg
 [rustc-image]: https://img.shields.io/badge/rustc-1.85+-blue.svg
 [hazmat-image]: https://img.shields.io/badge/crypto-hazmat%E2%9A%A0-red.svg
