@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.7.0 (UNRELEASED)
+### Changed
+- Edition changed to 2024 and MSRV bumped to 1.85 ([#228])
+- Relax MSRV policy and allow MSRV bumps in patch releases
+- Update to `universal-hash` v0.6
+
+[#228]: https://github.com/RustCrypto/universal-hashes/pull/228
+
 ## 0.6.2 (2022-03-03)
 ### Added
 - add `new_with_init_block` ([#195])
