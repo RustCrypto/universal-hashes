@@ -160,10 +160,7 @@ where
 }
 
 impl<const N: usize> core::fmt::Debug for GHashGeneric<N> {
-    fn fmt(
-        &self,
-        f: &mut core::fmt::Formatter,
-    ) -> Result<(), core::fmt::Error> {
+    fn fmt(&self, f: &mut core::fmt::Formatter) -> Result<(), core::fmt::Error> {
         write!(f, "GHashGeneric<{}> {{ ... }}", N)
     }
 }
