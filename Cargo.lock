@@ -30,7 +30,6 @@ name = "ghash"
 version = "0.6.0-rc.0"
 dependencies = [
  "hex-literal",
- "opaque-debug",
  "polyval",
  "zeroize",
 ]
