@@ -17,6 +17,7 @@ cfg_if! {
     ))] {
         mod autodetect;
         mod clmul;
+        mod common;
         pub use crate::backend::autodetect::Polyval;
     } else {
         pub use crate::backend::soft::Polyval;

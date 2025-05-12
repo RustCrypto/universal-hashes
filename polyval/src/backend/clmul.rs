@@ -10,55 +10,92 @@ use core::arch::x86::*;
 use core::arch::x86_64::*;
 
 use universal_hash::{
-    KeyInit, Reset, UhfBackend,
-    consts::{U1, U16},
+    KeyInit, ParBlocks, Reset, UhfBackend,
+    array::ArraySize,
+    consts::{U16},
     crypto_common::{BlockSizeUser, KeySizeUser, ParBlocksSizeUser},
+    typenum::{Const, ToUInt, U},
 };
 
-use crate::{Block, Key, Tag};
+use crate::{Block, Key, Tag, backend::common};
 use core::ptr;
 
 /// **POLYVAL**: GHASH-like universal hash over GF(2^128).
 #[derive(Clone)]
-pub struct Polyval {
-    h: __m128i,
+pub struct Polyval<const N: usize = 8> {
+    h: [__m128i; N],
     y: __m128i,
 }
 
-impl KeySizeUser for Polyval {
+impl<const N: usize> KeySizeUser for Polyval<N> {
     type KeySize = U16;
 }
 
-impl Polyval {
+impl<const N: usize> Polyval<N> {
     /// Initialize POLYVAL with the given `H` field element and initial block
     pub fn new_with_init_block(h: &Key, init_block: u128) -> Self {
         unsafe {
             // `_mm_loadu_si128` performs an unaligned load
             #[allow(clippy::cast_ptr_alignment)]
+            let h = _mm_loadu_si128(h.as_ptr() as *const __m128i);
+
             Self {
-                h: _mm_loadu_si128(h.as_ptr() as *const __m128i),
+		// introducing a closure here because polymul is unsafe.
+                h: common::powers_of_h(h, |a, b| { polymul(a, b) }),
                 y: _mm_loadu_si128(&init_block.to_be_bytes()[..] as *const _ as *const __m128i),
             }
         }
     }
 }
 
-impl KeyInit for Polyval {
+impl<const N: usize> KeyInit for Polyval<N> {
     /// Initialize POLYVAL with the given `H` field element
     fn new(h: &Key) -> Self {
         Self::new_with_init_block(h, 0)
     }
 }
 
-impl BlockSizeUser for Polyval {
+impl<const N: usize> BlockSizeUser for Polyval<N> {
     type BlockSize = U16;
 }
 
-impl ParBlocksSizeUser for Polyval {
-    type ParBlocksSize = U1;
+impl<const N: usize> ParBlocksSizeUser for Polyval<N>
+where
+    U<N>: ArraySize,
+    Const<N>: ToUInt,
+{
+    type ParBlocksSize = U<N>;
 }
 
-impl UhfBackend for Polyval {
+impl<const N: usize> UhfBackend for Polyval<N>
+where
+    U<N>: ArraySize,
+    Const<N>: ToUInt,
+{
+    fn proc_par_blocks(&mut self, blocks: &ParBlocks<Self>) {
+        unsafe {
+            let mut h = _mm_setzero_si128();
+            let mut m = _mm_setzero_si128();
+            let mut l = _mm_setzero_si128();
+
+            // Note: Manually unrolling this loop did not help in benchmarks.
+            for i in (0..N).rev() {
+                let mut x = _mm_loadu_si128(blocks[i].as_ptr().cast());
+                if i == 0 {
+                    x = _mm_xor_si128(x, self.y);
+                }
+                let y = self.h[i];
+                let (hh, mm, ll) = karatsuba1(x, y);
+                h = _mm_xor_si128(h, hh);
+                m = _mm_xor_si128(m, mm);
+                l = _mm_xor_si128(l, ll);
+            }
+
+            let (h, l) = karatsuba2(h, m, l);
+            self.y = mont_reduce(h, l);
+        }
+    }
+
     fn proc_block(&mut self, x: &Block) {
         unsafe {
             self.mul(x);
@@ -66,24 +103,24 @@ impl UhfBackend for Polyval {
     }
 }
 
-impl Polyval {
+impl<const N: usize> Polyval<N> {
     /// Get Polyval output
     pub(crate) fn finalize(self) -> Tag {
         unsafe { core::mem::transmute(self.y) }
     }
 }
 
-impl Polyval {
+impl<const N: usize> Polyval<N> {
     #[inline]
     #[target_feature(enable = "pclmulqdq")]
     #[allow(unsafe_op_in_unsafe_fn)]
     unsafe fn mul(&mut self, x: &Block) {
         let x = _mm_loadu_si128(x.as_ptr().cast());
-        self.y = polymul(_mm_xor_si128(self.y, x), self.h);
+        self.y = polymul(_mm_xor_si128(self.y, x), self.h[N - 1]);
     }
 }
 
-impl Reset for Polyval {
+impl<const N: usize> Reset for Polyval<N> {
     fn reset(&mut self) {
         unsafe {
             self.y = _mm_setzero_si128();
@@ -92,7 +129,7 @@ impl Reset for Polyval {
 }
 
 #[cfg(feature = "zeroize")]
-impl Drop for Polyval {
+impl<const N: usize> Drop for Polyval<N> {
     fn drop(&mut self) {
         use zeroize::Zeroize;
         self.h.zeroize();
