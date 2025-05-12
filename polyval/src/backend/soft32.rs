@@ -53,7 +53,7 @@ use zeroize::Zeroize;
 ///
 /// (This constant is not used when acceleration is not enabled.)
 #[derive(Clone)]
-pub struct Polyval<const N: usize> {
+pub struct Polyval<const N: usize = 1> {
     /// GF(2^128) field element input blocks are multiplied by
     h: U32x4,
 

@@ -38,7 +38,7 @@ pub struct Polyval<const N: usize = 8> {
 
 union Inner<const N: usize> {
     intrinsics: ManuallyDrop<intrinsics::Polyval<N>>,
-    soft: ManuallyDrop<soft::Polyval>,
+    soft: ManuallyDrop<soft::Polyval<N>>,
 }
 
 impl<const N: usize> KeySizeUser for Polyval<N> {
