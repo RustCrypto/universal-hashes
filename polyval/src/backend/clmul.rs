@@ -83,6 +83,34 @@ where
     Const<N>: ToUInt,
 {
     fn proc_par_blocks(&mut self, blocks: &ParBlocks<Self>) {
+	unsafe {
+	    self.mul_par_blocks(blocks);
+	}
+    }
+
+    fn proc_block(&mut self, x: &Block) {
+        unsafe {
+            self.mul(x);
+        }
+    }
+}
+
+impl<const N: usize> Polyval<N> {
+    /// Get Polyval output
+    pub(crate) fn finalize(self) -> Tag {
+        unsafe { core::mem::transmute(self.y) }
+    }
+}
+
+impl<const N: usize> Polyval<N>
+where
+    U<N>: ArraySize,
+    Const<N>: ToUInt,
+
+{
+    #[inline]
+    #[target_feature(enable = "pclmulqdq")]
+    unsafe fn mul_par_blocks(&mut self, blocks: &ParBlocks<Self>) {
         unsafe {
             let mut h = _mm_setzero_si128();
             let mut m = _mm_setzero_si128();
@@ -106,21 +134,6 @@ where
         }
     }
 
-    fn proc_block(&mut self, x: &Block) {
-        unsafe {
-            self.mul(x);
-        }
-    }
-}
-
-impl<const N: usize> Polyval<N> {
-    /// Get Polyval output
-    pub(crate) fn finalize(self) -> Tag {
-        unsafe { core::mem::transmute(self.y) }
-    }
-}
-
-impl<const N: usize> Polyval<N> {
     #[inline]
     #[target_feature(enable = "pclmulqdq")]
     #[allow(unsafe_op_in_unsafe_fn)]
