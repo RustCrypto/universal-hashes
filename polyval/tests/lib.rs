@@ -24,3 +24,25 @@ fn polyval_test_vector() {
     let result = poly.finalize();
     assert_eq!(&POLYVAL_RESULT[..], result.as_slice());
 }
+
+// A longer test case, to ensure that long-input optimizations
+// behave correctly.
+
+#[test]
+fn polyval_longer_test() {
+    let inp = (1..=4096).map(|n| (n * 47) as u8).collect::<Vec<_>>();
+
+    // Try computing polyval all at once.
+    let mut poly = Polyval::new(&H.into());
+    poly.update_padded(&inp);
+    let result1 = poly.finalize_reset();
+
+    // Try computing polyval one block at a time.
+    for block in inp.chunks(BLOCK_SIZE) {
+        poly.update(&[block.try_into().unwrap()]);
+    }
+    let result2 = poly.finalize();
+
+    // Make sure the results are the same.
+    assert_eq!(result1, result2);
+}
