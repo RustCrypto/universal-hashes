@@ -33,11 +33,11 @@ pub use polyval::universal_hash;
 
 use polyval::PolyvalGeneric;
 use universal_hash::{
-    array::ArraySize,
     KeyInit, UhfBackend, UhfClosure, UniversalHash,
+    array::ArraySize,
     consts::U16,
     crypto_common::{BlockSizeUser, KeySizeUser, ParBlocksSizeUser},
-    typenum::{U, ToUInt, Const},
+    typenum::{Const, ToUInt, U},
 };
 
 #[cfg(feature = "zeroize")]
@@ -99,7 +99,7 @@ impl<const N: usize> GHashGeneric<N> {
     }
 }
 
-impl<const N:usize> KeyInit for GHashGeneric<N> {
+impl<const N: usize> KeyInit for GHashGeneric<N> {
     /// Initialize GHASH with the given `H` field element
     #[inline]
     fn new(h: &Key) -> Self {
@@ -125,11 +125,11 @@ impl<B: UhfBackend> UhfBackend for GHashGenericBackend<'_, B> {
     }
 }
 
-impl<const N:usize> BlockSizeUser for GHashGeneric<N> {
+impl<const N: usize> BlockSizeUser for GHashGeneric<N> {
     type BlockSize = U16;
 }
 
-impl<const N:usize> UniversalHash for GHashGeneric<N>
+impl<const N: usize> UniversalHash for GHashGeneric<N>
 where
     U<N>: ArraySize,
     Const<N>: ToUInt,
