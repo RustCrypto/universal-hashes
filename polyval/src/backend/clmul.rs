@@ -83,9 +83,9 @@ where
     Const<N>: ToUInt,
 {
     fn proc_par_blocks(&mut self, blocks: &ParBlocks<Self>) {
-	unsafe {
-	    self.mul_par_blocks(blocks);
-	}
+        unsafe {
+            self.mul_par_blocks(blocks);
+        }
     }
 
     fn proc_block(&mut self, x: &Block) {
@@ -106,7 +106,6 @@ impl<const N: usize> Polyval<N>
 where
     U<N>: ArraySize,
     Const<N>: ToUInt,
-
 {
     #[inline]
     #[target_feature(enable = "pclmulqdq")]
