@@ -12,7 +12,7 @@ use core::arch::x86_64::*;
 use universal_hash::{
     KeyInit, ParBlocks, Reset, UhfBackend,
     array::ArraySize,
-    consts::{U16},
+    consts::U16,
     crypto_common::{BlockSizeUser, KeySizeUser, ParBlocksSizeUser},
     typenum::{Const, ToUInt, U},
 };
@@ -23,6 +23,9 @@ use core::ptr;
 /// **POLYVAL**: GHASH-like universal hash over GF(2^128).
 #[derive(Clone)]
 pub struct Polyval<const N: usize = 8> {
+    /// Powers of H in descending order.
+    ///
+    /// (H^N, H^(N-1)...H)
     h: [__m128i; N],
     y: __m128i,
 }
@@ -40,8 +43,8 @@ impl<const N: usize> Polyval<N> {
             let h = _mm_loadu_si128(h.as_ptr() as *const __m128i);
 
             Self {
-		// introducing a closure here because polymul is unsafe.
-                h: common::powers_of_h(h, |a, b| { polymul(a, b) }),
+                // introducing a closure here because polymul is unsafe.
+                h: common::powers_of_h(h, |a, b| polymul(a, b)),
                 y: _mm_loadu_si128(&init_block.to_be_bytes()[..] as *const _ as *const __m128i),
             }
         }
