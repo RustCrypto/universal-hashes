@@ -244,7 +244,7 @@ unsafe fn mont_reduce(x23: __m128i, x01: __m128i) -> __m128i {
     //    [C1:C0] = B0 • poly
     //    [D1:D0] = [B0 ⊕ C1 : B1 ⊕ C0]
     // Output: [D1 ⊕ X3 : D0 ⊕ X2]
-    static POLY: u128 = 1 << 127 | 1 << 126 | 1 << 121 | 1 << 63 | 1 << 62 | 1 << 57;
+    static POLY: u128 = (1 << 127) | (1 << 126) | (1 << 121) | (1 << 63) | (1 << 62) | (1 << 57);
     let poly = unsafe { _mm_loadu_si128(ptr::addr_of!(POLY).cast()) };
     let a = unsafe { pmull(x01, poly) };
     let b = unsafe { _mm_xor_si128(x01, _mm_shuffle_epi32(a, 0x4e)) };
