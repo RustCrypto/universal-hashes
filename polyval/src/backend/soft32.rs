@@ -65,7 +65,7 @@ impl<const N: usize> KeySizeUser for Polyval<N> {
     type KeySize = U16;
 }
 
-impl<const N: usize> Polyval {
+impl<const N: usize> Polyval<N> {
     /// Initialize POLYVAL with the given `H` field element and initial block
     pub fn new_with_init_block(h: &Key, init_block: u128) -> Self {
         Self {
