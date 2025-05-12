@@ -21,6 +21,13 @@ use crate::{Block, Key, Tag, backend::common};
 use core::ptr;
 
 /// **POLYVAL**: GHASH-like universal hash over GF(2^128).
+///
+/// Paramaterized on a constant that determines how many
+/// blocks to process at once: higher numbers use more memory,
+/// and require more time to re-key, but process data significantly
+/// faster.
+///
+/// (This constant is not used when acceleration is not enabled.)
 #[derive(Clone)]
 pub struct Polyval<const N: usize = 8> {
     /// Powers of H in descending order.

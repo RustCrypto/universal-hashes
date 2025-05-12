@@ -81,10 +81,10 @@
 mod backend;
 mod mulx;
 
-pub use crate::{backend::Polyval, mulx::mulx};
+pub use crate::{backend::Polyval, backend::PolyvalGeneric, mulx::mulx};
 pub use universal_hash;
 
-opaque_debug::implement!(Polyval);
+opaque_debug::implement!(PolyvalGeneric);
 
 /// Size of a POLYVAL block in bytes
 pub const BLOCK_SIZE: usize = 16;

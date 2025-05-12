@@ -1,7 +1,7 @@
 use hex_literal::hex;
 use polyval::{
-    BLOCK_SIZE, Polyval,
-    universal_hash::{KeyInit, UniversalHash},
+    BLOCK_SIZE, Polyval, PolyvalGeneric,
+    universal_hash::{KeyInit, Reset, UniversalHash, crypto_common::KeySizeUser, typenum::U16},
 };
 
 //
@@ -28,12 +28,14 @@ fn polyval_test_vector() {
 // A longer test case, to ensure that long-input optimizations
 // behave correctly.
 
-#[test]
-fn polyval_longer_test() {
+fn longer_test<Imp>()
+where
+    Imp: UniversalHash + KeyInit + Reset + Clone + KeySizeUser<KeySize = U16>,
+{
     let inp = (1..=4096).map(|n| (n * 47) as u8).collect::<Vec<_>>();
 
     // Try computing polyval all at once.
-    let mut poly = Polyval::new(&H.into());
+    let mut poly = Imp::new(&H.into());
     poly.update_padded(&inp);
     let result1 = poly.finalize_reset();
 
@@ -45,4 +47,21 @@ fn polyval_longer_test() {
 
     // Make sure the results are the same.
     assert_eq!(result1, result2);
+}
+
+#[test]
+fn longer_test_x1() {
+    longer_test::<PolyvalGeneric<1>>();
+}
+#[test]
+fn longer_test_x2() {
+    longer_test::<PolyvalGeneric<2>>();
+}
+#[test]
+fn longer_test_x4() {
+    longer_test::<PolyvalGeneric<4>>();
+}
+#[test]
+fn longer_test_x8() {
+    longer_test::<PolyvalGeneric<8>>();
 }
