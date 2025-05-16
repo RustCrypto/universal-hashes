@@ -7,6 +7,9 @@
 //! Based on code from ARM, and by Johannes Schneiders, Skip Hovsmith and
 //! Barry O'Rourke for the mbedTLS project.
 //!
+//! Incorporates performance improvements from Eric Lagergren
+//! at <https://github.com/ericlagergren/polyval-rs/>.
+//!
 //! For more information about PMULL, see:
 //! - <https://developer.arm.com/documentation/100069/0608/A64-SIMD-Vector-Instructions/PMULL--PMULL2--vector->
 //! - <https://eprint.iacr.org/2015/688.pdf>
@@ -15,63 +18,110 @@
 use core::{arch::aarch64::*, mem};
 
 use universal_hash::{
-    KeyInit, Reset, UhfBackend,
-    consts::{U1, U16},
+    KeyInit, ParBlocks, Reset, UhfBackend,
+    array::ArraySize,
+    consts::U16,
     crypto_common::{BlockSizeUser, KeySizeUser, ParBlocksSizeUser},
+    typenum::{Const, ToUInt, U},
 };
 
-use crate::{Block, Key, Tag};
+use crate::{Block, Key, Tag, backend::common};
 
 /// Montgomery reduction polynomial
 const POLY: u128 = (1 << 127) | (1 << 126) | (1 << 121) | (1 << 63) | (1 << 62) | (1 << 57);
 
 /// **POLYVAL**: GHASH-like universal hash over GF(2^128).
+///
+/// Paramaterized on a constant that determines how many
+/// blocks to process at once: higher numbers use more memory,
+/// and require more time to re-key, but process data significantly
+/// faster.
+///
+/// (This constant is not used when acceleration is not enabled.)
 #[derive(Clone)]
-pub struct Polyval {
-    h: uint8x16_t,
+pub struct Polyval<const N: usize = 8> {
+    /// Powers of H in descending order.
+    ///
+    /// (H^N, H^(N-1)...H)
+    h: [uint8x16_t; N],
     y: uint8x16_t,
 }
 
-impl KeySizeUser for Polyval {
+impl<const N: usize> KeySizeUser for Polyval<N> {
     type KeySize = U16;
 }
 
-impl Polyval {
+impl<const N: usize> Polyval<N> {
     /// Initialize POLYVAL with the given `H` field element and initial block
     pub fn new_with_init_block(h: &Key, init_block: u128) -> Self {
         unsafe {
+            let h = vld1q_u8(h.as_ptr());
             Self {
-                h: vld1q_u8(h.as_ptr()),
+                // introducing a closure here because polymul is unsafe.
+                h: common::powers_of_h(h, |a, b| polymul(a, b)),
                 y: vld1q_u8(init_block.to_be_bytes()[..].as_ptr()),
             }
         }
     }
 }
 
-impl KeyInit for Polyval {
+impl<const N: usize> KeyInit for Polyval<N> {
     /// Initialize POLYVAL with the given `H` field element
     fn new(h: &Key) -> Self {
         Self::new_with_init_block(h, 0)
     }
 }
 
-impl BlockSizeUser for Polyval {
+impl<const N: usize> BlockSizeUser for Polyval<N> {
     type BlockSize = U16;
 }
 
-impl ParBlocksSizeUser for Polyval {
-    type ParBlocksSize = U1;
+impl<const N: usize> ParBlocksSizeUser for Polyval<N>
+where
+    U<N>: ArraySize,
+    Const<N>: ToUInt,
+{
+    type ParBlocksSize = U<N>;
 }
 
-impl UhfBackend for Polyval {
+impl<const N: usize> UhfBackend for Polyval<N>
+where
+    U<N>: ArraySize,
+    Const<N>: ToUInt,
+{
+    fn proc_par_blocks(&mut self, blocks: &ParBlocks<Self>) {
+        unsafe {
+            let mut h = vdupq_n_u8(0);
+            let mut m = vdupq_n_u8(0);
+            let mut l = vdupq_n_u8(0);
+
+            // Note: Manually unrolling this loop did not help in benchmarks.
+            for i in (0..N).rev() {
+                let mut x = vld1q_u8(blocks[i].as_ptr());
+                if i == 0 {
+                    x = veorq_u8(x, self.y);
+                }
+                let y = self.h[i];
+                let (hh, mm, ll) = karatsuba1(x, y);
+                h = veorq_u8(h, hh);
+                m = veorq_u8(m, mm);
+                l = veorq_u8(l, ll);
+            }
+
+            let (h, l) = karatsuba2(h, m, l);
+            self.y = mont_reduce(h, l);
+        }
+    }
+
     fn proc_block(&mut self, x: &Block) {
         unsafe {
-            self.mul(x);
+            let y = veorq_u8(self.y, vld1q_u8(x.as_ptr()));
+            self.y = polymul(y, self.h[N - 1]);
         }
     }
 }
 
-impl Reset for Polyval {
+impl<const N: usize> Reset for Polyval<N> {
     fn reset(&mut self) {
         unsafe {
             self.y = vdupq_n_u8(0);
@@ -79,22 +129,21 @@ impl Reset for Polyval {
     }
 }
 
-impl Polyval {
+impl<const N: usize> Polyval<N> {
     /// Get POLYVAL output.
     pub(crate) fn finalize(self) -> Tag {
         unsafe { mem::transmute(self.y) }
     }
+}
 
-    /// POLYVAL carryless multiplication.
-    // TODO(tarcieri): investigate ordering optimizations and fusions e.g.`fuse-crypto-eor`
-    #[inline]
-    #[target_feature(enable = "neon")]
-    unsafe fn mul(&mut self, x: &Block) {
-        let y = veorq_u8(self.y, vld1q_u8(x.as_ptr()));
-        let (h, m, l) = karatsuba1(self.h, y);
-        let (h, l) = karatsuba2(h, m, l);
-        self.y = mont_reduce(h, l);
-    }
+/// Multipy "y" by "h" and return the result.
+// TODO(tarcieri): investigate ordering optimizations and fusions e.g.`fuse-crypto-eor`
+#[inline]
+#[target_feature(enable = "neon")]
+unsafe fn polymul(y: uint8x16_t, h: uint8x16_t) -> uint8x16_t {
+    let (h, m, l) = karatsuba1(h, y);
+    let (h, l) = karatsuba2(h, m, l);
+    mont_reduce(h, l)
 }
 
 /// Karatsuba decomposition for `x*y`.
@@ -195,7 +244,7 @@ unsafe fn pmull2(a: uint8x16_t, b: uint8x16_t) -> uint8x16_t {
 }
 // TODO(tarcieri): zeroize support
 // #[cfg(feature = "zeroize")]
-// impl Drop for Polyval {
+// impl Drop for Polyval<N> {
 //     fn drop(&mut self) {
 //         use zeroize::Zeroize;
 //         self.h.zeroize();

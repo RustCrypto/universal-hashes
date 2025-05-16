@@ -24,6 +24,11 @@
 //!
 //! In other words, if we bit-reverse (over 32 bits) the operands, then we
 //! bit-reverse (over 64 bits) the result.
+//!
+//! Note that this implementation doesn't use its generic argument,
+//! since (experimentally) it gets no performance benefit from doing so.
+//! `N` is present only so that we can provide a `GenericPolyval` that
+//! is always generic.
 
 use crate::{Block, Key, Tag};
 use core::{
@@ -40,8 +45,15 @@ use universal_hash::{
 use zeroize::Zeroize;
 
 /// **POLYVAL**: GHASH-like universal hash over GF(2^128).
+///
+/// Paramaterized on a constant that determines how many
+/// blocks to process at once: higher numbers use more memory,
+/// and require more time to re-key, but process data significantly
+/// faster.
+///
+/// (This constant is not used when acceleration is not enabled.)
 #[derive(Clone)]
-pub struct Polyval {
+pub struct Polyval<const N: usize = 1> {
     /// GF(2^128) field element input blocks are multiplied by
     h: U32x4,
 
@@ -49,11 +61,11 @@ pub struct Polyval {
     s: U32x4,
 }
 
-impl KeySizeUser for Polyval {
+impl<const N: usize> KeySizeUser for Polyval<N> {
     type KeySize = U16;
 }
 
-impl Polyval {
+impl<const N: usize> Polyval<N> {
     /// Initialize POLYVAL with the given `H` field element and initial block
     pub fn new_with_init_block(h: &Key, init_block: u128) -> Self {
         Self {
@@ -63,29 +75,29 @@ impl Polyval {
     }
 }
 
-impl KeyInit for Polyval {
+impl<const N: usize> KeyInit for Polyval<N> {
     /// Initialize POLYVAL with the given `H` field element
     fn new(h: &Key) -> Self {
         Self::new_with_init_block(h, 0)
     }
 }
 
-impl BlockSizeUser for Polyval {
+impl<const N: usize> BlockSizeUser for Polyval<N> {
     type BlockSize = U16;
 }
 
-impl ParBlocksSizeUser for Polyval {
+impl<const N: usize> ParBlocksSizeUser for Polyval<N> {
     type ParBlocksSize = U1;
 }
 
-impl UhfBackend for Polyval {
+impl<const N: usize> UhfBackend for Polyval<N> {
     fn proc_block(&mut self, x: &Block) {
         let x = U32x4::from(x);
         self.s = (self.s + x) * self.h;
     }
 }
 
-impl UniversalHash for Polyval {
+impl<const N: usize> UniversalHash for Polyval<N> {
     fn update_with_backend(&mut self, f: impl UhfClosure<BlockSize = Self::BlockSize>) {
         f.call(self);
     }
@@ -105,14 +117,14 @@ impl UniversalHash for Polyval {
     }
 }
 
-impl Reset for Polyval {
+impl<const N: usize> Reset for Polyval<N> {
     fn reset(&mut self) {
         self.s = U32x4::default();
     }
 }
 
 #[cfg(feature = "zeroize")]
-impl Drop for Polyval {
+impl<const N: usize> Drop for Polyval<N> {
     fn drop(&mut self) {
         self.h.zeroize();
         self.s.zeroize();

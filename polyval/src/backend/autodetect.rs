@@ -5,8 +5,10 @@ use crate::{Key, Tag, backend::soft};
 use core::mem::ManuallyDrop;
 use universal_hash::{
     KeyInit, Reset, UhfClosure, UniversalHash,
+    array::ArraySize,
     consts::U16,
     crypto_common::{BlockSizeUser, KeySizeUser},
+    typenum::{Const, ToUInt, U},
 };
 
 #[cfg(target_arch = "aarch64")]
@@ -22,21 +24,28 @@ cpufeatures::new!(mul_intrinsics, "aes"); // `aes` implies PMULL
 cpufeatures::new!(mul_intrinsics, "pclmulqdq");
 
 /// **POLYVAL**: GHASH-like universal hash over GF(2^128).
-pub struct Polyval {
-    inner: Inner,
+///
+/// Paramaterized on a constant that determines how many
+/// blocks to process at once: higher numbers use more memory,
+/// and require more time to re-key, but process data significantly
+/// faster.
+///
+/// (This constant is not used when acceleration is not enabled.)
+pub struct Polyval<const N: usize = 8> {
+    inner: Inner<N>,
     token: mul_intrinsics::InitToken,
 }
 
-union Inner {
-    intrinsics: ManuallyDrop<intrinsics::Polyval>,
-    soft: ManuallyDrop<soft::Polyval>,
+union Inner<const N: usize> {
+    intrinsics: ManuallyDrop<intrinsics::Polyval<N>>,
+    soft: ManuallyDrop<soft::Polyval<N>>,
 }
 
-impl KeySizeUser for Polyval {
+impl<const N: usize> KeySizeUser for Polyval<N> {
     type KeySize = U16;
 }
 
-impl Polyval {
+impl<const N: usize> Polyval<N> {
     /// Initialize POLYVAL with the given `H` field element and initial block
     pub fn new_with_init_block(h: &Key, init_block: u128) -> Self {
         let (token, has_intrinsics) = mul_intrinsics::init_get();
@@ -57,18 +66,22 @@ impl Polyval {
     }
 }
 
-impl KeyInit for Polyval {
+impl<const N: usize> KeyInit for Polyval<N> {
     /// Initialize POLYVAL with the given `H` field element
     fn new(h: &Key) -> Self {
         Self::new_with_init_block(h, 0)
     }
 }
 
-impl BlockSizeUser for Polyval {
+impl<const N: usize> BlockSizeUser for Polyval<N> {
     type BlockSize = U16;
 }
 
-impl UniversalHash for Polyval {
+impl<const N: usize> UniversalHash for Polyval<N>
+where
+    U<N>: ArraySize,
+    Const<N>: ToUInt,
+{
     fn update_with_backend(&mut self, f: impl UhfClosure<BlockSize = Self::BlockSize>) {
         unsafe {
             if self.token.get() {
@@ -91,7 +104,7 @@ impl UniversalHash for Polyval {
     }
 }
 
-impl Clone for Polyval {
+impl<const N: usize> Clone for Polyval<N> {
     fn clone(&self) -> Self {
         let inner = if self.token.get() {
             Inner {
@@ -110,7 +123,7 @@ impl Clone for Polyval {
     }
 }
 
-impl Reset for Polyval {
+impl<const N: usize> Reset for Polyval<N> {
     fn reset(&mut self) {
         if self.token.get() {
             unsafe { (*self.inner.intrinsics).reset() }

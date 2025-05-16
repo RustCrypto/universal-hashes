@@ -16,7 +16,6 @@ rust-version = "1.85"
 edition = "2024"
 
 [dependencies]
-opaque-debug = "0.3"
 polyval = { version = "0.7.0-rc.0", path = "../polyval" }
 
 # optional dependencies

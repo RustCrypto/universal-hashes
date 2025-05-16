@@ -81,10 +81,14 @@
 mod backend;
 mod mulx;
 
-pub use crate::{backend::Polyval, mulx::mulx};
+pub use crate::{backend::Polyval, backend::PolyvalGeneric, mulx::mulx};
 pub use universal_hash;
 
-opaque_debug::implement!(Polyval);
+impl<const N: usize> core::fmt::Debug for PolyvalGeneric<N> {
+    fn fmt(&self, f: &mut core::fmt::Formatter) -> Result<(), core::fmt::Error> {
+        write!(f, "PolyvalGeneric<{}> {{ ... }}", N)
+    }
+}
 
 /// Size of a POLYVAL block in bytes
 pub const BLOCK_SIZE: usize = 16;
