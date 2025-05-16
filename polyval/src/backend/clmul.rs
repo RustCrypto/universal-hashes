@@ -161,7 +161,7 @@ impl<const N: usize> Drop for Polyval<N> {
 
 /// # Safety
 ///
-/// The SSE2 and pclmulqdq target features must be enavled.
+/// The SSE2 and pclmulqdq target features must be enabled.
 #[inline]
 #[target_feature(enable = "sse2,pclmulqdq")]
 #[allow(unused_unsafe)]
