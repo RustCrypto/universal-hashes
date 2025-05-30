@@ -1,6 +1,6 @@
 [package]
 name = "polyval"
-version = "0.7.0-rc.0"
+version = "0.7.0-rc.1"
 authors = ["RustCrypto Developers"]
 license = "Apache-2.0 OR MIT"
 description = """
@@ -17,7 +17,7 @@ edition = "2024"
 
 [dependencies]
 cfg-if = "1"
-universal-hash = { version = "0.6.0-rc.0", default-features = false }
+universal-hash = { version = "0.6.0-rc.1", default-features = false }
 zeroize = { version = "1", optional = true, default-features = false }
 
 [target.'cfg(any(target_arch = "aarch64", target_arch = "x86_64", target_arch = "x86"))'.dependencies]

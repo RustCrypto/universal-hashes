@@ -19,15 +19,16 @@ dependencies = [
 
 [[package]]
 name = "crypto-common"
-version = "0.2.0-rc.2"
-source = "git+https://github.com/RustCrypto/traits#f8aa068be3e64ba8970107042f21605b237754ac"
+version = "0.2.0-rc.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8a23fa214dea9efd4dacee5a5614646b30216ae0f05d4bb51bafb50e9da1c5be"
 dependencies = [
  "hybrid-array",
 ]
 
 [[package]]
 name = "ghash"
-version = "0.6.0-rc.0"
+version = "0.6.0-rc.1"
 dependencies = [
  "hex-literal",
  "polyval",
@@ -57,7 +58,7 @@ checksum = "875b3680cb2f8f71bdcf9a30f38d48282f5d3c95cbf9b3fa57269bb5d5c06828"
 
 [[package]]
 name = "poly1305"
-version = "0.9.0-rc.0"
+version = "0.9.0-rc.1"
 dependencies = [
  "cpufeatures",
  "hex-literal",
@@ -67,7 +68,7 @@ dependencies = [
 
 [[package]]
 name = "polyval"
-version = "0.7.0-rc.0"
+version = "0.7.0-rc.1"
 dependencies = [
  "cfg-if",
  "cpufeatures",
@@ -90,8 +91,9 @@ checksum = "1dccffe3ce07af9386bfd29e80c0ab1a8205a2fc34e4bcd40364df902cfa8f3f"
 
 [[package]]
 name = "universal-hash"
-version = "0.6.0-rc.0"
-source = "git+https://github.com/RustCrypto/traits#f8aa068be3e64ba8970107042f21605b237754ac"
+version = "0.6.0-rc.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "17866ce72039aaa929b785c51d08d0395e02cb5eaffd3efdf634b9b1f80b8157"
 dependencies = [
  "crypto-common",
  "subtle",
