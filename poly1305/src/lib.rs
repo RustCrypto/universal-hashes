@@ -1,47 +1,5 @@
-//! The Poly1305 universal hash function and message authentication code.
-//!
-//! # About
-//!
-//! Poly1305 is a universal hash function suitable for use as a one-time
-//! authenticator and, when combined with a cipher, a message authentication
-//! code (MAC).
-//!
-//! It takes a 32-byte one-time key and a message and produces a 16-byte tag,
-//! which can be used to authenticate the message.
-//!
-//! Poly1305 is primarily notable for its use in the [`ChaCha20Poly1305`] and
-//! [`XSalsa20Poly1305`] authenticated encryption algorithms.
-//!
-//! # Minimum Supported Rust Version
-//!
-//! Rust **1.56** or higher.
-//!
-//! Minimum supported Rust version may be changed in the future, but such
-//! changes will be accompanied with a minor version bump.
-//!
-//! # Security Notes
-//!
-//! This crate has received one [security audit by NCC Group][audit], with no
-//! significant findings. We would like to thank [MobileCoin] for funding the
-//! audit.
-//!
-//! NOTE: the audit predates the AVX2 backend, which has not yet been audited.
-//!
-//! All implementations contained in the crate are designed to execute in constant
-//! time, either by relying on hardware intrinsics (e.g. AVX2 on x86/x86_64), or
-//! using a portable implementation which is only constant time on processors which
-//! implement constant-time multiplication.
-//!
-//! It is not suitable for use on processors with a variable-time multiplication
-//! operation (e.g. short circuit on multiply-by-zero / multiply-by-one, such as
-//! certain 32-bit PowerPC CPUs and some non-ARM microcontrollers).
-//!
-//! [`ChaCha20Poly1305`]: https://docs.rs/chacha20poly1305
-//! [`XSalsa20Poly1305`]: https://docs.rs/xsalsa20poly1305
-//! [audit]: https://research.nccgroup.com/2020/02/26/public-report-rustcrypto-aes-gcm-and-chacha20poly1305-implementation-review/
-//! [MobileCoin]: https://mobilecoin.com
-
 #![no_std]
+#![doc = include_str!("../README.md")]
 #![doc(
     html_logo_url = "https://raw.githubusercontent.com/RustCrypto/media/8f1a9894/logo.svg",
     html_favicon_url = "https://raw.githubusercontent.com/RustCrypto/media/8f1a9894/logo.svg"

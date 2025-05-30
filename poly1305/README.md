@@ -2,14 +2,17 @@
 
 [![crate][crate-image]][crate-link]
 [![Docs][docs-image]][docs-link]
-[![Project Chat][chat-image]][chat-link]
+[![Build Status][build-image]][build-link]
 ![Apache2/MIT licensed][license-image]
 ![Rust Version][rustc-image]
-[![Build Status][build-image]][build-link]
+[![Project Chat][chat-image]][chat-link]
 [![HAZMAT][hazmat-image]][hazmat-link]
 
 [Poly1305][1] is a [universal hash function][2] which, when combined with a cipher,
 can be used as a [Message Authentication Code (MAC)][3].
+
+It takes a 32-byte one-time key and an arbitrary-length message and produces a 16-byte tag,
+which can be used to authenticate the message.
 
 In practice, Poly1305 is primarily combined with ciphers from the
 [Salsa20 Family][4] such as in [ChaCha20Poly1305][5] and [XSalsa20Poly1305][6]
@@ -57,7 +60,7 @@ dual licensed as above, without any additional terms or conditions.
 
 [//]: # (badges)
 
-[crate-image]: https://img.shields.io/crates/v/poly1305.svg
+[crate-image]: https://img.shields.io/crates/v/poly1305.svg?logo=rust
 [crate-link]: https://crates.io/crates/poly1305
 [docs-image]: https://docs.rs/poly1305/badge.svg
 [docs-link]: https://docs.rs/poly1305/
