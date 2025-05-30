@@ -1,8 +1,8 @@
 # RustCrypto: Universal Hash Functions
 
 [![Project Chat][chat-image]][chat-link]
-[![dependency status][deps-image]][deps-link]
 ![Apache2/MIT licensed][license-image]
+[![dependency status][deps-image]][deps-link]
 [![HAZMAT][hazmat-image]][hazmat-link]
 
 Collection of [Universal Hash Functions] written in pure Rust.
