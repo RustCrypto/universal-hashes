@@ -8,6 +8,7 @@
 
 pub use universal_hash;
 
+use core::fmt::{self, Debug};
 use universal_hash::{
     KeyInit, UhfClosure, UniversalHash,
     consts::{U16, U32},
@@ -112,7 +113,11 @@ impl Poly1305 {
     }
 }
 
-opaque_debug::implement!(Poly1305);
+impl Debug for Poly1305 {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("Poly1305").finish_non_exhaustive()
+    }
+}
 
 #[cfg(all(
     any(target_arch = "x86", target_arch = "x86_64"),

@@ -56,18 +56,11 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "875b3680cb2f8f71bdcf9a30f38d48282f5d3c95cbf9b3fa57269bb5d5c06828"
 
 [[package]]
-name = "opaque-debug"
-version = "0.3.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c08d65885ee38876c4f86fa503fb49d7b507c2b62552df7c70b2fce627e06381"
-
-[[package]]
 name = "poly1305"
 version = "0.9.0-rc.0"
 dependencies = [
  "cpufeatures",
  "hex-literal",
- "opaque-debug",
  "universal-hash",
  "zeroize",
 ]
@@ -79,7 +72,6 @@ dependencies = [
  "cfg-if",
  "cpufeatures",
  "hex-literal",
- "opaque-debug",
  "universal-hash",
  "zeroize",
 ]
