@@ -17,7 +17,6 @@ edition = "2024"
 
 [dependencies]
 cfg-if = "1"
-opaque-debug = "0.3"
 universal-hash = { version = "0.6.0-rc.0", default-features = false }
 zeroize = { version = "1", optional = true, default-features = false }
 
