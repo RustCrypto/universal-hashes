@@ -5,3 +5,7 @@ members = [
     "polyval"
 ]
 resolver = "2"
+
+[patch.crates-io]
+# https://github.com/RustCrypto/traits/pull/1976
+crypto-common = { git = "https://github.com/RustCrypto/traits" }
