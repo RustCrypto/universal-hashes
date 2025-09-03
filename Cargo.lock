@@ -58,7 +58,7 @@ checksum = "6a82ae493e598baaea5209805c49bbf2ea7de956d50d7da0da1164f9c6d28543"
 
 [[package]]
 name = "poly1305"
-version = "0.9.0-rc.1"
+version = "0.9.0-rc.2"
 dependencies = [
  "cpufeatures",
  "hex-literal",
@@ -68,7 +68,7 @@ dependencies = [
 
 [[package]]
 name = "polyval"
-version = "0.7.0-rc.1"
+version = "0.7.0-rc.2"
 dependencies = [
  "cfg-if",
  "cpufeatures",

@@ -16,7 +16,7 @@ rust-version = "1.85"
 edition = "2024"
 
 [dependencies]
-polyval = { version = "0.7.0-rc.1", path = "../polyval" }
+polyval = { version = "0.7.0-rc.2", path = "../polyval" }
 
 # optional dependencies
 zeroize = { version = "1", optional = true, default-features = false }
