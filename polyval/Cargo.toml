@@ -32,4 +32,3 @@ check-cfg = ["cfg(polyval_force_soft)"]
 
 [package.metadata.docs.rs]
 all-features = true
-rustdoc-args = ["--cfg", "docsrs"]
