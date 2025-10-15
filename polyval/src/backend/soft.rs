@@ -54,7 +54,7 @@ impl<const N: usize> Polyval<N> {
     /// Initialize POLYVAL with the given `H` field element and initial block
     pub fn new_with_init_block(h: &Key, init_block: u128) -> Self {
         Self {
-            h: h.into(),
+            h: FieldElement::from_le_bytes(h),
             s: init_block.into(),
         }
     }
@@ -81,7 +81,7 @@ impl<const N: usize> ParBlocksSizeUser for Polyval<N> {
 
 impl<const N: usize> UhfBackend for Polyval<N> {
     fn proc_block(&mut self, x: &Block) {
-        let x = FieldElement::from(x);
+        let x = FieldElement::from_le_bytes(x);
         self.s = (self.s + x) * self.h;
     }
 }
@@ -93,7 +93,7 @@ impl<const N: usize> UniversalHash for Polyval<N> {
 
     /// Get POLYVAL result (i.e. computed `S` field element)
     fn finalize(self) -> Tag {
-        self.s.into()
+        self.s.to_le_bytes()
     }
 }
 
@@ -108,5 +108,36 @@ impl<const N: usize> Drop for Polyval<N> {
     fn drop(&mut self) {
         self.h.zeroize();
         self.s.zeroize();
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use hex_literal::hex;
+
+    const A: [u8; 16] = hex!("66e94bd4ef8a2c3b884cfa59ca342b2e");
+    const B: [u8; 16] = hex!("ff000000000000000000000000000000");
+
+    #[test]
+    fn fe_add() {
+        let a = FieldElement::from_le_bytes(&A.into());
+        let b = FieldElement::from_le_bytes(&B.into());
+
+        let expected =
+            FieldElement::from_le_bytes(&hex!("99e94bd4ef8a2c3b884cfa59ca342b2e").into());
+        assert_eq!(a + b, expected);
+        assert_eq!(b + a, expected);
+    }
+
+    #[test]
+    fn fe_mul() {
+        let a = FieldElement::from_le_bytes(&A.into());
+        let b = FieldElement::from_le_bytes(&B.into());
+
+        let expected =
+            FieldElement::from_le_bytes(&hex!("ebe563401e7e91ea3ad6426b8140c394").into());
+        assert_eq!(a * b, expected);
+        assert_eq!(b * a, expected);
     }
 }
