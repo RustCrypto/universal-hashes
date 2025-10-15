@@ -44,14 +44,9 @@ use zeroize::Zeroize;
 pub(super) struct FieldElement(u32, u32, u32, u32);
 
 impl FieldElement {
-    /// Iterate over the integer components of this field element.
-    fn iter(&self) -> impl Iterator<Item = u32> {
-        [self.0, self.1, self.2, self.3].into_iter()
-    }
-}
-
-impl From<&Block> for FieldElement {
-    fn from(bytes: &Block) -> FieldElement {
+    /// Decode field element from little endian bytestring representation.
+    #[inline]
+    pub(super) fn from_le_bytes(bytes: &Block) -> FieldElement {
         FieldElement(
             u32::from_le_bytes(bytes[..4].try_into().unwrap()),
             u32::from_le_bytes(bytes[4..8].try_into().unwrap()),
@@ -59,20 +54,13 @@ impl From<&Block> for FieldElement {
             u32::from_le_bytes(bytes[12..].try_into().unwrap()),
         )
     }
-}
 
-impl From<FieldElement> for Block {
+    /// Encode field element as little endian bytestring representation.
     #[inline]
-    fn from(fe: FieldElement) -> Block {
-        Block::from(&fe)
-    }
-}
-
-impl From<&FieldElement> for Block {
-    fn from(fe: &FieldElement) -> Block {
+    pub(super) fn to_le_bytes(self) -> Block {
         let mut block = Block::default();
 
-        for (chunk, i) in block.chunks_mut(4).zip(fe.iter()) {
+        for (chunk, i) in block.chunks_mut(4).zip([self.0, self.1, self.2, self.3]) {
             chunk.copy_from_slice(&i.to_le_bytes());
         }
 
