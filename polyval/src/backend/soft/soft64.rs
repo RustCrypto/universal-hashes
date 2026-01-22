@@ -83,15 +83,15 @@ impl Mul for FieldElement {
     fn mul(self, rhs: Self) -> Self {
         let h0 = self.0;
         let h1 = self.1;
-        let h0r = rev64(h0);
-        let h1r = rev64(h1);
+        let h0r = h0.reverse_bits();
+        let h1r = h1.reverse_bits();
         let h2 = h0 ^ h1;
         let h2r = h0r ^ h1r;
 
         let y0 = rhs.0;
         let y1 = rhs.1;
-        let y0r = rev64(y0);
-        let y1r = rev64(y1);
+        let y0r = y0.reverse_bits();
+        let y1r = y1.reverse_bits();
         let y2 = y0 ^ y1;
         let y2r = y0r ^ y1r;
         let z0 = bmul64(y0, h0);
@@ -104,9 +104,9 @@ impl Mul for FieldElement {
 
         z2 ^= z0 ^ z1;
         z2h ^= z0h ^ z1h;
-        z0h = rev64(z0h) >> 1;
-        z1h = rev64(z1h) >> 1;
-        z2h = rev64(z2h) >> 1;
+        z0h = z0h.reverse_bits() >> 1;
+        z1h = z1h.reverse_bits() >> 1;
+        z2h = z2h.reverse_bits() >> 1;
 
         let v0 = z0;
         let mut v1 = z0h ^ z2;
@@ -156,14 +156,4 @@ fn bmul64(x: u64, y: u64) -> u64 {
     z3 &= 0x8888_8888_8888_8888;
 
     z0 | z1 | z2 | z3
-}
-
-/// Bit-reverse a `u64` in constant time
-fn rev64(mut x: u64) -> u64 {
-    x = ((x & 0x5555_5555_5555_5555) << 1) | ((x >> 1) & 0x5555_5555_5555_5555);
-    x = ((x & 0x3333_3333_3333_3333) << 2) | ((x >> 2) & 0x3333_3333_3333_3333);
-    x = ((x & 0x0f0f_0f0f_0f0f_0f0f) << 4) | ((x >> 4) & 0x0f0f_0f0f_0f0f_0f0f);
-    x = ((x & 0x00ff_00ff_00ff_00ff) << 8) | ((x >> 8) & 0x00ff_00ff_00ff_00ff);
-    x = ((x & 0xffff_0000_ffff) << 16) | ((x >> 16) & 0xffff_0000_ffff);
-    x.rotate_right(32)
 }

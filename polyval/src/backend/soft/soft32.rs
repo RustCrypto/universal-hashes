@@ -19,7 +19,7 @@
 //! for all values x and y, we have:
 //!
 //! ```text
-//! rev32(x) * rev32(y) = rev64(x * y)
+//! x.reverse_bits() * y.reverse_bits() = (x * y).reverse_bits()
 //! ```
 //!
 //! In other words, if we bit-reverse (over 32 bits) the operands, then we
@@ -118,7 +118,12 @@ impl Mul for FieldElement {
     fn mul(self, rhs: Self) -> Self {
         let hw = [self.0, self.1, self.2, self.3];
         let yw = [rhs.0, rhs.1, rhs.2, rhs.3];
-        let hwr = [rev32(hw[0]), rev32(hw[1]), rev32(hw[2]), rev32(hw[3])];
+        let hwr = [
+            hw[0].reverse_bits(),
+            hw[1].reverse_bits(),
+            hw[2].reverse_bits(),
+            hw[3].reverse_bits(),
+        ];
 
         // We are using Karatsuba: the 128x128 multiplication is
         // reduced to three 64x64 multiplications, hence nine
@@ -136,10 +141,10 @@ impl Mul for FieldElement {
         a[6] = a[0] ^ a[2];
         a[7] = a[1] ^ a[3];
         a[8] = a[6] ^ a[7];
-        a[9] = rev32(yw[0]);
-        a[10] = rev32(yw[1]);
-        a[11] = rev32(yw[2]);
-        a[12] = rev32(yw[3]);
+        a[9] = yw[0].reverse_bits();
+        a[10] = yw[1].reverse_bits();
+        a[11] = yw[2].reverse_bits();
+        a[12] = yw[3].reverse_bits();
         a[13] = a[9] ^ a[10];
         a[14] = a[11] ^ a[12];
         a[15] = a[9] ^ a[11];
@@ -184,13 +189,13 @@ impl Mul for FieldElement {
         let mut zw = [0u32; 8];
 
         zw[0] = c[0];
-        zw[1] = c[4] ^ rev32(c[9]) >> 1;
-        zw[2] = c[1] ^ c[0] ^ c[2] ^ c[6] ^ rev32(c[13]) >> 1;
-        zw[3] = c[4] ^ c[5] ^ c[8] ^ rev32(c[10] ^ c[9] ^ c[11] ^ c[15]) >> 1;
-        zw[4] = c[2] ^ c[1] ^ c[3] ^ c[7] ^ rev32(c[13] ^ c[14] ^ c[17]) >> 1;
-        zw[5] = c[5] ^ rev32(c[11] ^ c[10] ^ c[12] ^ c[16]) >> 1;
-        zw[6] = c[3] ^ rev32(c[14]) >> 1;
-        zw[7] = rev32(c[12]) >> 1;
+        zw[1] = c[4] ^ c[9].reverse_bits() >> 1;
+        zw[2] = c[1] ^ c[0] ^ c[2] ^ c[6] ^ c[13].reverse_bits() >> 1;
+        zw[3] = c[4] ^ c[5] ^ c[8] ^ (c[10] ^ c[9] ^ c[11] ^ c[15]).reverse_bits() >> 1;
+        zw[4] = c[2] ^ c[1] ^ c[3] ^ c[7] ^ (c[13] ^ c[14] ^ c[17]).reverse_bits() >> 1;
+        zw[5] = c[5] ^ (c[11] ^ c[10] ^ c[12] ^ c[16]).reverse_bits() >> 1;
+        zw[6] = c[3] ^ c[14].reverse_bits() >> 1;
+        zw[7] = c[12].reverse_bits() >> 1;
 
         for i in 0..4 {
             let lw = zw[i];
@@ -238,13 +243,4 @@ fn bmul32(x: u32, y: u32) -> u32 {
     z3 &= 0x8888_8888;
 
     z0 | z1 | z2 | z3
-}
-
-/// Bit-reverse a 32-bit word in constant time.
-fn rev32(mut x: u32) -> u32 {
-    x = ((x & 0x5555_5555) << 1) | (x >> 1 & 0x5555_5555);
-    x = ((x & 0x3333_3333) << 2) | (x >> 2 & 0x3333_3333);
-    x = ((x & 0x0f0f_0f0f) << 4) | (x >> 4 & 0x0f0f_0f0f);
-    x = ((x & 0x00ff_00ff) << 8) | (x >> 8 & 0x00ff_00ff);
-    x.rotate_right(16)
 }
