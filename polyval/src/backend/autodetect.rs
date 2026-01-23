@@ -25,7 +25,7 @@ cpufeatures::new!(mul_intrinsics, "pclmulqdq");
 
 /// **POLYVAL**: GHASH-like universal hash over GF(2^128).
 ///
-/// Paramaterized on a constant that determines how many
+/// Parameterized on a constant that determines how many
 /// blocks to process at once: higher numbers use more memory,
 /// and require more time to re-key, but process data significantly
 /// faster.
