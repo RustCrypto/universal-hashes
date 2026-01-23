@@ -2,7 +2,7 @@
 
 mod soft;
 
-use cfg_if::cfg_if;
+use cpubits::cfg_if;
 
 cfg_if! {
     if #[cfg(all(target_arch = "aarch64", not(polyval_backend = "soft")))] {

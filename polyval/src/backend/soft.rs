@@ -1,26 +1,16 @@
 //! Portable software implementation. Provides implementations for low power 32-bit devices as well
 //! as a 64-bit implementation.
 
-// Use 64-bit backend on 64-bit targets, ARMv7, and WASM.
-// Fall back to 32-bit backend on others
-// TODO(tarcieri): use `cpubits` crate when available?
-#[cfg_attr(
-    not(any(
-        target_pointer_width = "64",
-        all(target_arch = "arm", target_feature = "v7"),
-        target_family = "wasm"
-    )),
-    path = "soft/soft32.rs"
-)]
-#[cfg_attr(
-    any(
-        target_pointer_width = "64",
-        all(target_arch = "arm", target_feature = "v7"),
-        target_family = "wasm"
-    ),
-    path = "soft/soft64.rs"
-)]
-mod soft_impl;
+cpubits::cpubits! {
+    16 | 32 => {
+        #[path = "soft/soft32.rs"]
+        mod soft_impl;
+    }
+    64 => {
+        #[path = "soft/soft64.rs"]
+        mod soft_impl;
+    }
+}
 
 use crate::{Block, Key, Tag};
 use soft_impl::*;
