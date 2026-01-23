@@ -3,10 +3,10 @@
 version = 4
 
 [[package]]
-name = "cfg-if"
-version = "1.0.4"
+name = "cpubits"
+version = "0.1.0-rc.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9330f8b2ff13f34540b44e946ef35111825727b38d33286ef986142615121801"
+checksum = "251aaca52dbc19119279d9364222e188ffdf48006791040bfd002617ab0ebc41"
 
 [[package]]
 name = "cpufeatures"
@@ -70,7 +70,7 @@ dependencies = [
 name = "polyval"
 version = "0.7.0-rc.3"
 dependencies = [
- "cfg-if",
+ "cpubits",
  "cpufeatures",
  "hex-literal",
  "universal-hash",
