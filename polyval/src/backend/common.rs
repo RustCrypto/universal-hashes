@@ -19,7 +19,7 @@ where
         if i > 0 {
             *v = mul(*v, prev);
         }
-        prev = *v
+        prev = *v;
     }
     pow
 }

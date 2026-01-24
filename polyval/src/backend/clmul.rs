@@ -47,12 +47,12 @@ impl<const N: usize> Polyval<N> {
         unsafe {
             // `_mm_loadu_si128` performs an unaligned load
             #[allow(clippy::cast_ptr_alignment)]
-            let h = _mm_loadu_si128(h.as_ptr() as *const __m128i);
+            let h = _mm_loadu_si128(h.as_ptr().cast::<__m128i>());
 
             Self {
                 // introducing a closure here because polymul is unsafe.
                 h: common::powers_of_h(h, |a, b| polymul(a, b)),
-                y: _mm_loadu_si128(&init_block.to_be_bytes()[..] as *const _ as *const __m128i),
+                y: _mm_loadu_si128(ptr::from_ref(&init_block.to_be_bytes()[..]).cast::<__m128i>()),
             }
         }
     }

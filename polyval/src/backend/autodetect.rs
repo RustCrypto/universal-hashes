@@ -47,6 +47,7 @@ impl<const N: usize> KeySizeUser for Polyval<N> {
 
 impl<const N: usize> Polyval<N> {
     /// Initialize POLYVAL with the given `H` field element and initial block
+    #[must_use]
     pub fn new_with_init_block(h: &Key, init_block: u128) -> Self {
         let (token, has_intrinsics) = mul_intrinsics::init_get();
 
@@ -85,9 +86,9 @@ where
     fn update_with_backend(&mut self, f: impl UhfClosure<BlockSize = Self::BlockSize>) {
         unsafe {
             if self.token.get() {
-                f.call(&mut *self.inner.intrinsics)
+                f.call(&mut *self.inner.intrinsics);
             } else {
-                f.call(&mut *self.inner.soft)
+                f.call(&mut *self.inner.soft);
             }
         }
     }

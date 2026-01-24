@@ -1,3 +1,5 @@
+//! `polyval` crate benchmarks.
+
 #![feature(test)]
 
 extern crate test;
