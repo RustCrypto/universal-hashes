@@ -9,7 +9,9 @@ cfg_if! {
         mod autodetect;
         mod pmull;
         mod common;
-        pub use crate::backend::autodetect::Polyval as PolyvalGeneric;
+
+        pub(crate) use autodetect::{FieldElement, InitToken};
+        pub use autodetect::DEFAULT_N_BLOCKS;
     } else if #[cfg(all(
         any(target_arch = "x86_64", target_arch = "x86"),
         not(polyval_backend = "soft")
@@ -17,13 +19,18 @@ cfg_if! {
         mod autodetect;
         mod clmul;
         mod common;
-        pub use crate::backend::autodetect::Polyval as PolyvalGeneric;
+
+        pub(crate) use autodetect::{FieldElement, InitToken};
+        pub use autodetect::DEFAULT_N_BLOCKS;
     } else {
-        pub use crate::backend::soft::Polyval as PolyvalGeneric;
+        pub(crate) use soft::FieldElement;
+        pub use soft::DEFAULT_N_BLOCKS;
+
+        /// Fake init token (used by feature autodetection) for soft-only scenarios.
+        // TODO(tarcieri): compile this out in `soft`-only scenarios
+        pub(crate) type InitToken = ();
+        pub(crate) fn detect_intrinsics() -> (InitToken, bool) {
+            ((), false)
+        }
     }
 }
-
-/// **POLYVAL**: GHASH-like universal hash over GF(2^128).
-//
-// We have to define a type alias here, or existing code will break.
-pub type Polyval = PolyvalGeneric<8>;

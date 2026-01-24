@@ -41,12 +41,12 @@ use zeroize::Zeroize;
 
 /// POLYVAL field element implemented as 4 x `u32` values.
 #[derive(Copy, Clone, Debug, Default, Eq, PartialEq)]
-pub(super) struct FieldElement(u32, u32, u32, u32);
+pub(crate) struct FieldElement(u32, u32, u32, u32);
 
 impl FieldElement {
     /// Decode field element from little endian bytestring representation.
     #[inline]
-    pub(super) fn from_le_bytes(bytes: &Block) -> FieldElement {
+    pub(crate) fn from_le_bytes(bytes: &Block) -> FieldElement {
         FieldElement(
             u32::from_le_bytes(bytes[..4].try_into().unwrap()),
             u32::from_le_bytes(bytes[4..8].try_into().unwrap()),
@@ -57,7 +57,7 @@ impl FieldElement {
 
     /// Encode field element as little endian bytestring representation.
     #[inline]
-    pub(super) fn to_le_bytes(self) -> Block {
+    pub(crate) fn to_le_bytes(self) -> Block {
         let mut block = Block::default();
 
         for (chunk, i) in block.chunks_mut(4).zip([self.0, self.1, self.2, self.3]) {

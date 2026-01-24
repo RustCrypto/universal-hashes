@@ -9,6 +9,8 @@ use core::arch::x86::*;
 #[cfg(target_arch = "x86_64")]
 use core::arch::x86_64::*;
 
+use crate::{Block, Key, PolyvalGeneric as Polyval, Tag, backend::common};
+use core::ptr;
 use universal_hash::{
     KeyInit, ParBlocks, Reset, UhfBackend,
     array::ArraySize,
@@ -17,25 +19,12 @@ use universal_hash::{
     typenum::{Const, ToUInt, U},
 };
 
-use crate::{Block, Key, Tag, backend::common};
-use core::ptr;
+/// Default number of blocks to use for powers-of-h.
+pub const DEFAULT_N_BLOCKS: usize = 8;
 
-/// **POLYVAL**: GHASH-like universal hash over GF(2^128).
-///
-/// Parameterized on a constant that determines how many
-/// blocks to process at once: higher numbers use more memory,
-/// and require more time to re-key, but process data significantly
-/// faster.
-///
-/// (This constant is not used when acceleration is not enabled.)
-#[derive(Clone)]
-pub struct Polyval<const N: usize = 8> {
-    /// Powers of H in descending order.
-    ///
-    /// (H^N, H^(N-1)...H)
-    h: [__m128i; N],
-    y: __m128i,
-}
+/// Field element type.
+// TODO(tarcieri): proper newtype encapsulation
+pub(crate) type FieldElement = __m128i;
 
 impl<const N: usize> KeySizeUser for Polyval<N> {
     type KeySize = U16;

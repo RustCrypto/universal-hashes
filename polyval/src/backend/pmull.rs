@@ -15,8 +15,8 @@
 //! - <https://eprint.iacr.org/2015/688.pdf>
 #![allow(unsafe_op_in_unsafe_fn)]
 
+use crate::{Block, Key, PolyvalGeneric as Polyval, Tag, backend::common};
 use core::{arch::aarch64::*, mem};
-
 use universal_hash::{
     KeyInit, ParBlocks, Reset, UhfBackend,
     array::ArraySize,
@@ -25,27 +25,15 @@ use universal_hash::{
     typenum::{Const, ToUInt, U},
 };
 
-use crate::{Block, Key, Tag, backend::common};
+/// Default number of blocks to use for powers-of-h.
+pub const DEFAULT_N_BLOCKS: usize = 8;
+
+/// Field element type.
+// TODO(tarcieri): proper newtype encapsulation
+pub(crate) type FieldElement = uint8x16_t;
 
 /// Montgomery reduction polynomial
 const POLY: u128 = (1 << 127) | (1 << 126) | (1 << 121) | (1 << 63) | (1 << 62) | (1 << 57);
-
-/// **POLYVAL**: GHASH-like universal hash over GF(2^128).
-///
-/// Parameterized on a constant that determines how many
-/// blocks to process at once: higher numbers use more memory,
-/// and require more time to re-key, but process data significantly
-/// faster.
-///
-/// (This constant is not used when acceleration is not enabled.)
-#[derive(Clone)]
-pub struct Polyval<const N: usize = 8> {
-    /// Powers of H in descending order.
-    ///
-    /// (H^N, H^(N-1)...H)
-    h: [uint8x16_t; N],
-    y: uint8x16_t,
-}
 
 impl<const N: usize> KeySizeUser for Polyval<N> {
     type KeySize = U16;

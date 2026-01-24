@@ -1,7 +1,7 @@
 //! Autodetection for CPU intrinsics, with fallback to the "soft" backend when
 //! they are unavailable.
 
-use crate::{Key, Tag, backend::soft};
+use crate::{Key, Tag, backend::soft, Polyval};
 use core::mem::ManuallyDrop;
 use universal_hash::{
     KeyInit, Reset, UhfClosure, UniversalHash,
@@ -23,31 +23,20 @@ cpufeatures::new!(mul_intrinsics, "aes"); // `aes` implies PMULL
 #[cfg(any(target_arch = "x86_64", target_arch = "x86"))]
 cpufeatures::new!(mul_intrinsics, "pclmulqdq");
 
-/// **POLYVAL**: GHASH-like universal hash over GF(2^128).
-///
-/// Parameterized on a constant that determines how many
-/// blocks to process at once: higher numbers use more memory,
-/// and require more time to re-key, but process data significantly
-/// faster.
-///
-/// (This constant is not used when acceleration is not enabled.)
-pub struct Polyval<const N: usize = 8> {
-    inner: Inner<N>,
-    token: mul_intrinsics::InitToken,
-}
+pub(crate) use mul_intrinsics::{InitToken, init_get as detect_intrisics};
 
 union Inner<const N: usize> {
     intrinsics: ManuallyDrop<intrinsics::Polyval<N>>,
     soft: ManuallyDrop<soft::Polyval<N>>,
 }
 
-impl<const N: usize> KeySizeUser for Polyval<N> {
-    type KeySize = U16;
-}
+
 
 impl<const N: usize> Polyval<N> {
+    pub(crate) fn compute_powers_of_h(h: &[Key])
+
     /// Initialize POLYVAL with the given `H` field element and initial block
-    pub fn new_with_init_block(h: &Key, init_block: u128) -> Self {
+    fn new_with_init_block(h: &Key, init_block: u128) -> Self {
         let (token, has_intrinsics) = mul_intrinsics::init_get();
 
         let inner = if has_intrinsics {

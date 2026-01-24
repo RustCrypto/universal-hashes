@@ -21,12 +21,12 @@ use zeroize::Zeroize;
 
 /// POLYVAL field element implemented as 2 x `u64` values.
 #[derive(Copy, Clone, Debug, Default, Eq, PartialEq)]
-pub(super) struct FieldElement(u64, u64);
+pub(crate) struct FieldElement(u64, u64);
 
 impl FieldElement {
     /// Decode field element from little endian bytestring representation.
     #[inline]
-    pub(super) fn from_le_bytes(bytes: &Block) -> FieldElement {
+    pub(crate) fn from_le_bytes(bytes: &Block) -> FieldElement {
         Self(
             u64::from_le_bytes(bytes[..8].try_into().unwrap()),
             u64::from_le_bytes(bytes[8..].try_into().unwrap()),
@@ -35,7 +35,7 @@ impl FieldElement {
 
     /// Encode field element as little endian bytestring representation.
     #[inline]
-    pub(super) fn to_le_bytes(self) -> Block {
+    pub(crate) fn to_le_bytes(self) -> Block {
         let mut block = Block::default();
         block[..8].copy_from_slice(&self.0.to_le_bytes());
         block[8..].copy_from_slice(&self.1.to_le_bytes());
