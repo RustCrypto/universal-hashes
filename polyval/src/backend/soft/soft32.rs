@@ -144,7 +144,7 @@ pub(super) fn karatsuba(h: U32x4, y: U32x4) -> U32x8 {
 /// Carryless multiplication in GF(2)[X], truncated to the low 32-bits.
 #[inline]
 fn bmul32(x: u32, y: u32) -> u32 {
-    super::bmul(x, y, 0x1111_1111, 0x2222_2222, 0x4444_4444, 0x8888_8888)
+    super::bmul(x, y, 0x1111_1111)
 }
 
 /// Reduce the 256-bit carryless product of Karatsuba modulo the POLYVAL polynomial.
