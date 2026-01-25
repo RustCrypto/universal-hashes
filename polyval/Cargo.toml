@@ -64,6 +64,7 @@ semicolon_if_nothing_returned = "warn"
 trivially_copy_pass_by_ref = "warn"
 std_instead_of_alloc = "warn"
 std_instead_of_core = "warn"
+suspicious_arithmetic_impl = "allow" # POLYVAL arithmetic ops are atypical
 #undocumented_unsafe_blocks = "warn" TODO
 unnecessary_safety_comment = "warn"
 unwrap_in_result = "warn"
