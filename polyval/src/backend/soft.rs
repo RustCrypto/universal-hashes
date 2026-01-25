@@ -227,8 +227,15 @@ impl Zeroize for FieldElement {
     }
 }
 
-/// Multiplication in GF(2)[X], truncated to the low 64-bits, with "holes" (sequences of zeroes) to
-/// avoid carry spilling, as specified in the four masking operands (`m0`-`m4`).
+/// Multiplication in GF(2)[X], implemented generically and wrapped as `bmul32` and `bmul64`.
+///
+/// Uses "holes" (sequences of zeroes) to avoid carry spilling, as specified in the four masking
+/// operands (`m0`-`m4`), which should have full-width values with the following bit patterns:
+///
+/// - `m0`: `0b100010001...0001` (e.g. `0x1111_1111u32`)
+/// - `m1`: `0b100010001...00010` (e.g. `0x2222_2222u32`)
+/// - `m2`: `0b100010001...000100` (e.g. `0x4444_4444u32`)
+/// - `m3`: `0b100010001...0001000` (e.g. `0x8888_8888u32`)
 ///
 /// When carries do occur, they wind up in a "hole" and are subsequently masked out of the result.
 #[inline]
