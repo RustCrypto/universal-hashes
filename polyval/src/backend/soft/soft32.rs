@@ -24,187 +24,122 @@
 //!
 //! In other words, if we bit-reverse (over 32 bits) the operands, then we
 //! bit-reverse (over 64 bits) the result.
-//!
-//! Note that this implementation doesn't use its generic argument,
-//! since (experimentally) it gets no performance benefit from doing so.
-//! `N` is present only so that we can provide a `GenericPolyval` that
-//! is always generic.
 
-use crate::Block;
-use core::ops::{Add, Mul};
-use universal_hash::common::array::{Array, sizes::U4};
+use super::FieldElement;
 
-#[cfg(feature = "zeroize")]
-use zeroize::Zeroize;
+type U32x4 = (u32, u32, u32, u32);
+type U32x8 = [u32; 8];
 
-/// POLYVAL field element implemented as 4 x `u32` values.
-#[derive(Copy, Clone, Debug, Default, Eq, PartialEq)]
-pub(super) struct FieldElement(u32, u32, u32, u32);
-
-impl FieldElement {
-    /// Decode field element from little endian bytestring representation.
+impl From<FieldElement> for U32x4 {
     #[inline]
-    pub(super) fn from_le_bytes(bytes: &Block) -> FieldElement {
-        // TODO(tarcieri): use `[T]::as_chunks` when MSRV is 1.88
-        let (chunks, remainder) = Array::<u8, U4>::slice_as_chunks(bytes);
-        debug_assert!(remainder.is_empty());
-
-        FieldElement(
-            u32::from_le_bytes(chunks[0].into()),
-            u32::from_le_bytes(chunks[1].into()),
-            u32::from_le_bytes(chunks[2].into()),
-            u32::from_le_bytes(chunks[3].into()),
+    fn from(fe: FieldElement) -> U32x4 {
+        (
+            u32::from_le_bytes([fe.0[0], fe.0[1], fe.0[2], fe.0[3]]),
+            u32::from_le_bytes([fe.0[4], fe.0[5], fe.0[6], fe.0[7]]),
+            u32::from_le_bytes([fe.0[8], fe.0[9], fe.0[10], fe.0[11]]),
+            u32::from_le_bytes([fe.0[12], fe.0[13], fe.0[14], fe.0[15]]),
         )
     }
+}
 
-    /// Encode field element as little endian bytestring representation.
+impl From<U32x4> for FieldElement {
     #[inline]
-    pub(super) fn to_le_bytes(self) -> Block {
-        let mut block = Block::default();
-
-        for (chunk, i) in block.chunks_mut(4).zip([self.0, self.1, self.2, self.3]) {
-            chunk.copy_from_slice(&i.to_le_bytes());
-        }
-
-        block
-    }
-
-    /// Compute the unreduced 256-bit carryless product of two 128-bit field elements using 32-bit
-    /// limbs.
-    ///
-    /// Uses a Karatsuba decomposition in which the 128x128 multiplication is reduced to three 64x64
-    /// multiplications, hence nine 32x32 multiplications. With the bit-reversal trick, we have to
-    /// perform 18 32x32 multiplications.
-    fn karatsuba(self, rhs: FieldElement) -> [u32; 8] {
-        let hw = [self.0, self.1, self.2, self.3];
-        let yw = [rhs.0, rhs.1, rhs.2, rhs.3];
-        let hwr = [
-            hw[0].reverse_bits(),
-            hw[1].reverse_bits(),
-            hw[2].reverse_bits(),
-            hw[3].reverse_bits(),
-        ];
-
-        // Karatsuba input decomposition for a
-        let mut a = [0u32; 18];
-        a[0] = yw[0];
-        a[1] = yw[1];
-        a[2] = yw[2];
-        a[3] = yw[3];
-        a[4] = a[0] ^ a[1];
-        a[5] = a[2] ^ a[3];
-        a[6] = a[0] ^ a[2];
-        a[7] = a[1] ^ a[3];
-        a[8] = a[6] ^ a[7];
-        a[9] = yw[0].reverse_bits();
-        a[10] = yw[1].reverse_bits();
-        a[11] = yw[2].reverse_bits();
-        a[12] = yw[3].reverse_bits();
-        a[13] = a[9] ^ a[10];
-        a[14] = a[11] ^ a[12];
-        a[15] = a[9] ^ a[11];
-        a[16] = a[10] ^ a[12];
-        a[17] = a[15] ^ a[16];
-
-        // Karatsuba input decomposition for b
-        let mut b = [0u32; 18];
-        b[0] = hw[0];
-        b[1] = hw[1];
-        b[2] = hw[2];
-        b[3] = hw[3];
-        b[4] = b[0] ^ b[1];
-        b[5] = b[2] ^ b[3];
-        b[6] = b[0] ^ b[2];
-        b[7] = b[1] ^ b[3];
-        b[8] = b[6] ^ b[7];
-        b[9] = hwr[0];
-        b[10] = hwr[1];
-        b[11] = hwr[2];
-        b[12] = hwr[3];
-        b[13] = b[9] ^ b[10];
-        b[14] = b[11] ^ b[12];
-        b[15] = b[9] ^ b[11];
-        b[16] = b[10] ^ b[12];
-        b[17] = b[15] ^ b[16];
-
-        // 18 carryless 32x32 multiplications
-        let mut c = [0u32; 18];
-        for i in 0..18 {
-            c[i] = bmul32(a[i], b[i]);
-        }
-
-        // Karatsuba recombination (normal)
-        c[4] ^= c[0] ^ c[1];
-        c[5] ^= c[2] ^ c[3];
-        c[8] ^= c[6] ^ c[7];
-
-        // Karatsuba recombination (bit-reversed)
-        c[13] ^= c[9] ^ c[10];
-        c[14] ^= c[11] ^ c[12];
-        c[17] ^= c[15] ^ c[16];
-
-        // Assemble the final 256-bit product as 32x8
-        let mut zw = [0u32; 8];
-        zw[0] = c[0];
-        zw[1] = c[4] ^ c[9].reverse_bits() >> 1;
-        zw[2] = c[1] ^ c[0] ^ c[2] ^ c[6] ^ c[13].reverse_bits() >> 1;
-        zw[3] = c[4] ^ c[5] ^ c[8] ^ (c[10] ^ c[9] ^ c[11] ^ c[15]).reverse_bits() >> 1;
-        zw[4] = c[2] ^ c[1] ^ c[3] ^ c[7] ^ (c[13] ^ c[14] ^ c[17]).reverse_bits() >> 1;
-        zw[5] = c[5] ^ (c[11] ^ c[10] ^ c[12] ^ c[16]).reverse_bits() >> 1;
-        zw[6] = c[3] ^ c[14].reverse_bits() >> 1;
-        zw[7] = c[12].reverse_bits() >> 1;
-        zw
+    fn from(v: U32x4) -> FieldElement {
+        let mut bytes = [0u8; 16];
+        bytes[0..4].copy_from_slice(&v.0.to_le_bytes());
+        bytes[4..8].copy_from_slice(&v.1.to_le_bytes());
+        bytes[8..12].copy_from_slice(&v.2.to_le_bytes());
+        bytes[12..16].copy_from_slice(&v.3.to_le_bytes());
+        FieldElement(bytes)
     }
 }
 
-impl From<u128> for FieldElement {
-    fn from(x: u128) -> Self {
-        FieldElement(
-            (x & 0xFFFF_FFFF) as u32,
-            ((x >> 32) & 0xFFFF_FFFF) as u32,
-            ((x >> 64) & 0xFFFF_FFFF) as u32,
-            ((x >> 96) & 0xFFFF_FFFF) as u32,
-        )
+/// Compute the unreduced 256-bit carryless product of two 128-bit field elements using 32-bit
+/// limbs.
+///
+/// Uses a Karatsuba decomposition in which the 128x128 multiplication is reduced to three 64x64
+/// multiplications, hence nine 32x32 multiplications. With the bit-reversal trick, we have to
+/// perform 18 32x32 multiplications.
+#[inline]
+pub(super) fn karatsuba(h: U32x4, y: U32x4) -> U32x8 {
+    let hw = [h.0, h.1, h.2, h.3];
+    let yw = [y.0, y.1, y.2, y.3];
+    let hwr = [
+        hw[0].reverse_bits(),
+        hw[1].reverse_bits(),
+        hw[2].reverse_bits(),
+        hw[3].reverse_bits(),
+    ];
+
+    // Karatsuba input decomposition for H
+    let mut a = [0u32; 18];
+    a[0] = yw[0];
+    a[1] = yw[1];
+    a[2] = yw[2];
+    a[3] = yw[3];
+    a[4] = a[0] ^ a[1];
+    a[5] = a[2] ^ a[3];
+    a[6] = a[0] ^ a[2];
+    a[7] = a[1] ^ a[3];
+    a[8] = a[6] ^ a[7];
+    a[9] = yw[0].reverse_bits();
+    a[10] = yw[1].reverse_bits();
+    a[11] = yw[2].reverse_bits();
+    a[12] = yw[3].reverse_bits();
+    a[13] = a[9] ^ a[10];
+    a[14] = a[11] ^ a[12];
+    a[15] = a[9] ^ a[11];
+    a[16] = a[10] ^ a[12];
+    a[17] = a[15] ^ a[16];
+
+    // Karatsuba input decomposition for Y
+    let mut b = [0u32; 18];
+    b[0] = hw[0];
+    b[1] = hw[1];
+    b[2] = hw[2];
+    b[3] = hw[3];
+    b[4] = b[0] ^ b[1];
+    b[5] = b[2] ^ b[3];
+    b[6] = b[0] ^ b[2];
+    b[7] = b[1] ^ b[3];
+    b[8] = b[6] ^ b[7];
+    b[9] = hwr[0];
+    b[10] = hwr[1];
+    b[11] = hwr[2];
+    b[12] = hwr[3];
+    b[13] = b[9] ^ b[10];
+    b[14] = b[11] ^ b[12];
+    b[15] = b[9] ^ b[11];
+    b[16] = b[10] ^ b[12];
+    b[17] = b[15] ^ b[16];
+
+    // 18 carryless 32x32 multiplications
+    let mut c = [0u32; 18];
+    for i in 0..18 {
+        c[i] = bmul32(a[i], b[i]);
     }
-}
 
-impl Add for FieldElement {
-    type Output = Self;
+    // Karatsuba recombination (normal)
+    c[4] ^= c[0] ^ c[1];
+    c[5] ^= c[2] ^ c[3];
+    c[8] ^= c[6] ^ c[7];
 
-    /// Adds two POLYVAL field elements.
-    fn add(self, rhs: Self) -> Self::Output {
-        FieldElement(
-            self.0 ^ rhs.0,
-            self.1 ^ rhs.1,
-            self.2 ^ rhs.2,
-            self.3 ^ rhs.3,
-        )
-    }
-}
+    // Karatsuba recombination (bit-reversed)
+    c[13] ^= c[9] ^ c[10];
+    c[14] ^= c[11] ^ c[12];
+    c[17] ^= c[15] ^ c[16];
 
-/// Computes carryless POLYVAL multiplication over GF(2^128) in constant time.
-///
-/// Method described at: <https://www.bearssl.org/constanttime.html#ghash-for-gcm>
-///
-/// POLYVAL multiplication is effectively the little endian equivalent of
-/// GHASH multiplication, aside from one small detail described here:
-///
-/// <https://crypto.stackexchange.com/questions/66448/how-does-bearssls-gcm-modular-reduction-work/66462#66462>
-///
-/// > The product of two bit-reversed 128-bit polynomials yields the
-/// > bit-reversed result over 255 bits, not 256. The BearSSL code ends up
-/// > with a 256-bit result in zw[], and that value is shifted by one bit,
-/// > because of that reversed convention issue. Thus, the code must
-/// > include a shifting step to put it back where it should
-///
-/// This shift is unnecessary for POLYVAL and has been removed.
-impl Mul for FieldElement {
-    type Output = Self;
-
-    fn mul(self, rhs: Self) -> Self {
-        let zw = self.karatsuba(rhs);
-        mont_reduce(zw)
-    }
+    // Assemble the final 256-bit product as 32x8
+    let mut zw = [0u32; 8];
+    zw[0] = c[0];
+    zw[1] = c[4] ^ c[9].reverse_bits() >> 1;
+    zw[2] = c[1] ^ c[0] ^ c[2] ^ c[6] ^ c[13].reverse_bits() >> 1;
+    zw[3] = c[4] ^ c[5] ^ c[8] ^ (c[10] ^ c[9] ^ c[11] ^ c[15]).reverse_bits() >> 1;
+    zw[4] = c[2] ^ c[1] ^ c[3] ^ c[7] ^ (c[13] ^ c[14] ^ c[17]).reverse_bits() >> 1;
+    zw[5] = c[5] ^ (c[11] ^ c[10] ^ c[12] ^ c[16]).reverse_bits() >> 1;
+    zw[6] = c[3] ^ c[14].reverse_bits() >> 1;
+    zw[7] = c[12].reverse_bits() >> 1;
+    zw
 }
 
 /// Carryless multiplication in GF(2)[X], truncated to the low 32-bits.
@@ -219,22 +154,11 @@ fn bmul32(x: u32, y: u32) -> u32 {
 /// polynomial `x^128 + x^127 + x^126 + x^121 + 1`. This is closely related to GHASH reduction but
 /// the polynomial's bit order is reversed in POLYVAL.
 #[inline]
-fn mont_reduce(mut zw: [u32; 8]) -> FieldElement {
+pub(super) fn mont_reduce(mut zw: U32x8) -> U32x4 {
     for i in 0..4 {
         let lw = zw[i];
         zw[i + 4] ^= lw ^ (lw >> 1) ^ (lw >> 2) ^ (lw >> 7);
         zw[i + 3] ^= (lw << 31) ^ (lw << 30) ^ (lw << 25);
     }
-
-    FieldElement(zw[4], zw[5], zw[6], zw[7])
-}
-
-#[cfg(feature = "zeroize")]
-impl Zeroize for FieldElement {
-    fn zeroize(&mut self) {
-        self.0.zeroize();
-        self.1.zeroize();
-        self.2.zeroize();
-        self.3.zeroize();
-    }
+    (zw[4], zw[5], zw[6], zw[7])
 }

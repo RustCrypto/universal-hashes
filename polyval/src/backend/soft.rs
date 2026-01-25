@@ -12,12 +12,13 @@ cpubits::cpubits! {
     }
 }
 
-use crate::{Block, Key, Tag};
+use crate::{BLOCK_SIZE, Block, Key, Tag};
 use core::{
+    fmt::{self, Debug},
     num::Wrapping,
-    ops::{BitAnd, BitOr, BitXor, Mul},
+    ops::{Add, BitAnd, BitOr, BitXor, Mul},
 };
-use soft_impl::*;
+use soft_impl::{karatsuba, mont_reduce};
 use universal_hash::{
     KeyInit, Reset, UhfBackend, UhfClosure, UniversalHash,
     common::{BlockSizeUser, KeySizeUser, ParBlocksSizeUser},
@@ -41,15 +42,15 @@ pub struct Polyval<const N: usize = 1> {
     h: FieldElement,
 
     /// Field element representing the computed universal hash
-    s: FieldElement,
+    y: FieldElement,
 }
 
 impl<const N: usize> Polyval<N> {
     /// Initialize POLYVAL with the given `H` field element and initial block
     pub fn new_with_init_block(h: &Key, init_block: u128) -> Self {
         Self {
-            h: FieldElement::from_le_bytes(h),
-            s: init_block.into(),
+            h: FieldElement::from(*h),
+            y: init_block.into(),
         }
     }
 }
@@ -75,8 +76,8 @@ impl<const N: usize> ParBlocksSizeUser for Polyval<N> {
 
 impl<const N: usize> UhfBackend for Polyval<N> {
     fn proc_block(&mut self, x: &Block) {
-        let x = FieldElement::from_le_bytes(x);
-        self.s = (self.s + x) * self.h;
+        let x = FieldElement::from(x);
+        self.y = (self.y + x) * self.h;
     }
 }
 
@@ -87,13 +88,13 @@ impl<const N: usize> UniversalHash for Polyval<N> {
 
     /// Get POLYVAL result (i.e. computed `S` field element)
     fn finalize(self) -> Tag {
-        self.s.to_le_bytes()
+        self.y.into()
     }
 }
 
 impl<const N: usize> Reset for Polyval<N> {
     fn reset(&mut self) {
-        self.s = FieldElement::default();
+        self.y = FieldElement::default();
     }
 }
 
@@ -101,7 +102,131 @@ impl<const N: usize> Reset for Polyval<N> {
 impl<const N: usize> Drop for Polyval<N> {
     fn drop(&mut self) {
         self.h.zeroize();
-        self.s.zeroize();
+        self.y.zeroize();
+    }
+}
+
+/// An element in POLYVAL's field.
+///
+/// This type represents an element of the binary field GF(2^128) modulo the irreducible polynomial
+/// `x^128 + x^127 + x^126 + x^121 + 1` as described in [RFC8452 §3].
+///
+/// # Representation
+///
+/// The element is represented as 16-bytes in little-endian order.
+///
+/// Arithmetic in POLYVAL's field has the following properties:
+/// - All arithmetic operations are performed modulo the polynomial above.
+/// - Addition is equivalent to the XOR operation applied to the two field elements
+/// - Multiplication is carryless
+///
+/// [RFC8452 §3]: https://tools.ietf.org/html/rfc8452#section-3
+#[derive(Clone, Copy, Default, Eq, PartialEq)] // TODO(tarcieri): constant-time `*Eq`?
+pub(crate) struct FieldElement([u8; BLOCK_SIZE]);
+
+impl Debug for FieldElement {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "FieldElement(")?;
+        for byte in self.0 {
+            write!(f, "{:02x}", byte)?;
+        }
+        write!(f, ")")
+    }
+}
+
+impl From<Block> for FieldElement {
+    #[inline]
+    fn from(block: Block) -> Self {
+        Self(block.into())
+    }
+}
+
+impl From<&Block> for FieldElement {
+    #[inline]
+    fn from(block: &Block) -> Self {
+        Self::from(*block)
+    }
+}
+
+impl From<FieldElement> for Block {
+    #[inline]
+    fn from(fe: FieldElement) -> Self {
+        fe.0.into()
+    }
+}
+
+impl From<&FieldElement> for Block {
+    #[inline]
+    fn from(fe: &FieldElement) -> Self {
+        Self::from(*fe)
+    }
+}
+
+impl From<[u8; BLOCK_SIZE]> for FieldElement {
+    #[inline]
+    fn from(bytes: [u8; BLOCK_SIZE]) -> Self {
+        Self(bytes)
+    }
+}
+
+impl From<u128> for FieldElement {
+    #[inline]
+    fn from(x: u128) -> Self {
+        Self(x.to_le_bytes())
+    }
+}
+
+impl From<FieldElement> for u128 {
+    #[inline]
+    fn from(fe: FieldElement) -> Self {
+        u128::from_le_bytes(fe.0)
+    }
+}
+
+impl Add for FieldElement {
+    type Output = Self;
+
+    /// Adds two POLYVAL field elements.
+    ///
+    /// In POLYVAL's field, addition is the equivalent operation to XOR.
+    #[inline]
+    fn add(mut self, rhs: Self) -> Self::Output {
+        for i in 0..BLOCK_SIZE {
+            self.0[i] ^= rhs.0[i];
+        }
+        self
+    }
+}
+
+/// Computes carryless POLYVAL multiplication over GF(2^128) in constant time.
+///
+/// Method described at: <https://www.bearssl.org/constanttime.html#ghash-for-gcm>
+///
+/// POLYVAL multiplication is effectively the little endian equivalent of
+/// GHASH multiplication, aside from one small detail described here:
+///
+/// <https://crypto.stackexchange.com/questions/66448/how-does-bearssls-gcm-modular-reduction-work/66462#66462>
+///
+/// > The product of two bit-reversed 128-bit polynomials yields the
+/// > bit-reversed result over 255 bits, not 256. The BearSSL code ends up
+/// > with a 256-bit result in zw[], and that value is shifted by one bit,
+/// > because of that reversed convention issue. Thus, the code must
+/// > include a shifting step to put it back where it should
+///
+/// This shift is unnecessary for POLYVAL and has been removed.
+impl Mul for FieldElement {
+    type Output = Self;
+
+    fn mul(self, rhs: Self) -> Self {
+        let v = karatsuba(self.into(), rhs.into());
+        mont_reduce(v).into()
+    }
+}
+
+#[cfg(feature = "zeroize")]
+impl Zeroize for FieldElement {
+    fn zeroize(&mut self) {
+        self.0.zeroize();
     }
 }
 
@@ -143,22 +268,20 @@ mod tests {
 
     #[test]
     fn fe_add() {
-        let a = FieldElement::from_le_bytes(&A.into());
-        let b = FieldElement::from_le_bytes(&B.into());
+        let a = FieldElement::from(A);
+        let b = FieldElement::from(B);
 
-        let expected =
-            FieldElement::from_le_bytes(&hex!("99e94bd4ef8a2c3b884cfa59ca342b2e").into());
+        let expected = FieldElement::from(hex!("99e94bd4ef8a2c3b884cfa59ca342b2e"));
         assert_eq!(a + b, expected);
         assert_eq!(b + a, expected);
     }
 
     #[test]
     fn fe_mul() {
-        let a = FieldElement::from_le_bytes(&A.into());
-        let b = FieldElement::from_le_bytes(&B.into());
+        let a = FieldElement::from(A);
+        let b = FieldElement::from(B);
 
-        let expected =
-            FieldElement::from_le_bytes(&hex!("ebe563401e7e91ea3ad6426b8140c394").into());
+        let expected = FieldElement::from(hex!("ebe563401e7e91ea3ad6426b8140c394"));
         assert_eq!(a * b, expected);
         assert_eq!(b * a, expected);
     }
