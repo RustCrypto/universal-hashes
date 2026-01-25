@@ -16,7 +16,7 @@ use crate::{BLOCK_SIZE, Block, Key, Tag};
 use core::{
     fmt::{self, Debug},
     num::Wrapping,
-    ops::{Add, BitAnd, BitOr, BitXor, Mul},
+    ops::{Add, BitAnd, BitOr, BitXor, Mul, Shl},
 };
 use soft_impl::{karatsuba, mont_reduce};
 use universal_hash::{
@@ -229,21 +229,22 @@ impl Zeroize for FieldElement {
 
 /// Multiplication in GF(2)[X], implemented generically and wrapped as `bmul32` and `bmul64`.
 ///
-/// Uses "holes" (sequences of zeroes) to avoid carry spilling, as specified in the four masking
-/// operands (`m0`-`m4`), which should have full-width values with the following bit patterns:
+/// Uses "holes" (sequences of zeroes) to avoid carry spilling, as specified in the mask operand
+/// `m0` which should have a full-width value with the following bit pattern:
 ///
-/// - `m0`: `0b100010001...0001` (e.g. `0x1111_1111u32`)
-/// - `m1`: `0b100010001...00010` (e.g. `0x2222_2222u32`)
-/// - `m2`: `0b100010001...000100` (e.g. `0x4444_4444u32`)
-/// - `m3`: `0b100010001...0001000` (e.g. `0x8888_8888u32`)
+/// `0b100010001...0001` (e.g. `0x1111_1111u32`)
 ///
 /// When carries do occur, they wind up in a "hole" and are subsequently masked out of the result.
 #[inline]
-fn bmul<T>(x: T, y: T, m0: T, m1: T, m2: T, m3: T) -> T
+fn bmul<T>(x: T, y: T, m0: T) -> T
 where
-    T: BitAnd<Output = T> + BitOr<Output = T> + Copy,
+    T: BitAnd<Output = T> + BitOr<Output = T> + Copy + Shl<u32, Output = T>,
     Wrapping<T>: BitXor<Output = Wrapping<T>> + Mul<Output = Wrapping<T>>,
 {
+    let m1 = m0 << 1;
+    let m2 = m1 << 1;
+    let m3 = m2 << 1;
+
     let x0 = Wrapping(x & m0);
     let x1 = Wrapping(x & m1);
     let x2 = Wrapping(x & m2);
