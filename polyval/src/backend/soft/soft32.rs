@@ -35,7 +35,7 @@ use core::{
     num::Wrapping,
     ops::{Add, Mul},
 };
-use universal_hash::crypto_common::array::{Array, sizes::U4};
+use universal_hash::common::array::{Array, sizes::U4};
 
 #[cfg(feature = "zeroize")]
 use zeroize::Zeroize;
