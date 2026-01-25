@@ -35,6 +35,7 @@ use core::{
     num::Wrapping,
     ops::{Add, Mul},
 };
+use universal_hash::crypto_common::array::{Array, sizes::U4};
 
 #[cfg(feature = "zeroize")]
 use zeroize::Zeroize;
@@ -47,11 +48,15 @@ impl FieldElement {
     /// Decode field element from little endian bytestring representation.
     #[inline]
     pub(super) fn from_le_bytes(bytes: &Block) -> FieldElement {
+        // TODO(tarcieri): use `[T]::as_chunks` when MSRV is 1.88
+        let (chunks, remainder) = Array::<u8, U4>::slice_as_chunks(bytes);
+        debug_assert!(remainder.is_empty());
+
         FieldElement(
-            u32::from_le_bytes(bytes[..4].try_into().unwrap()),
-            u32::from_le_bytes(bytes[4..8].try_into().unwrap()),
-            u32::from_le_bytes(bytes[8..12].try_into().unwrap()),
-            u32::from_le_bytes(bytes[12..].try_into().unwrap()),
+            u32::from_le_bytes(chunks[0].into()),
+            u32::from_le_bytes(chunks[1].into()),
+            u32::from_le_bytes(chunks[2].into()),
+            u32::from_le_bytes(chunks[3].into()),
         )
     }
 

@@ -1,3 +1,5 @@
+//! POLYVAL integration tests.
+
 use hex_literal::hex;
 use polyval::{
     BLOCK_SIZE, Polyval, PolyvalGeneric,

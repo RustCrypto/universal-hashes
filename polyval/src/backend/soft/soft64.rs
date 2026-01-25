@@ -15,6 +15,7 @@ use core::{
     num::Wrapping,
     ops::{Add, Mul},
 };
+use universal_hash::crypto_common::array::{Array, sizes::U8};
 
 #[cfg(feature = "zeroize")]
 use zeroize::Zeroize;
@@ -27,9 +28,12 @@ impl FieldElement {
     /// Decode field element from little endian bytestring representation.
     #[inline]
     pub(super) fn from_le_bytes(bytes: &Block) -> FieldElement {
+        // TODO(tarcieri): use `[T]::as_chunks` when MSRV is 1.88
+        let (chunks, remainder) = Array::<u8, U8>::slice_as_chunks(bytes);
+        debug_assert!(remainder.is_empty());
         Self(
-            u64::from_le_bytes(bytes[..8].try_into().unwrap()),
-            u64::from_le_bytes(bytes[8..].try_into().unwrap()),
+            u64::from_le_bytes(chunks[0].into()),
+            u64::from_le_bytes(chunks[1].into()),
         )
     }
 
@@ -37,19 +41,19 @@ impl FieldElement {
     #[inline]
     pub(super) fn to_le_bytes(self) -> Block {
         let mut block = Block::default();
-        block[..8].copy_from_slice(&self.0.to_le_bytes());
-        block[8..].copy_from_slice(&self.1.to_le_bytes());
+        let (lo, hi) = block.split_at_mut(8);
+        lo.copy_from_slice(&self.0.to_le_bytes());
+        hi.copy_from_slice(&self.1.to_le_bytes());
         block
     }
 }
 
 impl From<u128> for FieldElement {
     fn from(x: u128) -> Self {
-        FieldElement((x >> 64) as u64, (x) as u64)
+        FieldElement((x >> 64) as u64, (x & 0xFFFF_FFFF_FFFF_FFFF) as u64)
     }
 }
 
-#[allow(clippy::suspicious_arithmetic_impl)]
 impl Add for FieldElement {
     type Output = Self;
 
