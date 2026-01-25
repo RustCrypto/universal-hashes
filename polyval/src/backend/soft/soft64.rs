@@ -11,10 +11,7 @@
 //! is always generic.
 
 use crate::Block;
-use core::{
-    num::Wrapping,
-    ops::{Add, Mul},
-};
+use core::ops::{Add, Mul};
 use universal_hash::common::array::{Array, sizes::U8};
 
 #[cfg(feature = "zeroize")]
@@ -133,6 +130,19 @@ impl Mul for FieldElement {
     }
 }
 
+/// Carryless multiplication in GF(2)[X], truncated to the low 64-bits.
+#[inline]
+fn bmul64(x: u64, y: u64) -> u64 {
+    super::bmul(
+        x,
+        y,
+        0x1111_1111_1111_1111,
+        0x2222_2222_2222_2222,
+        0x4444_4444_4444_4444,
+        0x8888_8888_8888_8888,
+    )
+}
+
 /// Reduce the 256-bit carryless product of Karatsuba modulo the POLYVAL polynomial.
 ///
 /// This performs constant-time folding using shifts and XORs corresponding to the irreducible
@@ -153,32 +163,4 @@ impl Zeroize for FieldElement {
         self.0.zeroize();
         self.1.zeroize();
     }
-}
-
-/// Multiplication in GF(2)[X], truncated to the low 64-bits, with "holes" (sequences of zeroes) to
-/// avoid carry spilling.
-///
-/// When carries do occur, they wind up in a "hole" and are subsequently masked out of the result.
-fn bmul64(x: u64, y: u64) -> u64 {
-    const M0: u64 = 0x1111_1111_1111_1111;
-    const M1: u64 = 0x2222_2222_2222_2222;
-    const M2: u64 = 0x4444_4444_4444_4444;
-    const M3: u64 = 0x8888_8888_8888_8888;
-
-    let x0 = Wrapping(x & M0);
-    let x1 = Wrapping(x & M1);
-    let x2 = Wrapping(x & M2);
-    let x3 = Wrapping(x & M3);
-
-    let y0 = Wrapping(y & M0);
-    let y1 = Wrapping(y & M1);
-    let y2 = Wrapping(y & M2);
-    let y3 = Wrapping(y & M3);
-
-    let z0 = (x0 * y0) ^ (x1 * y3) ^ (x2 * y2) ^ (x3 * y1);
-    let z1 = (x0 * y1) ^ (x1 * y0) ^ (x2 * y3) ^ (x3 * y2);
-    let z2 = (x0 * y2) ^ (x1 * y1) ^ (x2 * y0) ^ (x3 * y3);
-    let z3 = (x0 * y3) ^ (x1 * y2) ^ (x2 * y1) ^ (x3 * y0);
-
-    (z0.0 & M0) | (z1.0 & M1) | (z2.0 & M2) | (z3.0 & M3)
 }
