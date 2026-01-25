@@ -16,8 +16,8 @@ use crate::{Block, Key, Tag};
 use soft_impl::*;
 use universal_hash::{
     KeyInit, Reset, UhfBackend, UhfClosure, UniversalHash,
+    common::{BlockSizeUser, KeySizeUser, ParBlocksSizeUser},
     consts::{U1, U16},
-    crypto_common::{BlockSizeUser, KeySizeUser, ParBlocksSizeUser},
 };
 
 #[cfg(feature = "zeroize")]

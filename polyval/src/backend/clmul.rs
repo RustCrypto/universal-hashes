@@ -12,8 +12,8 @@ use core::arch::x86_64::*;
 use universal_hash::{
     KeyInit, ParBlocks, Reset, UhfBackend,
     array::ArraySize,
+    common::{BlockSizeUser, KeySizeUser, ParBlocksSizeUser},
     consts::U16,
-    crypto_common::{BlockSizeUser, KeySizeUser, ParBlocksSizeUser},
     typenum::{Const, ToUInt, U},
 };
 

@@ -14,8 +14,8 @@
 
 use universal_hash::{
     UhfBackend, UhfClosure, UniversalHash,
+    common::{BlockSizeUser, ParBlocksSizeUser},
     consts::{U1, U16},
-    crypto_common::{BlockSizeUser, ParBlocksSizeUser},
 };
 
 use crate::{Block, Key, Tag};

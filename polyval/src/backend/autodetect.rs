@@ -6,8 +6,8 @@ use core::mem::ManuallyDrop;
 use universal_hash::{
     KeyInit, Reset, UhfClosure, UniversalHash,
     array::ArraySize,
+    common::{BlockSizeUser, KeySizeUser},
     consts::U16,
-    crypto_common::{BlockSizeUser, KeySizeUser},
     typenum::{Const, ToUInt, U},
 };
 

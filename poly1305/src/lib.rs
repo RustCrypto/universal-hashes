@@ -11,8 +11,8 @@ pub use universal_hash;
 use core::fmt::{self, Debug};
 use universal_hash::{
     KeyInit, UhfClosure, UniversalHash,
+    common::{BlockSizeUser, KeySizeUser},
     consts::{U16, U32},
-    crypto_common::{BlockSizeUser, KeySizeUser},
 };
 
 mod backend;

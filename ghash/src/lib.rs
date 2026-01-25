@@ -12,8 +12,8 @@ use polyval::PolyvalGeneric;
 use universal_hash::{
     KeyInit, UhfBackend, UhfClosure, UniversalHash,
     array::ArraySize,
+    common::{BlockSizeUser, KeySizeUser, ParBlocksSizeUser},
     consts::U16,
-    crypto_common::{BlockSizeUser, KeySizeUser, ParBlocksSizeUser},
     typenum::{Const, ToUInt, U},
 };
 

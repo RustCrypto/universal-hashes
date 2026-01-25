@@ -3,7 +3,7 @@
 use hex_literal::hex;
 use polyval::{
     BLOCK_SIZE, Polyval, PolyvalGeneric,
-    universal_hash::{KeyInit, Reset, UniversalHash, crypto_common::KeySizeUser, typenum::U16},
+    universal_hash::{KeyInit, Reset, UniversalHash, common::KeySizeUser, typenum::U16},
 };
 
 //
