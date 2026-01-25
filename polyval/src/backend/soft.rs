@@ -190,11 +190,8 @@ impl Add for FieldElement {
     ///
     /// In POLYVAL's field, addition is the equivalent operation to XOR.
     #[inline]
-    fn add(mut self, rhs: Self) -> Self::Output {
-        for i in 0..BLOCK_SIZE {
-            self.0[i] ^= rhs.0[i];
-        }
-        self
+    fn add(self, rhs: Self) -> Self::Output {
+        (u128::from(self) ^ u128::from(rhs)).into()
     }
 }
 

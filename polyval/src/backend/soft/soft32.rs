@@ -28,7 +28,7 @@
 use super::FieldElement;
 
 type U32x4 = (u32, u32, u32, u32);
-type U32x8 = [u32; 8];
+type U32x8 = (u32, u32, u32, u32, u32, u32, u32, u32);
 
 impl From<FieldElement> for U32x4 {
     #[inline]
@@ -129,17 +129,16 @@ pub(super) fn karatsuba(h: U32x4, y: U32x4) -> U32x8 {
     c[14] ^= c[11] ^ c[12];
     c[17] ^= c[15] ^ c[16];
 
-    // Assemble the final 256-bit product as 32x8
-    let mut zw = [0u32; 8];
-    zw[0] = c[0];
-    zw[1] = c[4] ^ c[9].reverse_bits() >> 1;
-    zw[2] = c[1] ^ c[0] ^ c[2] ^ c[6] ^ c[13].reverse_bits() >> 1;
-    zw[3] = c[4] ^ c[5] ^ c[8] ^ (c[10] ^ c[9] ^ c[11] ^ c[15]).reverse_bits() >> 1;
-    zw[4] = c[2] ^ c[1] ^ c[3] ^ c[7] ^ (c[13] ^ c[14] ^ c[17]).reverse_bits() >> 1;
-    zw[5] = c[5] ^ (c[11] ^ c[10] ^ c[12] ^ c[16]).reverse_bits() >> 1;
-    zw[6] = c[3] ^ c[14].reverse_bits() >> 1;
-    zw[7] = c[12].reverse_bits() >> 1;
-    zw
+    // Assemble the final 256-bit product as `U32x8`
+    let zw0 = c[0];
+    let zw1 = c[4] ^ c[9].reverse_bits() >> 1;
+    let zw2 = c[1] ^ c[0] ^ c[2] ^ c[6] ^ c[13].reverse_bits() >> 1;
+    let zw3 = c[4] ^ c[5] ^ c[8] ^ (c[10] ^ c[9] ^ c[11] ^ c[15]).reverse_bits() >> 1;
+    let zw4 = c[2] ^ c[1] ^ c[3] ^ c[7] ^ (c[13] ^ c[14] ^ c[17]).reverse_bits() >> 1;
+    let zw5 = c[5] ^ (c[11] ^ c[10] ^ c[12] ^ c[16]).reverse_bits() >> 1;
+    let zw6 = c[3] ^ c[14].reverse_bits() >> 1;
+    let zw7 = c[12].reverse_bits() >> 1;
+    (zw0, zw1, zw2, zw3, zw4, zw5, zw6, zw7)
 }
 
 /// Carryless multiplication in GF(2)[X], truncated to the low 32-bits.
@@ -154,7 +153,8 @@ fn bmul32(x: u32, y: u32) -> u32 {
 /// polynomial `x^128 + x^127 + x^126 + x^121 + 1`. This is closely related to GHASH reduction but
 /// the polynomial's bit order is reversed in POLYVAL.
 #[inline]
-pub(super) fn mont_reduce(mut zw: U32x8) -> U32x4 {
+pub(super) fn mont_reduce(zw: U32x8) -> U32x4 {
+    let mut zw = [zw.0, zw.1, zw.2, zw.3, zw.4, zw.5, zw.6, zw.7];
     for i in 0..4 {
         let lw = zw[i];
         zw[i + 4] ^= lw ^ (lw >> 1) ^ (lw >> 2) ^ (lw >> 7);

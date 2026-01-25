@@ -62,7 +62,7 @@ pub(super) fn karatsuba(h: U64x2, y: U64x2) -> U64x4 {
     z1h = z1h.reverse_bits() >> 1;
     z2h = z2h.reverse_bits() >> 1;
 
-    // Assemble the final 256-bit product as 64x4
+    // Assemble the final 256-bit product as `U64x4`
     let v0 = z0;
     let v1 = z0h ^ z2;
     let v2 = z1 ^ z2h;
