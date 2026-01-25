@@ -1,6 +1,6 @@
 [package]
 name = "polyval"
-version = "0.7.0-rc.3"
+version = "0.7.0-rc.4"
 authors = ["RustCrypto Developers"]
 license = "Apache-2.0 OR MIT"
 description = """
