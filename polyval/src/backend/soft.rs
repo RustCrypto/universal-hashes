@@ -13,6 +13,10 @@ cpubits::cpubits! {
 }
 
 use crate::{Block, Key, Tag};
+use core::{
+    num::Wrapping,
+    ops::{BitAnd, BitOr, BitXor, Mul},
+};
 use soft_impl::*;
 use universal_hash::{
     KeyInit, Reset, UhfBackend, UhfClosure, UniversalHash,
@@ -99,6 +103,34 @@ impl<const N: usize> Drop for Polyval<N> {
         self.h.zeroize();
         self.s.zeroize();
     }
+}
+
+/// Multiplication in GF(2)[X], truncated to the low 64-bits, with "holes" (sequences of zeroes) to
+/// avoid carry spilling, as specified in the four masking operands (`m0`-`m4`).
+///
+/// When carries do occur, they wind up in a "hole" and are subsequently masked out of the result.
+#[inline]
+fn bmul<T>(x: T, y: T, m0: T, m1: T, m2: T, m3: T) -> T
+where
+    T: BitAnd<Output = T> + BitOr<Output = T> + Copy,
+    Wrapping<T>: BitXor<Output = Wrapping<T>> + Mul<Output = Wrapping<T>>,
+{
+    let x0 = Wrapping(x & m0);
+    let x1 = Wrapping(x & m1);
+    let x2 = Wrapping(x & m2);
+    let x3 = Wrapping(x & m3);
+
+    let y0 = Wrapping(y & m0);
+    let y1 = Wrapping(y & m1);
+    let y2 = Wrapping(y & m2);
+    let y3 = Wrapping(y & m3);
+
+    let z0 = (x0 * y0) ^ (x1 * y3) ^ (x2 * y2) ^ (x3 * y1);
+    let z1 = (x0 * y1) ^ (x1 * y0) ^ (x2 * y3) ^ (x3 * y2);
+    let z2 = (x0 * y2) ^ (x1 * y1) ^ (x2 * y0) ^ (x3 * y3);
+    let z3 = (x0 * y3) ^ (x1 * y2) ^ (x2 * y1) ^ (x3 * y0);
+
+    (z0.0 & m0) | (z1.0 & m1) | (z2.0 & m2) | (z3.0 & m3)
 }
 
 #[cfg(test)]
