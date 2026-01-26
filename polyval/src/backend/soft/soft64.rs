@@ -30,7 +30,7 @@ impl From<U64x2> for FieldElement {
 /// Uses a Karatsuba decomposition in which the 128x128 multiplication is reduced to three 64x64
 /// multiplications together with a bit-reversal trick to efficiently recover the high half.
 #[inline]
-pub(super) fn karatsuba(h: U64x2, y: U64x2) -> U64x4 {
+pub(crate) fn karatsuba(h: U64x2, y: U64x2) -> U64x4 {
     // Karatsuba input decomposition for H
     let h0 = h.0;
     let h1 = h.1;
@@ -82,7 +82,7 @@ fn bmul64(x: u64, y: u64) -> u64 {
 /// polynomial `x^128 + x^127 + x^126 + x^121 + 1`. This is closely related to GHASH reduction but
 /// the polynomial's bit order is reversed in POLYVAL.
 #[inline]
-pub(super) fn mont_reduce(v: U64x4) -> U64x2 {
+pub(crate) fn mont_reduce(v: U64x4) -> U64x2 {
     let (v0, mut v1, mut v2, mut v3) = v;
     v2 ^= v0 ^ (v0 >> 1) ^ (v0 >> 2) ^ (v0 >> 7);
     v1 ^= (v0 << 63) ^ (v0 << 62) ^ (v0 << 57);

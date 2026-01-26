@@ -9,6 +9,9 @@ use core::arch::x86::*;
 #[cfg(target_arch = "x86_64")]
 use core::arch::x86_64::*;
 
+use super::FieldElement;
+use crate::{Block, Key, Tag, backend::common};
+use core::{ops::Mul, ptr};
 use universal_hash::{
     KeyInit, ParBlocks, Reset, UhfBackend,
     array::ArraySize,
@@ -16,9 +19,6 @@ use universal_hash::{
     consts::U16,
     typenum::{Const, ToUInt, U},
 };
-
-use crate::{Block, Key, Tag, backend::common};
-use core::ptr;
 
 /// **POLYVAL**: GHASH-like universal hash over GF(2^128).
 ///
@@ -33,8 +33,8 @@ pub struct Polyval<const N: usize = 8> {
     /// Powers of H in descending order.
     ///
     /// (H^N, H^(N-1)...H)
-    h: [__m128i; N],
-    y: __m128i,
+    h: [FieldElement; N],
+    y: FieldElement,
 }
 
 impl<const N: usize> KeySizeUser for Polyval<N> {
@@ -44,16 +44,10 @@ impl<const N: usize> KeySizeUser for Polyval<N> {
 impl<const N: usize> Polyval<N> {
     /// Initialize POLYVAL with the given `H` field element and initial block
     pub fn new_with_init_block(h: &Key, init_block: u128) -> Self {
-        unsafe {
-            // `_mm_loadu_si128` performs an unaligned load
-            #[allow(clippy::cast_ptr_alignment)]
-            let h = _mm_loadu_si128(h.as_ptr().cast::<__m128i>());
-
-            Self {
-                // introducing a closure here because polymul is unsafe.
-                h: common::powers_of_h(h, |a, b| polymul(a, b)),
-                y: _mm_loadu_si128(ptr::from_ref(&init_block.to_be_bytes()[..]).cast::<__m128i>()),
-            }
+        let h = FieldElement::from(h);
+        Self {
+            h: common::powers_of_h(h, Mul::mul),
+            y: init_block.into(),
         }
     }
 }
@@ -119,17 +113,17 @@ where
             for i in (0..N).rev() {
                 let mut x = _mm_loadu_si128(blocks[i].as_ptr().cast());
                 if i == 0 {
-                    x = _mm_xor_si128(x, self.y);
+                    x = _mm_xor_si128(x, self.y.into());
                 }
                 let y = self.h[i];
-                let (hh, mm, ll) = karatsuba1(x, y);
+                let (hh, mm, ll) = karatsuba1(x, y.into());
                 h = _mm_xor_si128(h, hh);
                 m = _mm_xor_si128(m, mm);
                 l = _mm_xor_si128(l, ll);
             }
 
             let (h, l) = karatsuba2(h, m, l);
-            self.y = mont_reduce(h, l);
+            self.y = mont_reduce(h, l).into();
         }
     }
 
@@ -138,15 +132,13 @@ where
     #[allow(unsafe_op_in_unsafe_fn)]
     unsafe fn mul(&mut self, x: &Block) {
         let x = _mm_loadu_si128(x.as_ptr().cast());
-        self.y = polymul(_mm_xor_si128(self.y, x), self.h[N - 1]);
+        self.y = polymul(_mm_xor_si128(self.y.into(), x), self.h[N - 1].into()).into();
     }
 }
 
 impl<const N: usize> Reset for Polyval<N> {
     fn reset(&mut self) {
-        unsafe {
-            self.y = _mm_setzero_si128();
-        }
+        self.y = FieldElement::default();
     }
 }
 
@@ -156,6 +148,22 @@ impl<const N: usize> Drop for Polyval<N> {
         use zeroize::Zeroize;
         self.h.zeroize();
         self.y.zeroize();
+    }
+}
+
+impl From<FieldElement> for __m128i {
+    #[inline]
+    fn from(fe: FieldElement) -> __m128i {
+        unsafe { _mm_loadu_si128(fe.0.as_ptr().cast()) }
+    }
+}
+
+impl From<__m128i> for FieldElement {
+    #[inline]
+    fn from(fe: __m128i) -> FieldElement {
+        let mut ret = FieldElement::default();
+        unsafe { _mm_store_si128(ret.0.as_mut_ptr().cast(), fe) }
+        ret
     }
 }
 

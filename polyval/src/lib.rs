@@ -9,7 +9,7 @@
 mod backend;
 mod mulx;
 
-pub use crate::{backend::Polyval, backend::PolyvalGeneric, mulx::mulx};
+pub use crate::{backend::PolyvalGeneric, mulx::mulx};
 pub use universal_hash;
 
 impl<const N: usize> core::fmt::Debug for PolyvalGeneric<N> {
@@ -32,3 +32,6 @@ pub type Block = universal_hash::Block<Polyval>;
 
 /// POLYVAL tags (16-bytes)
 pub type Tag = universal_hash::Block<Polyval>;
+
+/// **POLYVAL**: GHASH-like universal hash over GF(2^128).
+pub type Polyval = PolyvalGeneric<8>;

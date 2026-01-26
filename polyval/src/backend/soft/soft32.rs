@@ -5,25 +5,25 @@
 //!
 //! Copyright (c) 2016 Thomas Pornin <pornin@bolet.org>
 //!
-//! This implementation uses 32-bit multiplications, and only the low
-//! 32 bits for each multiplication result. This is meant primarily for
-//! the ARM Cortex M0 and M0+, whose multiplication opcode does not yield
-//! the upper 32 bits; but it might also be useful on architectures where
-//! access to the upper 32 bits requires use of specific registers that
-//! create contention (e.g. on i386, "mul" necessarily outputs the result
-//! in edx:eax, while "imul" can use any registers but is limited to the
-//! low 32 bits).
+//! This implementation is designed for 32-bit CPUs which lack a widening multiply instruction such
+//! as the ARM Cortex M0 and M0+, whose multiplication opcode does not yield the upper 32-bits.
+//! We use the `cpubits` crate to distinguish CPUs which do support widening multiply such as ARMv7
+//! and promote them to use the 64-bit implementation (please open an issue on `cpubits` if you feel
+//! an architecture should receive such a promotion).
 //!
-//! The implementation trick that is used here is bit-reversing (bit 0
-//! is swapped with bit 31, bit 1 with bit 30, and so on). In GF(2)[X],
-//! for all values x and y, we have:
+//! It might also be useful on architectures where access to the upper 32-bits requires use of
+//! specific registers that create contention (e.g. on i386, "mul" necessarily outputs the result
+//! in `edx:eax`, while `imul` can use any registers but is limited to the low 32 bits).
+//!
+//! The implementation trick that is used here is bit-reversing (bit 0 is swapped with bit 31, bit 1
+//! with bit 30, and so on). In GF(2)[X], for all values x and y, we have:
 //!
 //! ```text
 //! x.reverse_bits() * y.reverse_bits() = (x * y).reverse_bits()
 //! ```
 //!
-//! In other words, if we bit-reverse (over 32 bits) the operands, then we
-//! bit-reverse (over 64 bits) the result.
+//! In other words, if we bit-reverse (over 32-bits) the operands, then we bit-reverse (over
+//! 64-bits) the result.
 
 use super::FieldElement;
 
@@ -61,7 +61,7 @@ impl From<U32x4> for FieldElement {
 /// multiplications, hence nine 32x32 multiplications. With the bit-reversal trick, we have to
 /// perform 18 32x32 multiplications.
 #[inline]
-pub(super) fn karatsuba(h: U32x4, y: U32x4) -> U32x8 {
+pub(crate) fn karatsuba(h: U32x4, y: U32x4) -> U32x8 {
     let hw = [h.0, h.1, h.2, h.3];
     let yw = [y.0, y.1, y.2, y.3];
     let hwr = [
@@ -153,7 +153,7 @@ fn bmul32(x: u32, y: u32) -> u32 {
 /// polynomial `x^128 + x^127 + x^126 + x^121 + 1`. This is closely related to GHASH reduction but
 /// the polynomial's bit order is reversed in POLYVAL.
 #[inline]
-pub(super) fn mont_reduce(zw: U32x8) -> U32x4 {
+pub(crate) fn mont_reduce(zw: U32x8) -> U32x4 {
     let mut zw = [zw.0, zw.1, zw.2, zw.3, zw.4, zw.5, zw.6, zw.7];
     for i in 0..4 {
         let lw = zw[i];
