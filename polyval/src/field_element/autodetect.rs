@@ -1,7 +1,7 @@
 //! Autodetection for CPU intrinsics, with fallback to the "soft" backend when
 //! they are unavailable.
 
-use crate::{Key, Tag, backend::soft};
+use crate::{Key, Tag, field_element::soft};
 use core::mem::ManuallyDrop;
 use universal_hash::{
     KeyInit, Reset, UhfClosure, UniversalHash,
@@ -12,10 +12,10 @@ use universal_hash::{
 };
 
 #[cfg(target_arch = "aarch64")]
-use super::pmull as intrinsics;
+use super::armv8 as intrinsics;
 
 #[cfg(any(target_arch = "x86_64", target_arch = "x86"))]
-use super::clmul as intrinsics;
+use super::x86 as intrinsics;
 
 #[cfg(target_arch = "aarch64")]
 cpufeatures::new!(mul_intrinsics, "aes"); // `aes` implies PMULL

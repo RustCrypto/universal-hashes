@@ -10,7 +10,7 @@ use core::arch::x86::*;
 use core::arch::x86_64::*;
 
 use super::FieldElement;
-use crate::{Block, Key, Tag, backend::common};
+use crate::{Block, Key, Tag, field_element::common};
 use core::{ops::Mul, ptr};
 use universal_hash::{
     KeyInit, ParBlocks, Reset, UhfBackend,
