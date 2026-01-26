@@ -1,5 +1,21 @@
-//! Portable software implementation. Provides implementations for low power 32-bit devices as well
-//! as a 64-bit implementation.
+//! Portable pure Rust implementation which can computes carryless POLYVAL multiplication over
+//! GF (2^128) in constant time. Both 32-bit and 64-bit backends are available.
+//!
+//! Method described at: <https://www.bearssl.org/constanttime.html#ghash-for-gcm>
+//!
+//! POLYVAL multiplication is effectively the little endian equivalent of GHASH multiplication,
+//! aside from one small detail described here:
+//!
+//! <https://crypto.stackexchange.com/questions/66448/how-does-bearssls-gcm-modular-reduction-work/66462#66462>
+//!
+//! > The product of two bit-reversed 128-bit polynomials yields the
+//! > bit-reversed result over 255 bits, not 256. The BearSSL code ends up
+//! > with a 256-bit result in zw[], and that value is shifted by one bit,
+//! > because of that reversed convention issue. Thus, the code must
+//! > include a shifting step to put it back where it should
+//!
+//! This shift is unnecessary for POLYVAL (it is in fact what distinguishes POLYVAL from GHASH) and
+//! has been removed.
 
 cpubits::cpubits! {
     16 | 32 => {
@@ -12,13 +28,14 @@ cpubits::cpubits! {
     }
 }
 
-use crate::{BLOCK_SIZE, Block, Key, Tag};
+pub(super) use soft_impl::{karatsuba, mont_reduce};
+
+use super::FieldElement;
+use crate::{Block, Key, Tag};
 use core::{
-    fmt::{self, Debug},
     num::Wrapping,
-    ops::{Add, BitAnd, BitOr, BitXor, Mul, Shl},
+    ops::{BitAnd, BitOr, BitXor, Mul, Shl},
 };
-use soft_impl::{karatsuba, mont_reduce};
 use universal_hash::{
     KeyInit, Reset, UhfBackend, UhfClosure, UniversalHash,
     common::{BlockSizeUser, KeySizeUser, ParBlocksSizeUser},
@@ -106,127 +123,6 @@ impl<const N: usize> Drop for Polyval<N> {
     }
 }
 
-/// An element in POLYVAL's field.
-///
-/// This type represents an element of the binary field GF(2^128) modulo the irreducible polynomial
-/// `x^128 + x^127 + x^126 + x^121 + 1` as described in [RFC8452 §3].
-///
-/// # Representation
-///
-/// The element is represented as 16-bytes in little-endian order.
-///
-/// Arithmetic in POLYVAL's field has the following properties:
-/// - All arithmetic operations are performed modulo the polynomial above.
-/// - Addition is equivalent to the XOR operation applied to the two field elements
-/// - Multiplication is carryless
-///
-/// [RFC8452 §3]: https://tools.ietf.org/html/rfc8452#section-3
-#[derive(Clone, Copy, Default, Eq, PartialEq)] // TODO(tarcieri): constant-time `*Eq`?
-pub(crate) struct FieldElement([u8; BLOCK_SIZE]);
-
-impl Debug for FieldElement {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "FieldElement(")?;
-        for byte in self.0 {
-            write!(f, "{:02x}", byte)?;
-        }
-        write!(f, ")")
-    }
-}
-
-impl From<Block> for FieldElement {
-    #[inline]
-    fn from(block: Block) -> Self {
-        Self(block.into())
-    }
-}
-
-impl From<&Block> for FieldElement {
-    #[inline]
-    fn from(block: &Block) -> Self {
-        Self::from(*block)
-    }
-}
-
-impl From<FieldElement> for Block {
-    #[inline]
-    fn from(fe: FieldElement) -> Self {
-        fe.0.into()
-    }
-}
-
-impl From<&FieldElement> for Block {
-    #[inline]
-    fn from(fe: &FieldElement) -> Self {
-        Self::from(*fe)
-    }
-}
-
-impl From<[u8; BLOCK_SIZE]> for FieldElement {
-    #[inline]
-    fn from(bytes: [u8; BLOCK_SIZE]) -> Self {
-        Self(bytes)
-    }
-}
-
-impl From<u128> for FieldElement {
-    #[inline]
-    fn from(x: u128) -> Self {
-        Self(x.to_le_bytes())
-    }
-}
-
-impl From<FieldElement> for u128 {
-    #[inline]
-    fn from(fe: FieldElement) -> Self {
-        u128::from_le_bytes(fe.0)
-    }
-}
-
-impl Add for FieldElement {
-    type Output = Self;
-
-    /// Adds two POLYVAL field elements.
-    ///
-    /// In POLYVAL's field, addition is the equivalent operation to XOR.
-    #[inline]
-    fn add(self, rhs: Self) -> Self::Output {
-        (u128::from(self) ^ u128::from(rhs)).into()
-    }
-}
-
-/// Computes carryless POLYVAL multiplication over GF(2^128) in constant time.
-///
-/// Method described at: <https://www.bearssl.org/constanttime.html#ghash-for-gcm>
-///
-/// POLYVAL multiplication is effectively the little endian equivalent of
-/// GHASH multiplication, aside from one small detail described here:
-///
-/// <https://crypto.stackexchange.com/questions/66448/how-does-bearssls-gcm-modular-reduction-work/66462#66462>
-///
-/// > The product of two bit-reversed 128-bit polynomials yields the
-/// > bit-reversed result over 255 bits, not 256. The BearSSL code ends up
-/// > with a 256-bit result in zw[], and that value is shifted by one bit,
-/// > because of that reversed convention issue. Thus, the code must
-/// > include a shifting step to put it back where it should
-///
-/// This shift is unnecessary for POLYVAL and has been removed.
-impl Mul for FieldElement {
-    type Output = Self;
-
-    fn mul(self, rhs: Self) -> Self {
-        let v = karatsuba(self.into(), rhs.into());
-        mont_reduce(v).into()
-    }
-}
-
-#[cfg(feature = "zeroize")]
-impl Zeroize for FieldElement {
-    fn zeroize(&mut self) {
-        self.0.zeroize();
-    }
-}
-
 /// Multiplication in GF(2)[X], implemented generically and wrapped as `bmul32` and `bmul64`.
 ///
 /// Uses "holes" (sequences of zeroes) to avoid carry spilling, as specified in the mask operand
@@ -261,33 +157,4 @@ where
     let z3 = (x0 * y3) ^ (x1 * y2) ^ (x2 * y1) ^ (x3 * y0);
 
     (z0.0 & m0) | (z1.0 & m1) | (z2.0 & m2) | (z3.0 & m3)
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use hex_literal::hex;
-
-    const A: [u8; 16] = hex!("66e94bd4ef8a2c3b884cfa59ca342b2e");
-    const B: [u8; 16] = hex!("ff000000000000000000000000000000");
-
-    #[test]
-    fn fe_add() {
-        let a = FieldElement::from(A);
-        let b = FieldElement::from(B);
-
-        let expected = FieldElement::from(hex!("99e94bd4ef8a2c3b884cfa59ca342b2e"));
-        assert_eq!(a + b, expected);
-        assert_eq!(b + a, expected);
-    }
-
-    #[test]
-    fn fe_mul() {
-        let a = FieldElement::from(A);
-        let b = FieldElement::from(B);
-
-        let expected = FieldElement::from(hex!("ebe563401e7e91ea3ad6426b8140c394"));
-        assert_eq!(a * b, expected);
-        assert_eq!(b * a, expected);
-    }
 }

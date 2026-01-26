@@ -15,8 +15,9 @@
 //! - <https://eprint.iacr.org/2015/688.pdf>
 #![allow(unsafe_op_in_unsafe_fn)]
 
-use core::{arch::aarch64::*, mem};
-
+use super::FieldElement;
+use crate::{Block, Key, Tag, backend::common};
+use core::{arch::aarch64::*, mem, ops::Mul};
 use universal_hash::{
     KeyInit, ParBlocks, Reset, UhfBackend,
     array::ArraySize,
@@ -24,8 +25,6 @@ use universal_hash::{
     consts::U16,
     typenum::{Const, ToUInt, U},
 };
-
-use crate::{Block, Key, Tag, backend::common};
 
 /// Montgomery reduction polynomial
 const POLY: u128 = (1 << 127) | (1 << 126) | (1 << 121) | (1 << 63) | (1 << 62) | (1 << 57);
@@ -43,8 +42,8 @@ pub struct Polyval<const N: usize = 8> {
     /// Powers of H in descending order.
     ///
     /// (H^N, H^(N-1)...H)
-    h: [uint8x16_t; N],
-    y: uint8x16_t,
+    h: [FieldElement; N],
+    y: FieldElement,
 }
 
 impl<const N: usize> KeySizeUser for Polyval<N> {
@@ -54,13 +53,10 @@ impl<const N: usize> KeySizeUser for Polyval<N> {
 impl<const N: usize> Polyval<N> {
     /// Initialize POLYVAL with the given `H` field element and initial block
     pub fn new_with_init_block(h: &Key, init_block: u128) -> Self {
-        unsafe {
-            let h = vld1q_u8(h.as_ptr());
-            Self {
-                // introducing a closure here because polymul is unsafe.
-                h: common::powers_of_h(h, |a, b| polymul(a, b)),
-                y: vld1q_u8(init_block.to_be_bytes()[..].as_ptr()),
-            }
+        let h = FieldElement::from(h);
+        Self {
+            h: common::powers_of_h(h, Mul::mul),
+            y: init_block.into(),
         }
     }
 }
@@ -99,44 +95,58 @@ where
             for i in (0..N).rev() {
                 let mut x = vld1q_u8(blocks[i].as_ptr());
                 if i == 0 {
-                    x = veorq_u8(x, self.y);
+                    x = veorq_u8(x, self.y.into());
                 }
                 let y = self.h[i];
-                let (hh, mm, ll) = karatsuba1(x, y);
+                let (hh, mm, ll) = karatsuba1(x, y.into());
                 h = veorq_u8(h, hh);
                 m = veorq_u8(m, mm);
                 l = veorq_u8(l, ll);
             }
 
             let (h, l) = karatsuba2(h, m, l);
-            self.y = mont_reduce(h, l);
+            self.y = mont_reduce(h, l).into();
         }
     }
 
     fn proc_block(&mut self, x: &Block) {
         unsafe {
-            let y = veorq_u8(self.y, vld1q_u8(x.as_ptr()));
-            self.y = polymul(y, self.h[N - 1]);
+            let y = veorq_u8(self.y.into(), vld1q_u8(x.as_ptr()));
+            self.y = polymul(y, self.h[N - 1].into()).into();
         }
     }
 }
 
 impl<const N: usize> Reset for Polyval<N> {
     fn reset(&mut self) {
-        unsafe {
-            self.y = vdupq_n_u8(0);
-        }
+        self.y = FieldElement::default();
     }
 }
 
 impl<const N: usize> Polyval<N> {
     /// Get POLYVAL output.
     pub(crate) fn finalize(self) -> Tag {
-        unsafe { mem::transmute(self.y) }
+        self.y.into()
     }
 }
 
-/// Multipy "y" by "h" and return the result.
+impl From<FieldElement> for uint8x16_t {
+    #[inline]
+    fn from(fe: FieldElement) -> uint8x16_t {
+        unsafe { vld1q_u8(fe.0.as_ptr()) }
+    }
+}
+
+impl From<uint8x16_t> for FieldElement {
+    #[inline]
+    fn from(fe: uint8x16_t) -> FieldElement {
+        let mut ret = FieldElement::default();
+        unsafe { vst1q_u8(ret.0.as_mut_ptr(), fe) }
+        ret
+    }
+}
+
+/// Multiply "y" by "h" and return the result.
 // TODO(tarcieri): investigate ordering optimizations and fusions e.g.`fuse-crypto-eor`
 #[inline]
 #[target_feature(enable = "neon")]
