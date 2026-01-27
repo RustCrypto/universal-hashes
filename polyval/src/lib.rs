@@ -13,7 +13,7 @@ pub use crate::mulx::mulx;
 pub use universal_hash;
 
 use core::fmt::{self, Debug};
-use field_element::{FieldElement, InitToken, has_intrinsics};
+use field_element::{FieldElement, InitToken, init_intrinsics};
 use universal_hash::{
     KeyInit, ParBlocks, Reset, UhfBackend, UhfClosure, UniversalHash,
     array::{Array, ArraySize},
@@ -76,7 +76,7 @@ impl<const N: usize> PolyvalGeneric<N> {
     /// Initialize POLYVAL with the given `H` field element and initial block.
     #[must_use]
     pub fn new_with_init_block(h: &Key, init_block: u128) -> Self {
-        let has_intrinsics = has_intrinsics().0;
+        let has_intrinsics = init_intrinsics();
         Self {
             powers_of_h: FieldElement::from(h).powers_of_h(has_intrinsics),
             y: init_block.into(),

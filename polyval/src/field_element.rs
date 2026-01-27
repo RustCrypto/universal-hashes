@@ -37,7 +37,7 @@ cfg_if! {
         // aarch64
         mod autodetect;
         mod armv8;
-        pub(crate) use autodetect::{InitToken, has_intrinsics};
+        pub(crate) use autodetect::{InitToken, init_intrinsics};
     } else if #[cfg(all(
         any(target_arch = "x86_64", target_arch = "x86"),
         not(polyval_backend = "soft")
@@ -45,15 +45,14 @@ cfg_if! {
         // x86/x86-64
         mod autodetect;
         mod x86;
-        pub(crate) use autodetect::{InitToken, has_intrinsics};
+        pub(crate) use autodetect::{InitToken, init_intrinsics};
     } else {
         // "soft" fallback implementation for other targets written in pure Rust
         use universal_hash::array::{Array, ArraySize};
 
+        // Stub intrinsics "detection"
         pub(crate) type InitToken = ();
-        pub(crate) fn has_intrinsics() -> (InitToken, bool) {
-            ((), false)
-        }
+        pub(crate) fn init_intrinsics() {}
 
         impl FieldElement {
             /// Default degree of parallelism, i.e. how many powers of `H` to compute.
