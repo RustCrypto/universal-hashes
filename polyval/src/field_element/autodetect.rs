@@ -1,135 +1,54 @@
 //! Autodetection for CPU intrinsics, with fallback to the "soft" backend when
 //! they are unavailable.
 
-use crate::{Key, Tag, field_element::soft};
-use core::mem::ManuallyDrop;
-use universal_hash::{
-    KeyInit, Reset, UhfClosure, UniversalHash,
-    array::ArraySize,
-    common::{BlockSizeUser, KeySizeUser},
-    consts::U16,
-    typenum::{Const, ToUInt, U},
-};
-
 #[cfg(target_arch = "aarch64")]
 use super::armv8 as intrinsics;
-
 #[cfg(any(target_arch = "x86_64", target_arch = "x86"))]
 use super::x86 as intrinsics;
 
+use super::{FieldElement, soft};
+use crate::Block;
+use universal_hash::array::{Array, ArraySize};
+
 #[cfg(target_arch = "aarch64")]
 cpufeatures::new!(mul_intrinsics, "aes"); // `aes` implies PMULL
-
 #[cfg(any(target_arch = "x86_64", target_arch = "x86"))]
 cpufeatures::new!(mul_intrinsics, "pclmulqdq");
 
-/// **POLYVAL**: GHASH-like universal hash over GF(2^128).
-///
-/// Parameterized on a constant that determines how many
-/// blocks to process at once: higher numbers use more memory,
-/// and require more time to re-key, but process data significantly
-/// faster.
-///
-/// (This constant is not used when acceleration is not enabled.)
-pub struct Polyval<const N: usize = 8> {
-    inner: Inner<N>,
-    token: mul_intrinsics::InitToken,
-}
+pub(crate) use mul_intrinsics::{InitToken, init_get as detect_intrinsics};
 
-union Inner<const N: usize> {
-    intrinsics: ManuallyDrop<intrinsics::Polyval<N>>,
-    soft: ManuallyDrop<soft::Polyval<N>>,
-}
+impl FieldElement {
+    /// Default degree of parallelism, i.e. how many powers of `H` to compute.
+    pub const DEFAULT_PARALLELISM: usize = 8;
 
-impl<const N: usize> KeySizeUser for Polyval<N> {
-    type KeySize = U16;
-}
-
-impl<const N: usize> Polyval<N> {
-    /// Initialize POLYVAL with the given `H` field element and initial block
-    #[must_use]
-    pub fn new_with_init_block(h: &Key, init_block: u128) -> Self {
-        let (token, has_intrinsics) = mul_intrinsics::init_get();
-
-        let inner = if has_intrinsics {
-            Inner {
-                intrinsics: ManuallyDrop::new(intrinsics::Polyval::new_with_init_block(
-                    h, init_block,
-                )),
-            }
+    /// Process an individual block.
+    pub(crate) fn proc_block(
+        h: FieldElement,
+        y: FieldElement,
+        block: &Block,
+        has_intrinsics: InitToken,
+    ) -> FieldElement {
+        if has_intrinsics.get() {
+            // SAFETY: we have checked the CPU has the necessary intrinsics above
+            unsafe { intrinsics::proc_block(h, y, block) }
         } else {
-            Inner {
-                soft: ManuallyDrop::new(soft::Polyval::new_with_init_block(h, init_block)),
-            }
-        };
-
-        Self { inner, token }
-    }
-}
-
-impl<const N: usize> KeyInit for Polyval<N> {
-    /// Initialize POLYVAL with the given `H` field element
-    fn new(h: &Key) -> Self {
-        Self::new_with_init_block(h, 0)
-    }
-}
-
-impl<const N: usize> BlockSizeUser for Polyval<N> {
-    type BlockSize = U16;
-}
-
-impl<const N: usize> UniversalHash for Polyval<N>
-where
-    U<N>: ArraySize,
-    Const<N>: ToUInt,
-{
-    fn update_with_backend(&mut self, f: impl UhfClosure<BlockSize = Self::BlockSize>) {
-        unsafe {
-            if self.token.get() {
-                f.call(&mut *self.inner.intrinsics);
-            } else {
-                f.call(&mut *self.inner.soft);
-            }
+            soft::proc_block(h, y, block)
         }
     }
 
-    /// Get POLYVAL result (i.e. computed `S` field element)
-    fn finalize(self) -> Tag {
-        unsafe {
-            if self.token.get() {
-                ManuallyDrop::into_inner(self.inner.intrinsics).finalize()
-            } else {
-                ManuallyDrop::into_inner(self.inner.soft).finalize()
-            }
-        }
-    }
-}
-
-impl<const N: usize> Clone for Polyval<N> {
-    fn clone(&self) -> Self {
-        let inner = if self.token.get() {
-            Inner {
-                intrinsics: ManuallyDrop::new(unsafe { (*self.inner.intrinsics).clone() }),
-            }
+    /// Process multiple blocks in parallel.
+    pub(crate) fn proc_par_blocks<const N: usize, U: ArraySize>(
+        powers_of_h: &[FieldElement; N],
+        y: FieldElement,
+        blocks: &Array<Block, U>,
+        has_intrinsics: InitToken,
+    ) -> FieldElement {
+        if has_intrinsics.get() {
+            // SAFETY: we have checked the CPU has the necessary intrinsics above
+            unsafe { intrinsics::proc_par_blocks(powers_of_h, y, blocks) }
         } else {
-            Inner {
-                soft: ManuallyDrop::new(unsafe { (*self.inner.soft).clone() }),
-            }
-        };
-
-        Self {
-            inner,
-            token: self.token,
-        }
-    }
-}
-
-impl<const N: usize> Reset for Polyval<N> {
-    fn reset(&mut self) {
-        if self.token.get() {
-            unsafe { (*self.inner.intrinsics).reset() }
-        } else {
-            unsafe { (*self.inner.soft).reset() }
+            // TODO(tarcieri): currently just calls `proc_block` for each block on `soft`-only
+            soft::proc_par_blocks(powers_of_h, y, blocks)
         }
     }
 }

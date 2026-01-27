@@ -3,30 +3,14 @@
 mod soft;
 
 use crate::{BLOCK_SIZE, Block};
-use core::fmt;
-use core::fmt::Debug;
-use core::ops::{Add, Mul, MulAssign};
+use core::{
+    fmt::{self, Debug},
+    ops::{Add, Mul, MulAssign},
+};
 use cpubits::cfg_if;
 
 #[cfg(feature = "zeroize")]
 use zeroize::Zeroize;
-
-cfg_if! {
-    if #[cfg(all(target_arch = "aarch64", not(polyval_backend = "soft")))] {
-        mod autodetect;
-        mod armv8;
-        pub use autodetect::Polyval as PolyvalGeneric;
-    } else if #[cfg(all(
-        any(target_arch = "x86_64", target_arch = "x86"),
-        not(polyval_backend = "soft")
-    ))] {
-        mod autodetect;
-        mod x86;
-        pub use autodetect::Polyval as PolyvalGeneric;
-    } else {
-        pub use soft::Polyval as PolyvalGeneric;
-    }
-}
 
 /// An element in POLYVAL's field.
 ///
@@ -48,11 +32,62 @@ cfg_if! {
 #[repr(C, align(16))] // Make ABI and alignment compatible with SIMD registers
 pub(crate) struct FieldElement([u8; BLOCK_SIZE]);
 
+cfg_if! {
+    if #[cfg(all(target_arch = "aarch64", not(polyval_backend = "soft")))] {
+        // aarch64
+        mod autodetect;
+        mod armv8;
+        pub(crate) use autodetect::{InitToken, detect_intrinsics};
+    } else if #[cfg(all(
+        any(target_arch = "x86_64", target_arch = "x86"),
+        not(polyval_backend = "soft")
+    ))] {
+        // x86/x86-64
+        mod autodetect;
+        mod x86;
+        pub(crate) use autodetect::{InitToken, detect_intrinsics};
+    } else {
+        // Pure Rust fallback implementation for other targets
+        use universal_hash::array::{Array, ArraySize};
+
+        pub(crate) type InitToken = ();
+        pub(crate) fn detect_intrinsics() -> (InitToken, bool) {
+            ((), false)
+        }
+
+        impl FieldElement {
+            /// Default degree of parallelism, i.e. how many powers of `H` to compute.
+            pub const DEFAULT_PARALLELISM: usize = 8;
+
+            /// Process an individual block.
+            pub(crate) fn proc_block(
+                h: FieldElement,
+                y: FieldElement,
+                x: &Block,
+                _has_intrinsics: InitToken
+            ) -> FieldElement {
+                soft::proc_block(h, y, x)
+            }
+
+            /// Process multiple blocks in parallel.
+            // TODO(tarcieri): currently just calls `proc_block` for each block on `soft`-only
+            pub(crate) fn proc_par_blocks<const N: usize, U: ArraySize>(
+                powers_of_h: &[FieldElement; N],
+                y: FieldElement,
+                blocks: &Array<Block, U>,
+                _has_intrinsics: InitToken
+            ) -> FieldElement {
+                soft::proc_par_blocks(powers_of_h, y, blocks)
+            }
+        }
+    }
+}
+
 impl FieldElement {
     /// Compute the first N powers of h, in reverse order.
     #[inline]
     #[allow(dead_code)] // We may not use this in some configurations
-    fn powers_of_h<const N: usize>(self) -> [Self; N] {
+    pub(crate) fn powers_of_h<const N: usize>(self) -> [Self; N] {
         // TODO: improve pipelining by using more square operations?
         let mut pow = [Self::default(); N];
         let mut prev = self;
@@ -144,8 +179,7 @@ impl Mul for FieldElement {
 
     #[inline]
     fn mul(self, rhs: Self) -> Self {
-        let v = soft::karatsuba(self, rhs);
-        soft::mont_reduce(v)
+        soft::polymul(self, rhs)
     }
 }
 

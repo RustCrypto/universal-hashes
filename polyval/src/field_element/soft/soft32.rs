@@ -56,7 +56,7 @@ impl FieldElement {
 /// multiplications, hence nine 32x32 multiplications. With the bit-reversal trick, we have to
 /// perform 18 32x32 multiplications.
 #[inline]
-pub(crate) fn karatsuba(h: FieldElement, y: FieldElement) -> [u32; 8] {
+pub(super) fn karatsuba(h: FieldElement, y: FieldElement) -> [u32; 8] {
     let hw = h.to_u32x4();
     let yw = y.to_u32x4();
     let hwr = [
@@ -149,7 +149,7 @@ fn bmul32(x: u32, y: u32) -> u32 {
 ///
 /// This is closely related to GHASH reduction but the bit order is reversed in POLYVAL.
 #[inline]
-pub(crate) fn mont_reduce(mut zw: [u32; 8]) -> FieldElement {
+pub(super) fn mont_reduce(mut zw: [u32; 8]) -> FieldElement {
     for i in 0..4 {
         let lw = zw[i];
         zw[i + 4] ^= lw ^ (lw >> 1) ^ (lw >> 2) ^ (lw >> 7);
