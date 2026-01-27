@@ -5,7 +5,7 @@ mod soft;
 use crate::{BLOCK_SIZE, Block};
 use core::fmt;
 use core::fmt::Debug;
-use core::ops::{Add, Mul};
+use core::ops::{Add, Mul, MulAssign};
 use cpubits::cfg_if;
 
 #[cfg(feature = "zeroize")]
@@ -15,7 +15,6 @@ cfg_if! {
     if #[cfg(all(target_arch = "aarch64", not(polyval_backend = "soft")))] {
         mod autodetect;
         mod armv8;
-        mod common;
         pub use autodetect::Polyval as PolyvalGeneric;
     } else if #[cfg(all(
         any(target_arch = "x86_64", target_arch = "x86"),
@@ -23,7 +22,6 @@ cfg_if! {
     ))] {
         mod autodetect;
         mod x86;
-        mod common;
         pub use autodetect::Polyval as PolyvalGeneric;
     } else {
         pub use soft::Polyval as PolyvalGeneric;
@@ -49,6 +47,26 @@ cfg_if! {
 #[derive(Clone, Copy, Default, Eq, PartialEq)] // TODO(tarcieri): constant-time `*Eq`?
 #[repr(C, align(16))] // Make ABI and alignment compatible with SIMD registers
 pub(crate) struct FieldElement([u8; BLOCK_SIZE]);
+
+impl FieldElement {
+    /// Compute the first N powers of h, in reverse order.
+    #[inline]
+    #[allow(dead_code)] // We may not use this in some configurations
+    fn powers_of_h<const N: usize>(self) -> [Self; N] {
+        // TODO: improve pipelining by using more square operations?
+        let mut pow = [Self::default(); N];
+        let mut prev = self;
+
+        for (i, v) in pow.iter_mut().rev().enumerate() {
+            *v = self;
+            if i > 0 {
+                *v *= prev;
+            }
+            prev = *v;
+        }
+        pow
+    }
+}
 
 impl Debug for FieldElement {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -127,6 +145,13 @@ impl Mul for FieldElement {
     fn mul(self, rhs: Self) -> Self {
         let v = soft::karatsuba(self.into(), rhs.into());
         soft::mont_reduce(v).into()
+    }
+}
+
+impl MulAssign for FieldElement {
+    #[inline]
+    fn mul_assign(&mut self, rhs: Self) {
+        *self = *self * rhs;
     }
 }
 

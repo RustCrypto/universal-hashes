@@ -16,8 +16,8 @@
 #![allow(unsafe_op_in_unsafe_fn)]
 
 use super::FieldElement;
-use crate::{Block, Key, Tag, field_element::common};
-use core::{arch::aarch64::*, mem, ops::Mul};
+use crate::{Block, Key, Tag};
+use core::{arch::aarch64::*, mem};
 use universal_hash::{
     KeyInit, ParBlocks, Reset, UhfBackend,
     array::ArraySize,
@@ -53,9 +53,8 @@ impl<const N: usize> KeySizeUser for Polyval<N> {
 impl<const N: usize> Polyval<N> {
     /// Initialize POLYVAL with the given `H` field element and initial block
     pub fn new_with_init_block(h: &Key, init_block: u128) -> Self {
-        let h = FieldElement::from(h);
         Self {
-            h: common::powers_of_h(h, Mul::mul),
+            h: FieldElement::from(h).powers_of_h(),
             y: init_block.into(),
         }
     }
