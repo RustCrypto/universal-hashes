@@ -37,7 +37,7 @@ cfg_if! {
         // aarch64
         mod autodetect;
         mod armv8;
-        pub(crate) use autodetect::{InitToken, detect_intrinsics};
+        pub(crate) use autodetect::{InitToken, has_intrinsics};
     } else if #[cfg(all(
         any(target_arch = "x86_64", target_arch = "x86"),
         not(polyval_backend = "soft")
@@ -45,19 +45,29 @@ cfg_if! {
         // x86/x86-64
         mod autodetect;
         mod x86;
-        pub(crate) use autodetect::{InitToken, detect_intrinsics};
+        pub(crate) use autodetect::{InitToken, has_intrinsics};
     } else {
-        // Pure Rust fallback implementation for other targets
+        // "soft" fallback implementation for other targets written in pure Rust
         use universal_hash::array::{Array, ArraySize};
 
         pub(crate) type InitToken = ();
-        pub(crate) fn detect_intrinsics() -> (InitToken, bool) {
+        pub(crate) fn has_intrinsics() -> (InitToken, bool) {
             ((), false)
         }
 
         impl FieldElement {
             /// Default degree of parallelism, i.e. how many powers of `H` to compute.
             pub const DEFAULT_PARALLELISM: usize = 8;
+
+            /// Stub implementation that works with `Polyval::h` even though we don't support
+            /// `proc_par_blocks`.
+            #[inline]
+            pub(crate) fn powers_of_h<const N: usize>(
+                self,
+                _has_intrinsics: InitToken
+            ) -> [Self; N] {
+                soft::powers_of_h(self)
+            }
 
             /// Process an individual block.
             pub(crate) fn proc_block(
@@ -80,26 +90,6 @@ cfg_if! {
                 soft::proc_par_blocks(powers_of_h, y, blocks)
             }
         }
-    }
-}
-
-impl FieldElement {
-    /// Compute the first N powers of h, in reverse order.
-    #[inline]
-    #[allow(dead_code)] // We may not use this in some configurations
-    pub(crate) fn powers_of_h<const N: usize>(self) -> [Self; N] {
-        // TODO: improve pipelining by using more square operations?
-        let mut pow = [Self::default(); N];
-        let mut prev = self;
-
-        for (i, v) in pow.iter_mut().rev().enumerate() {
-            *v = self;
-            if i > 0 {
-                *v *= prev;
-            }
-            prev = *v;
-        }
-        pow
     }
 }
 
