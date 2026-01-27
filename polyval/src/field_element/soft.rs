@@ -37,6 +37,15 @@ use core::{
 use soft_impl::{karatsuba, mont_reduce};
 use universal_hash::array::{Array, ArraySize};
 
+/// Stub implementation which only makes `PolyvalGeneric::h` work.
+// TODO(tarcieri): actually implement this optimization?
+#[inline]
+pub(super) fn powers_of_h<const N: usize>(h: FieldElement) -> [FieldElement; N] {
+    let mut ret = [FieldElement::default(); N];
+    ret[N - 1] = h;
+    ret
+}
+
 /// Perform carryless multiplication of `y` by `h` and return the result.
 #[inline]
 pub(super) fn polymul(y: FieldElement, h: FieldElement) -> FieldElement {
@@ -46,6 +55,7 @@ pub(super) fn polymul(y: FieldElement, h: FieldElement) -> FieldElement {
 
 /// Process an individual block.
 // TODO(tarcieri): implement `proc_par_blocks` for soft backend?
+#[inline]
 pub(super) fn proc_block(h: FieldElement, y: FieldElement, x: &Block) -> FieldElement {
     let x = FieldElement::from(x);
     polymul(y + x, h)
@@ -53,6 +63,7 @@ pub(super) fn proc_block(h: FieldElement, y: FieldElement, x: &Block) -> FieldEl
 
 /// Process multiple blocks.
 // TODO(tarcieri): optimized implementation?
+#[inline]
 pub(super) fn proc_par_blocks<const N: usize, U: ArraySize>(
     powers_of_h: &[FieldElement; N],
     mut y: FieldElement,
