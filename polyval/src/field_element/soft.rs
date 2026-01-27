@@ -28,99 +28,40 @@ cpubits::cpubits! {
     }
 }
 
-pub(super) use soft_impl::{karatsuba, mont_reduce};
-
-use super::FieldElement;
-use crate::{Block, Key, Tag};
+use crate::Block;
+use crate::field_element::FieldElement;
 use core::{
     num::Wrapping,
     ops::{BitAnd, BitOr, BitXor, Mul, Shl},
 };
-use universal_hash::{
-    KeyInit, Reset, UhfBackend, UhfClosure, UniversalHash,
-    common::{BlockSizeUser, KeySizeUser, ParBlocksSizeUser},
-    consts::{U1, U16},
-};
+use soft_impl::{karatsuba, mont_reduce};
+use universal_hash::array::{Array, ArraySize};
 
-#[cfg(feature = "zeroize")]
-use zeroize::Zeroize;
-
-/// **POLYVAL**: GHASH-like universal hash over GF(2^128).
-///
-/// Parameterized on a constant that determines how many
-/// blocks to process at once: higher numbers use more memory,
-/// and require more time to re-key, but process data significantly
-/// faster.
-///
-/// (This constant is not used when acceleration is not enabled.)
-#[derive(Clone)]
-pub struct Polyval<const N: usize = 1> {
-    /// GF(2^128) field element input blocks are multiplied by
-    h: FieldElement,
-
-    /// Field element representing the computed universal hash
-    y: FieldElement,
+/// Perform carryless multiplication of `y` by `h` and return the result.
+#[inline]
+pub(super) fn polymul(y: FieldElement, h: FieldElement) -> FieldElement {
+    let v = karatsuba(y, h);
+    mont_reduce(v)
 }
 
-impl<const N: usize> Polyval<N> {
-    /// Initialize POLYVAL with the given `H` field element and initial block
-    pub fn new_with_init_block(h: &Key, init_block: u128) -> Self {
-        Self {
-            h: FieldElement::from(*h),
-            y: init_block.into(),
-        }
+/// Process an individual block.
+// TODO(tarcieri): implement `proc_par_blocks` for soft backend?
+pub(super) fn proc_block(h: FieldElement, y: FieldElement, x: &Block) -> FieldElement {
+    let x = FieldElement::from(x);
+    polymul(y + x, h)
+}
+
+/// Process multiple blocks.
+// TODO(tarcieri): optimized implementation?
+pub(super) fn proc_par_blocks<const N: usize, U: ArraySize>(
+    powers_of_h: &[FieldElement; N],
+    mut y: FieldElement,
+    blocks: &Array<Block, U>,
+) -> FieldElement {
+    for block in blocks.iter() {
+        y = proc_block(powers_of_h[N - 1], y, block);
     }
-}
-
-impl<const N: usize> KeySizeUser for Polyval<N> {
-    type KeySize = U16;
-}
-
-impl<const N: usize> KeyInit for Polyval<N> {
-    /// Initialize POLYVAL with the given `H` field element
-    fn new(h: &Key) -> Self {
-        Self::new_with_init_block(h, 0)
-    }
-}
-
-impl<const N: usize> BlockSizeUser for Polyval<N> {
-    type BlockSize = U16;
-}
-
-impl<const N: usize> ParBlocksSizeUser for Polyval<N> {
-    type ParBlocksSize = U1;
-}
-
-impl<const N: usize> UhfBackend for Polyval<N> {
-    fn proc_block(&mut self, x: &Block) {
-        let x = FieldElement::from(x);
-        self.y = (self.y + x) * self.h;
-    }
-}
-
-impl<const N: usize> UniversalHash for Polyval<N> {
-    fn update_with_backend(&mut self, f: impl UhfClosure<BlockSize = Self::BlockSize>) {
-        f.call(self);
-    }
-
-    /// Get POLYVAL result (i.e. computed `S` field element)
-    fn finalize(self) -> Tag {
-        self.y.into()
-    }
-}
-
-impl<const N: usize> Reset for Polyval<N> {
-    fn reset(&mut self) {
-        self.y = FieldElement::default();
-    }
-}
-
-#[cfg(feature = "zeroize")]
-impl<const N: usize> Drop for Polyval<N> {
-    fn drop(&mut self) {
-        self.h.zeroize();
-        self.y.zeroize();
-    }
+    y
 }
 
 /// Multiplication in GF(2)[X], implemented generically and wrapped as `bmul32` and `bmul64`.
