@@ -15,7 +15,7 @@ cpufeatures::new!(detect_intrinsics, "aes"); // `aes` implies PMULL
 #[cfg(any(target_arch = "x86_64", target_arch = "x86"))]
 cpufeatures::new!(detect_intrinsics, "pclmulqdq");
 
-pub(crate) use detect_intrinsics::{InitToken, init_get as has_intrinsics};
+pub(crate) use detect_intrinsics::{InitToken, init as init_intrinsics};
 
 impl FieldElement {
     /// Default degree of parallelism, i.e. how many powers of `H` to compute.
