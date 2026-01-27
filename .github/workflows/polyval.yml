@@ -22,7 +22,7 @@ env:
 
 jobs:
   # Ensure crate builds on a `no_std` target
-  build-no_std:
+  build-no-std:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
@@ -30,7 +30,7 @@ jobs:
         with:
           toolchain: stable
           targets: thumbv7em-none-eabi
-      - run: cargo check --target thumbv7em-none-eabi --release --features zeroize
+      - run: cargo check --target thumbv7em-none-eabi --release --all-features
 
   # Tests with CPU feature detection enabled
   test-autodetect:

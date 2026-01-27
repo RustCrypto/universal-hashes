@@ -6,6 +6,9 @@
     html_favicon_url = "https://raw.githubusercontent.com/RustCrypto/media/8f1a9894/logo.svg"
 )]
 
+#[cfg(feature = "hazmat")]
+pub mod hazmat;
+
 mod field_element;
 mod mulx;
 

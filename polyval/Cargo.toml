@@ -15,12 +15,15 @@ categories = ["cryptography", "no-std"]
 rust-version = "1.85"
 edition = "2024"
 
+[features]
+hazmat = []
+
 [dependencies]
 cpubits = "0.1.0-rc.1"
 universal-hash = { version = "0.6.0-rc.8", default-features = false }
 zeroize = { version = "1", optional = true, default-features = false }
 
-[target.'cfg(any(target_arch = "aarch64", target_arch = "x86_64", target_arch = "x86"))'.dependencies]
+[target.'cfg(any(target_arch = "aarch64", target_arch = "x86", target_arch = "x86_64"))'.dependencies]
 cpufeatures = "0.2"
 
 [dev-dependencies]
