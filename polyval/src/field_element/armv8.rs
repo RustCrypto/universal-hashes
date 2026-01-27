@@ -7,8 +7,8 @@
 //! Based on code from ARM, and by Johannes Schneiders, Skip Hovsmith and
 //! Barry O'Rourke for the mbedTLS project.
 //!
-//! Incorporates performance improvements from Eric Lagergren
-//! at <https://github.com/ericlagergren/polyval-rs/>.
+//! Incorporates performance improvements from Eric Lagergren at
+//! <https://github.com/ericlagergren/polyval-rs/>.
 //!
 //! For more information about PMULL, see:
 //! - <https://developer.arm.com/documentation/100069/0608/A64-SIMD-Vector-Instructions/PMULL--PMULL2--vector->
@@ -16,7 +16,7 @@
 #![allow(unsafe_op_in_unsafe_fn)]
 
 use super::FieldElement;
-use crate::{Block, Key, Tag, backend::common};
+use crate::{Block, Key, Tag, field_element::common};
 use core::{arch::aarch64::*, mem, ops::Mul};
 use universal_hash::{
     KeyInit, ParBlocks, Reset, UhfBackend,

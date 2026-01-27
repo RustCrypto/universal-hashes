@@ -1,4 +1,4 @@
-//! POLYVAL backends
+//! POLYVAL field element implementation.
 
 mod soft;
 
@@ -14,19 +14,19 @@ use zeroize::Zeroize;
 cfg_if! {
     if #[cfg(all(target_arch = "aarch64", not(polyval_backend = "soft")))] {
         mod autodetect;
-        mod pmull;
+        mod armv8;
         mod common;
-        pub use crate::backend::autodetect::Polyval as PolyvalGeneric;
+        pub use autodetect::Polyval as PolyvalGeneric;
     } else if #[cfg(all(
         any(target_arch = "x86_64", target_arch = "x86"),
         not(polyval_backend = "soft")
     ))] {
         mod autodetect;
-        mod clmul;
+        mod x86;
         mod common;
-        pub use crate::backend::autodetect::Polyval as PolyvalGeneric;
+        pub use autodetect::Polyval as PolyvalGeneric;
     } else {
-        pub use crate::backend::soft::Polyval as PolyvalGeneric;
+        pub use soft::Polyval as PolyvalGeneric;
     }
 }
 
@@ -37,7 +37,8 @@ cfg_if! {
 ///
 /// # Representation
 ///
-/// The element is represented as 16-bytes in little-endian order.
+/// The element is represented as 16-bytes in little-endian order, using a `repr(C)` ABI and
+/// 16-byte alignment enforced with `align(16)`.
 ///
 /// Arithmetic in POLYVAL's field has the following properties:
 /// - All arithmetic operations are performed modulo the polynomial above.

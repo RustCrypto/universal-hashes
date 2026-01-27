@@ -6,10 +6,10 @@
     html_favicon_url = "https://raw.githubusercontent.com/RustCrypto/media/8f1a9894/logo.svg"
 )]
 
-mod backend;
+mod field_element;
 mod mulx;
 
-pub use crate::{backend::PolyvalGeneric, mulx::mulx};
+pub use crate::{field_element::PolyvalGeneric, mulx::mulx};
 pub use universal_hash;
 
 impl<const N: usize> core::fmt::Debug for PolyvalGeneric<N> {
