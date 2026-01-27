@@ -26,7 +26,9 @@ use universal_hash::{
     typenum::{Const, ToUInt, U},
 };
 
-/// Montgomery reduction polynomial
+/// POLYVAL reduction polynomial (`x^128 + x^127 + x^126 + x^121 + 1`) encoded in little-endian
+/// GF(2)[x] form with reflected reduction terms arising from folding the upper 128-bits of the
+/// product into the lower half during modular reduction.
 const POLY: u128 = (1 << 127) | (1 << 126) | (1 << 121) | (1 << 63) | (1 << 62) | (1 << 57);
 
 /// **POLYVAL**: GHASH-like universal hash over GF(2^128).

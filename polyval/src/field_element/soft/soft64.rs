@@ -5,23 +5,14 @@
 //!
 //! Copyright (c) 2016 Thomas Pornin <pornin@bolet.org>
 
-use super::FieldElement;
+use crate::field_element::FieldElement;
 
-type U64x2 = (u64, u64);
-type U64x4 = (u64, u64, u64, u64);
-
-impl From<FieldElement> for U64x2 {
+impl FieldElement {
+    /// Splits into `(lo, hi)`.
     #[inline]
-    fn from(fe: FieldElement) -> U64x2 {
-        let x = u128::from(fe);
+    fn to_u64x2(self) -> (u64, u64) {
+        let x = u128::from(self);
         ((x & 0xFFFF_FFFF_FFFF_FFFF) as u64, (x >> 64) as u64)
-    }
-}
-
-impl From<U64x2> for FieldElement {
-    #[inline]
-    fn from(fe: U64x2) -> FieldElement {
-        (u128::from(fe.0) | u128::from(fe.1) << 64).into()
     }
 }
 
@@ -30,18 +21,16 @@ impl From<U64x2> for FieldElement {
 /// Uses a Karatsuba decomposition in which the 128x128 multiplication is reduced to three 64x64
 /// multiplications together with a bit-reversal trick to efficiently recover the high half.
 #[inline]
-pub(crate) fn karatsuba(h: U64x2, y: U64x2) -> U64x4 {
+pub(crate) fn karatsuba(h: FieldElement, y: FieldElement) -> [u64; 4] {
     // Karatsuba input decomposition for H
-    let h0 = h.0;
-    let h1 = h.1;
+    let (h0, h1) = h.to_u64x2();
     let h0r = h0.reverse_bits();
     let h1r = h1.reverse_bits();
     let h2 = h0 ^ h1;
     let h2r = h0r ^ h1r;
 
     // Karatsuba input decomposition for Y
-    let y0 = y.0;
-    let y1 = y.1;
+    let (y0, y1) = y.to_u64x2();
     let y0r = y0.reverse_bits();
     let y1r = y1.reverse_bits();
     let y2 = y0 ^ y1;
@@ -67,7 +56,7 @@ pub(crate) fn karatsuba(h: U64x2, y: U64x2) -> U64x4 {
     let v1 = z0h ^ z2;
     let v2 = z1 ^ z2h;
     let v3 = z1h;
-    (v0, v1, v2, v3)
+    [v0, v1, v2, v3]
 }
 
 /// Carryless multiplication in GF(2)[X], truncated to the low 64-bits.
@@ -79,14 +68,15 @@ fn bmul64(x: u64, y: u64) -> u64 {
 /// Reduce the 256-bit carryless product of Karatsuba modulo the POLYVAL polynomial.
 ///
 /// This performs constant-time folding using shifts and XORs corresponding to the irreducible
-/// polynomial `x^128 + x^127 + x^126 + x^121 + 1`. This is closely related to GHASH reduction but
-/// the polynomial's bit order is reversed in POLYVAL.
+/// polynomial `x^128 + x^127 + x^126 + x^121 + 1`.
+///
+/// This is closely related to GHASH reduction but the bit order is reversed in POLYVAL.
 #[inline]
-pub(crate) fn mont_reduce(v: U64x4) -> U64x2 {
-    let (v0, mut v1, mut v2, mut v3) = v;
+pub(crate) fn mont_reduce(v: [u64; 4]) -> FieldElement {
+    let (v0, mut v1, mut v2, mut v3) = (v[0], v[1], v[2], v[3]);
     v2 ^= v0 ^ (v0 >> 1) ^ (v0 >> 2) ^ (v0 >> 7);
     v1 ^= (v0 << 63) ^ (v0 << 62) ^ (v0 << 57);
     v3 ^= v1 ^ (v1 >> 1) ^ (v1 >> 2) ^ (v1 >> 7);
     v2 ^= (v1 << 63) ^ (v1 << 62) ^ (v1 << 57);
-    (v2, v3)
+    (u128::from(v2) | u128::from(v3) << 64).into()
 }

@@ -22,35 +22,30 @@
 //! x.reverse_bits() * y.reverse_bits() = (x * y).reverse_bits()
 //! ```
 //!
-//! In other words, if we bit-reverse (over 32-bits) the operands, then we bit-reverse (over
-//! 64-bits) the result.
+//! In other words, if we bit-reverse (over 32-bits) the operands then we bit-reverse (over 64-bits)
+//! the result.
 
-use super::FieldElement;
+use crate::field_element::FieldElement;
 
-type U32x4 = (u32, u32, u32, u32);
-type U32x8 = (u32, u32, u32, u32, u32, u32, u32, u32);
-
-impl From<FieldElement> for U32x4 {
+impl FieldElement {
     #[inline]
-    fn from(fe: FieldElement) -> U32x4 {
-        (
-            u32::from_le_bytes([fe.0[0], fe.0[1], fe.0[2], fe.0[3]]),
-            u32::from_le_bytes([fe.0[4], fe.0[5], fe.0[6], fe.0[7]]),
-            u32::from_le_bytes([fe.0[8], fe.0[9], fe.0[10], fe.0[11]]),
-            u32::from_le_bytes([fe.0[12], fe.0[13], fe.0[14], fe.0[15]]),
-        )
-    }
-}
-
-impl From<U32x4> for FieldElement {
-    #[inline]
-    fn from(v: U32x4) -> FieldElement {
+    fn from_u32x4(v: [u32; 4]) -> FieldElement {
         let mut bytes = [0u8; 16];
-        bytes[0..4].copy_from_slice(&v.0.to_le_bytes());
-        bytes[4..8].copy_from_slice(&v.1.to_le_bytes());
-        bytes[8..12].copy_from_slice(&v.2.to_le_bytes());
-        bytes[12..16].copy_from_slice(&v.3.to_le_bytes());
+        bytes[0..4].copy_from_slice(&v[0].to_le_bytes());
+        bytes[4..8].copy_from_slice(&v[1].to_le_bytes());
+        bytes[8..12].copy_from_slice(&v[2].to_le_bytes());
+        bytes[12..16].copy_from_slice(&v[3].to_le_bytes());
         FieldElement(bytes)
+    }
+
+    #[inline]
+    fn to_u32x4(self) -> [u32; 4] {
+        [
+            u32::from_le_bytes([self.0[0], self.0[1], self.0[2], self.0[3]]),
+            u32::from_le_bytes([self.0[4], self.0[5], self.0[6], self.0[7]]),
+            u32::from_le_bytes([self.0[8], self.0[9], self.0[10], self.0[11]]),
+            u32::from_le_bytes([self.0[12], self.0[13], self.0[14], self.0[15]]),
+        ]
     }
 }
 
@@ -61,9 +56,9 @@ impl From<U32x4> for FieldElement {
 /// multiplications, hence nine 32x32 multiplications. With the bit-reversal trick, we have to
 /// perform 18 32x32 multiplications.
 #[inline]
-pub(crate) fn karatsuba(h: U32x4, y: U32x4) -> U32x8 {
-    let hw = [h.0, h.1, h.2, h.3];
-    let yw = [y.0, y.1, y.2, y.3];
+pub(crate) fn karatsuba(h: FieldElement, y: FieldElement) -> [u32; 8] {
+    let hw = h.to_u32x4();
+    let yw = y.to_u32x4();
     let hwr = [
         hw[0].reverse_bits(),
         hw[1].reverse_bits(),
@@ -138,7 +133,7 @@ pub(crate) fn karatsuba(h: U32x4, y: U32x4) -> U32x8 {
     let zw5 = c[5] ^ (c[11] ^ c[10] ^ c[12] ^ c[16]).reverse_bits() >> 1;
     let zw6 = c[3] ^ c[14].reverse_bits() >> 1;
     let zw7 = c[12].reverse_bits() >> 1;
-    (zw0, zw1, zw2, zw3, zw4, zw5, zw6, zw7)
+    [zw0, zw1, zw2, zw3, zw4, zw5, zw6, zw7]
 }
 
 /// Carryless multiplication in GF(2)[X], truncated to the low 32-bits.
@@ -150,15 +145,16 @@ fn bmul32(x: u32, y: u32) -> u32 {
 /// Reduce the 256-bit carryless product of Karatsuba modulo the POLYVAL polynomial.
 ///
 /// This performs constant-time folding using shifts and XORs corresponding to the irreducible
-/// polynomial `x^128 + x^127 + x^126 + x^121 + 1`. This is closely related to GHASH reduction but
-/// the polynomial's bit order is reversed in POLYVAL.
+/// polynomial `x^128 + x^127 + x^126 + x^121 + 1`.
+///
+/// This is closely related to GHASH reduction but the bit order is reversed in POLYVAL.
 #[inline]
-pub(crate) fn mont_reduce(zw: U32x8) -> U32x4 {
-    let mut zw = [zw.0, zw.1, zw.2, zw.3, zw.4, zw.5, zw.6, zw.7];
+pub(crate) fn mont_reduce(mut zw: [u32; 8]) -> FieldElement {
     for i in 0..4 {
         let lw = zw[i];
         zw[i + 4] ^= lw ^ (lw >> 1) ^ (lw >> 2) ^ (lw >> 7);
         zw[i + 3] ^= (lw << 31) ^ (lw << 30) ^ (lw << 25);
     }
-    (zw[4], zw[5], zw[6], zw[7])
+
+    FieldElement::from_u32x4([zw[4], zw[5], zw[6], zw[7]])
 }

@@ -142,9 +142,10 @@ impl Add for FieldElement {
 impl Mul for FieldElement {
     type Output = Self;
 
+    #[inline]
     fn mul(self, rhs: Self) -> Self {
-        let v = soft::karatsuba(self.into(), rhs.into());
-        soft::mont_reduce(v).into()
+        let v = soft::karatsuba(self, rhs);
+        soft::mont_reduce(v)
     }
 }
 
