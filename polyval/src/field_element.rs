@@ -28,9 +28,19 @@ use zeroize::Zeroize;
 /// - Multiplication is carryless
 ///
 /// [RFC8452 §3]: https://tools.ietf.org/html/rfc8452#section-3
-#[derive(Clone, Copy, Default, Eq, PartialEq)] // TODO(tarcieri): constant-time `*Eq`?
+#[derive(Clone, Copy, Default)]
+#[cfg_attr(test, derive(Eq, PartialEq))]
 #[repr(C, align(16))] // Make ABI and alignment compatible with SIMD registers
-pub(crate) struct FieldElement([u8; BLOCK_SIZE]);
+pub struct FieldElement([u8; BLOCK_SIZE]);
+
+impl FieldElement {
+    /// Reverse this field element at a byte-level of granularity.
+    ///
+    /// This is useful when implementing GHASH in terms of POLYVAL.
+    pub fn reverse(&mut self) {
+        self.0.reverse();
+    }
+}
 
 cfg_if! {
     if #[cfg(all(target_arch = "aarch64", not(polyval_backend = "soft")))] {
@@ -166,6 +176,7 @@ impl Add for FieldElement {
 impl Mul for FieldElement {
     type Output = Self;
 
+    /// Perform carryless multiplication within POLYVAL's field modulo its polynomial.
     #[inline]
     fn mul(self, rhs: Self) -> Self {
         soft::polymul(self, rhs)
