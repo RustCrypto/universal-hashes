@@ -29,6 +29,9 @@ cpufeatures = "0.2"
 [dev-dependencies]
 hex-literal = "1"
 
+[target.'cfg(any(unix, windows))'.dev-dependencies]
+proptest = "1.9"
+
 [lints.rust]
 missing_copy_implementations = "warn"
 missing_debug_implementations = "warn"
