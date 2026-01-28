@@ -1,5 +1,6 @@
 //! POLYVAL field element implementation.
 
+mod common;
 mod soft;
 
 use crate::{BLOCK_SIZE, Block};
@@ -66,19 +67,16 @@ cfg_if! {
 
         impl FieldElement {
             /// Default degree of parallelism, i.e. how many powers of `H` to compute.
-            pub const DEFAULT_PARALLELISM: usize = 8;
+            pub const DEFAULT_PARALLELISM: usize = 1;
 
-            /// Stub implementation that works with `Polyval::h` even though we don't support
-            /// `proc_par_blocks`.
             #[inline]
             pub(crate) fn powers_of_h<const N: usize>(
                 self,
                 _has_intrinsics: InitToken
             ) -> [Self; N] {
-                soft::powers_of_h(self)
+                common::powers_of_h(self, Mul::mul)
             }
 
-            /// Process an individual block.
             pub(crate) fn proc_block(
                 h: FieldElement,
                 y: FieldElement,
@@ -88,8 +86,6 @@ cfg_if! {
                 soft::proc_block(h, y, x)
             }
 
-            /// Process multiple blocks in parallel.
-            // TODO(tarcieri): currently just calls `proc_block` for each block on `soft`-only
             pub(crate) fn proc_par_blocks<const N: usize, U: ArraySize>(
                 powers_of_h: &[FieldElement; N],
                 y: FieldElement,

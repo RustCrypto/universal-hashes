@@ -6,8 +6,9 @@ use super::armv8 as intrinsics;
 #[cfg(any(target_arch = "x86_64", target_arch = "x86"))]
 use super::x86 as intrinsics;
 
-use super::{FieldElement, soft};
+use super::{FieldElement, common, soft};
 use crate::Block;
+use core::ops::Mul;
 use universal_hash::array::{Array, ArraySize};
 
 #[cfg(target_arch = "aarch64")]
@@ -25,20 +26,12 @@ impl FieldElement {
     #[inline]
     pub(crate) fn powers_of_h<const N: usize>(self, has_intrinsics: InitToken) -> [Self; N] {
         if has_intrinsics.get() {
-            // TODO: improve pipelining by using more square operations?
-            let mut pow = [Self::default(); N];
-            let mut prev = self;
-
-            for (i, v) in pow.iter_mut().rev().enumerate() {
-                *v = self;
-                if i > 0 {
-                    *v = unsafe { intrinsics::polymul((*v).into(), prev.into()) }.into();
-                }
-                prev = *v;
-            }
-            pow
+            // SAFETY: we only need to ensure we have intrinsics, which we just did
+            common::powers_of_h(self, |a, b| unsafe {
+                intrinsics::polymul(a.into(), b.into()).into()
+            })
         } else {
-            soft::powers_of_h(self)
+            common::powers_of_h(self, Mul::mul)
         }
     }
 
@@ -68,7 +61,6 @@ impl FieldElement {
             // SAFETY: we have checked the CPU has the necessary intrinsics above
             unsafe { intrinsics::proc_par_blocks(powers_of_h, y, blocks) }
         } else {
-            // TODO(tarcieri): currently just calls `proc_block` for each block on `soft`-only
             soft::proc_par_blocks(powers_of_h, y, blocks)
         }
     }
