@@ -37,9 +37,9 @@ checksum = "9330f8b2ff13f34540b44e946ef35111825727b38d33286ef986142615121801"
 
 [[package]]
 name = "cpubits"
-version = "0.1.0-rc.1"
+version = "0.1.0-rc.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "251aaca52dbc19119279d9364222e188ffdf48006791040bfd002617ab0ebc41"
+checksum = "4ee6439310d1504c84ab741743fc93ea845bb9f6ab8b44962237957810246118"
 
 [[package]]
 name = "cpufeatures"

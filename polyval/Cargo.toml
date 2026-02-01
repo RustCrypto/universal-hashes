@@ -19,7 +19,7 @@ edition = "2024"
 hazmat = []
 
 [dependencies]
-cpubits = "0.1.0-rc.1"
+cpubits = "0.1.0-rc.2"
 universal-hash = { version = "0.6.0-rc.8", default-features = false }
 zeroize = { version = "1", optional = true, default-features = false }
 
@@ -43,7 +43,10 @@ unused_qualifications = "warn"
 
 [lints.rust.unexpected_cfgs]
 level = "warn"
-check-cfg = ['cfg(polyval_backend, values("soft"))']
+check-cfg = [
+    'cfg(cpubits, values("16", "32", "64"))',
+    'cfg(polyval_backend, values("soft"))'
+]
 
 [lints.clippy]
 borrow_as_ptr = "warn"
