@@ -1,6 +1,6 @@
 [package]
 name = "poly1305"
-version = "0.9.0-rc.4"
+version = "0.9.0-rc.5"
 authors = ["RustCrypto Developers"]
 license = "Apache-2.0 OR MIT"
 description = "The Poly1305 universal hash function and message authentication code"
@@ -13,7 +13,7 @@ rust-version = "1.85"
 edition = "2024"
 
 [dependencies]
-universal-hash = { version = "0.6.0-rc.8", default-features = false }
+universal-hash = { version = "0.6.0-rc.10", default-features = false }
 zeroize = { version = "1", optional = true, default-features = false }
 
 [target.'cfg(any(target_arch = "x86_64", target_arch = "x86"))'.dependencies]
