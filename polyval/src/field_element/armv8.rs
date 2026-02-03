@@ -18,7 +18,7 @@
 
 use super::FieldElement;
 use crate::Block;
-use core::{arch::aarch64::*, mem};
+use core::arch::aarch64::*;
 use universal_hash::array::{Array, ArraySize};
 
 /// 128-bit SIMD register type.
@@ -185,7 +185,7 @@ unsafe fn mont_reduce(x23: Simd128, x01: Simd128) -> Simd128 {
 #[inline]
 #[target_feature(enable = "aes,neon")]
 unsafe fn pmull(a: Simd128, b: Simd128) -> Simd128 {
-    mem::transmute(vmull_p64(
+    vreinterpretq_u8_p128(vmull_p64(
         vgetq_lane_u64(vreinterpretq_u64_u8(a), 0),
         vgetq_lane_u64(vreinterpretq_u64_u8(b), 0),
     ))
@@ -195,7 +195,7 @@ unsafe fn pmull(a: Simd128, b: Simd128) -> Simd128 {
 #[inline]
 #[target_feature(enable = "aes,neon")]
 unsafe fn pmull2(a: Simd128, b: Simd128) -> Simd128 {
-    mem::transmute(vmull_p64(
+    vreinterpretq_u8_p128(vmull_p64(
         vgetq_lane_u64(vreinterpretq_u64_u8(a), 1),
         vgetq_lane_u64(vreinterpretq_u64_u8(b), 1),
     ))
