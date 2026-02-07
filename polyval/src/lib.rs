@@ -34,6 +34,9 @@ pub const BLOCK_SIZE: usize = 16;
 /// Size of a POLYVAL key in bytes
 pub const KEY_SIZE: usize = 16;
 
+/// Default degree of parallelism to use.
+pub const DEFAULT_PARALLELISM: usize = FieldElement::DEFAULT_PARALLELISM;
+
 /// POLYVAL keys (16-bytes)
 pub type Key = Array<u8, U16>;
 
@@ -47,7 +50,7 @@ pub type Tag = Array<u8, U16>;
 ///
 /// This type alias uses the default amount of parallelism for the target (`8` for `aarch64`/`x86`,
 /// `1` for other targets using a pure Rust fallback implementation).
-pub type Polyval = PolyvalGeneric<{ FieldElement::DEFAULT_PARALLELISM }>;
+pub type Polyval = PolyvalGeneric<{ DEFAULT_PARALLELISM }>;
 
 /// **POLYVAL**: GHASH-like universal hash over GF(2^128).
 ///
@@ -56,7 +59,7 @@ pub type Polyval = PolyvalGeneric<{ FieldElement::DEFAULT_PARALLELISM }>;
 ///
 /// (This constant is not used when acceleration is not enabled.)
 #[derive(Clone)]
-pub struct PolyvalGeneric<const N: usize = { FieldElement::DEFAULT_PARALLELISM }> {
+pub struct PolyvalGeneric<const N: usize = { DEFAULT_PARALLELISM }> {
     /// Powers of H in descending order.
     ///
     /// (H^N, H^(N-1)...H)

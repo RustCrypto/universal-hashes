@@ -8,7 +8,7 @@
 
 pub use polyval::universal_hash;
 
-use polyval::PolyvalGeneric;
+use polyval::{DEFAULT_PARALLELISM, PolyvalGeneric};
 use universal_hash::{
     KeyInit, UhfBackend, UhfClosure, UniversalHash,
     array::ArraySize,
@@ -31,23 +31,19 @@ pub type Tag = universal_hash::Block<GHash>;
 
 /// **GHASH**: universal hash over GF(2^128) used by AES-GCM.
 ///
-/// GHASH is a universal hash function used for message authentication in
-/// the AES-GCM authenticated encryption cipher.
-pub type GHash = GHashGeneric<8>;
+/// GHASH is a universal hash function used for message authentication in the AES-GCM authenticated
+/// encryption cipher.
+pub type GHash = GHashGeneric<{ DEFAULT_PARALLELISM }>;
 
 /// **GHASH**: universal hash over GF(2^128) used by AES-GCM.
 ///
-/// GHASH is a universal hash function used for message authentication in
-/// the AES-GCM authenticated encryption cipher.
+/// GHASH is a universal hash function used for message authentication in the AES-GCM authenticated
+/// encryption cipher.
 ///
-/// Paramaterized on a constant that determines how many
-/// blocks to process at once: higher numbers use more memory,
-/// and require more time to re-key, but process data significantly
-/// faster.
-///
-/// (This constant is not used when acceleration is not enabled.)
+/// Parameterized on a constant that determines how many blocks to process at once: higher numbers
+/// use more memory, and require more time to re-key, but process data significantly faster.
 #[derive(Clone)]
-pub struct GHashGeneric<const N: usize = 8>(PolyvalGeneric<N>);
+pub struct GHashGeneric<const N: usize = { DEFAULT_PARALLELISM }>(PolyvalGeneric<N>);
 
 impl<const N: usize> KeySizeUser for GHashGeneric<N> {
     type KeySize = U16;
