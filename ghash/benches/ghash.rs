@@ -2,10 +2,7 @@
 
 extern crate test;
 
-use ghash::{
-    GHash,
-    universal_hash::{KeyInit, UniversalHash},
-};
+use ghash::{GHash, universal_hash::UniversalHash};
 use test::Bencher;
 
 // TODO(tarcieri): move this into the `universal-hash` crate

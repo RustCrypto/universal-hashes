@@ -48,6 +48,7 @@ trivial_casts = "warn"
 trivial_numeric_casts = "warn"
 unused_lifetimes = "warn"
 unused_qualifications = "warn"
+unreachable_pub = "warn"
 
 [lints.rust.unexpected_cfgs]
 level = "warn"

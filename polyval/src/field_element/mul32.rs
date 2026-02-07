@@ -124,7 +124,7 @@ pub(super) fn karatsuba(h: FieldElement, y: FieldElement) -> [u32; 8] {
     c[14] ^= c[11] ^ c[12];
     c[17] ^= c[15] ^ c[16];
 
-    // Assemble the final 256-bit product as `U32x8`
+    // Assemble the final 256-bit product as `u32` x 8.
     let zw0 = c[0];
     let zw1 = c[4] ^ c[9].reverse_bits() >> 1;
     let zw2 = c[1] ^ c[0] ^ c[2] ^ c[6] ^ c[13].reverse_bits() >> 1;
