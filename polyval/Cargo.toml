@@ -24,7 +24,7 @@ universal-hash = { version = "0.6.0-rc.10", default-features = false }
 zeroize = { version = "1", optional = true, default-features = false }
 
 [target.'cfg(any(target_arch = "aarch64", target_arch = "x86", target_arch = "x86_64"))'.dependencies]
-cpufeatures = "0.2"
+cpufeatures = "0.3"
 
 [dev-dependencies]
 hex-literal = "1"
