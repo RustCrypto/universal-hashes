@@ -25,9 +25,98 @@
 //! In other words, if we bit-reverse (over 32-bits) the operands then we bit-reverse (over 64-bits)
 //! the result.
 
+use super::bmul;
 use crate::field_element::FieldElement;
+use core::{array, ops::BitXor};
 
 impl FieldElement {
+    /// Compute the unreduced 256-bit carryless product of two 128-bit field elements using 32-bit
+    /// limbs.
+    ///
+    /// Uses a Karatsuba decomposition in which the 128x128 multiplication is reduced to three 64x64
+    /// multiplications, hence nine 32x32 multiplications. With the bit-reversal trick, we have to
+    /// perform 18 32x32 multiplications.
+    #[inline]
+    pub(crate) fn karatsuba_mul(self, rhs: FieldElement) -> Product {
+        let hw = self.to_u32x4();
+        let yw = rhs.to_u32x4();
+        let hwr = [
+            hw[0].reverse_bits(),
+            hw[1].reverse_bits(),
+            hw[2].reverse_bits(),
+            hw[3].reverse_bits(),
+        ];
+
+        // Karatsuba input decomposition for H
+        let mut a = [0u32; 18];
+        a[0] = yw[0];
+        a[1] = yw[1];
+        a[2] = yw[2];
+        a[3] = yw[3];
+        a[4] = a[0] ^ a[1];
+        a[5] = a[2] ^ a[3];
+        a[6] = a[0] ^ a[2];
+        a[7] = a[1] ^ a[3];
+        a[8] = a[6] ^ a[7];
+        a[9] = yw[0].reverse_bits();
+        a[10] = yw[1].reverse_bits();
+        a[11] = yw[2].reverse_bits();
+        a[12] = yw[3].reverse_bits();
+        a[13] = a[9] ^ a[10];
+        a[14] = a[11] ^ a[12];
+        a[15] = a[9] ^ a[11];
+        a[16] = a[10] ^ a[12];
+        a[17] = a[15] ^ a[16];
+
+        // Karatsuba input decomposition for Y
+        let mut b = [0u32; 18];
+        b[0] = hw[0];
+        b[1] = hw[1];
+        b[2] = hw[2];
+        b[3] = hw[3];
+        b[4] = b[0] ^ b[1];
+        b[5] = b[2] ^ b[3];
+        b[6] = b[0] ^ b[2];
+        b[7] = b[1] ^ b[3];
+        b[8] = b[6] ^ b[7];
+        b[9] = hwr[0];
+        b[10] = hwr[1];
+        b[11] = hwr[2];
+        b[12] = hwr[3];
+        b[13] = b[9] ^ b[10];
+        b[14] = b[11] ^ b[12];
+        b[15] = b[9] ^ b[11];
+        b[16] = b[10] ^ b[12];
+        b[17] = b[15] ^ b[16];
+
+        // 18 carryless 32x32 multiplications
+        let mut c = [0u32; 18];
+        for i in 0..18 {
+            c[i] = bmul(a[i], b[i], 0x1111_1111);
+        }
+
+        // Karatsuba recombination (normal)
+        c[4] ^= c[0] ^ c[1];
+        c[5] ^= c[2] ^ c[3];
+        c[8] ^= c[6] ^ c[7];
+
+        // Karatsuba recombination (bit-reversed)
+        c[13] ^= c[9] ^ c[10];
+        c[14] ^= c[11] ^ c[12];
+        c[17] ^= c[15] ^ c[16];
+
+        // Assemble the final 256-bit product as `u32` x 8.
+        let zw0 = c[0];
+        let zw1 = c[4] ^ c[9].reverse_bits() >> 1;
+        let zw2 = c[1] ^ c[0] ^ c[2] ^ c[6] ^ c[13].reverse_bits() >> 1;
+        let zw3 = c[4] ^ c[5] ^ c[8] ^ (c[10] ^ c[9] ^ c[11] ^ c[15]).reverse_bits() >> 1;
+        let zw4 = c[2] ^ c[1] ^ c[3] ^ c[7] ^ (c[13] ^ c[14] ^ c[17]).reverse_bits() >> 1;
+        let zw5 = c[5] ^ (c[11] ^ c[10] ^ c[12] ^ c[16]).reverse_bits() >> 1;
+        let zw6 = c[3] ^ c[14].reverse_bits() >> 1;
+        let zw7 = c[12].reverse_bits() >> 1;
+        Product([zw0, zw1, zw2, zw3, zw4, zw5, zw6, zw7])
+    }
+
     #[inline]
     fn from_u32x4(v: [u32; 4]) -> FieldElement {
         let mut bytes = [0u8; 16];
@@ -49,112 +138,35 @@ impl FieldElement {
     }
 }
 
-/// Compute the unreduced 256-bit carryless product of two 128-bit field elements using 32-bit
-/// limbs.
-///
-/// Uses a Karatsuba decomposition in which the 128x128 multiplication is reduced to three 64x64
-/// multiplications, hence nine 32x32 multiplications. With the bit-reversal trick, we have to
-/// perform 18 32x32 multiplications.
-#[inline]
-pub(super) fn karatsuba(h: FieldElement, y: FieldElement) -> [u32; 8] {
-    let hw = h.to_u32x4();
-    let yw = y.to_u32x4();
-    let hwr = [
-        hw[0].reverse_bits(),
-        hw[1].reverse_bits(),
-        hw[2].reverse_bits(),
-        hw[3].reverse_bits(),
-    ];
+/// Unreduced 256-bit carryless product.
+pub(crate) struct Product([u32; 8]);
 
-    // Karatsuba input decomposition for H
-    let mut a = [0u32; 18];
-    a[0] = yw[0];
-    a[1] = yw[1];
-    a[2] = yw[2];
-    a[3] = yw[3];
-    a[4] = a[0] ^ a[1];
-    a[5] = a[2] ^ a[3];
-    a[6] = a[0] ^ a[2];
-    a[7] = a[1] ^ a[3];
-    a[8] = a[6] ^ a[7];
-    a[9] = yw[0].reverse_bits();
-    a[10] = yw[1].reverse_bits();
-    a[11] = yw[2].reverse_bits();
-    a[12] = yw[3].reverse_bits();
-    a[13] = a[9] ^ a[10];
-    a[14] = a[11] ^ a[12];
-    a[15] = a[9] ^ a[11];
-    a[16] = a[10] ^ a[12];
-    a[17] = a[15] ^ a[16];
+impl Product {
+    /// Reduce the 256-bit carryless product of Karatsuba modulo the POLYVAL polynomial.
+    ///
+    /// This performs constant-time folding using shifts and XORs corresponding to the irreducible
+    /// polynomial `x^128 + x^127 + x^126 + x^121 + 1`.
+    ///
+    /// This is closely related to GHASH reduction but the bit order is reversed in POLYVAL.
+    #[inline]
+    pub(crate) fn mont_reduce(self) -> FieldElement {
+        let mut zw = self.0;
 
-    // Karatsuba input decomposition for Y
-    let mut b = [0u32; 18];
-    b[0] = hw[0];
-    b[1] = hw[1];
-    b[2] = hw[2];
-    b[3] = hw[3];
-    b[4] = b[0] ^ b[1];
-    b[5] = b[2] ^ b[3];
-    b[6] = b[0] ^ b[2];
-    b[7] = b[1] ^ b[3];
-    b[8] = b[6] ^ b[7];
-    b[9] = hwr[0];
-    b[10] = hwr[1];
-    b[11] = hwr[2];
-    b[12] = hwr[3];
-    b[13] = b[9] ^ b[10];
-    b[14] = b[11] ^ b[12];
-    b[15] = b[9] ^ b[11];
-    b[16] = b[10] ^ b[12];
-    b[17] = b[15] ^ b[16];
+        for i in 0..4 {
+            let lw = zw[i];
+            zw[i + 4] ^= lw ^ (lw >> 1) ^ (lw >> 2) ^ (lw >> 7);
+            zw[i + 3] ^= (lw << 31) ^ (lw << 30) ^ (lw << 25);
+        }
 
-    // 18 carryless 32x32 multiplications
-    let mut c = [0u32; 18];
-    for i in 0..18 {
-        c[i] = bmul32(a[i], b[i]);
+        FieldElement::from_u32x4([zw[4], zw[5], zw[6], zw[7]])
     }
-
-    // Karatsuba recombination (normal)
-    c[4] ^= c[0] ^ c[1];
-    c[5] ^= c[2] ^ c[3];
-    c[8] ^= c[6] ^ c[7];
-
-    // Karatsuba recombination (bit-reversed)
-    c[13] ^= c[9] ^ c[10];
-    c[14] ^= c[11] ^ c[12];
-    c[17] ^= c[15] ^ c[16];
-
-    // Assemble the final 256-bit product as `u32` x 8.
-    let zw0 = c[0];
-    let zw1 = c[4] ^ c[9].reverse_bits() >> 1;
-    let zw2 = c[1] ^ c[0] ^ c[2] ^ c[6] ^ c[13].reverse_bits() >> 1;
-    let zw3 = c[4] ^ c[5] ^ c[8] ^ (c[10] ^ c[9] ^ c[11] ^ c[15]).reverse_bits() >> 1;
-    let zw4 = c[2] ^ c[1] ^ c[3] ^ c[7] ^ (c[13] ^ c[14] ^ c[17]).reverse_bits() >> 1;
-    let zw5 = c[5] ^ (c[11] ^ c[10] ^ c[12] ^ c[16]).reverse_bits() >> 1;
-    let zw6 = c[3] ^ c[14].reverse_bits() >> 1;
-    let zw7 = c[12].reverse_bits() >> 1;
-    [zw0, zw1, zw2, zw3, zw4, zw5, zw6, zw7]
 }
 
-/// Carryless multiplication in GF(2)[X], truncated to the low 32-bits.
-#[inline]
-fn bmul32(x: u32, y: u32) -> u32 {
-    super::bmul(x, y, 0x1111_1111)
-}
+impl BitXor for Product {
+    type Output = Self;
 
-/// Reduce the 256-bit carryless product of Karatsuba modulo the POLYVAL polynomial.
-///
-/// This performs constant-time folding using shifts and XORs corresponding to the irreducible
-/// polynomial `x^128 + x^127 + x^126 + x^121 + 1`.
-///
-/// This is closely related to GHASH reduction but the bit order is reversed in POLYVAL.
-#[inline]
-pub(super) fn mont_reduce(mut zw: [u32; 8]) -> FieldElement {
-    for i in 0..4 {
-        let lw = zw[i];
-        zw[i + 4] ^= lw ^ (lw >> 1) ^ (lw >> 2) ^ (lw >> 7);
-        zw[i + 3] ^= (lw << 31) ^ (lw << 30) ^ (lw << 25);
+    #[inline]
+    fn bitxor(self, rhs: Self) -> Self::Output {
+        Self(array::from_fn(|n| self.0[n] ^ rhs.0[n]))
     }
-
-    FieldElement::from_u32x4([zw[4], zw[5], zw[6], zw[7]])
 }
