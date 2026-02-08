@@ -8,13 +8,11 @@
 
 pub use polyval::universal_hash;
 
-use polyval::{DEFAULT_PARALLELISM, PolyvalGeneric};
+use polyval::Polyval;
 use universal_hash::{
     KeyInit, UhfBackend, UhfClosure, UniversalHash,
-    array::ArraySize,
     common::{BlockSizeUser, KeySizeUser, ParBlocksSizeUser},
     consts::U16,
-    typenum::{Const, ToUInt, U},
 };
 
 #[cfg(feature = "zeroize")]
@@ -33,26 +31,17 @@ pub type Tag = universal_hash::Block<GHash>;
 ///
 /// GHASH is a universal hash function used for message authentication in the AES-GCM authenticated
 /// encryption cipher.
-pub type GHash = GHashGeneric<{ DEFAULT_PARALLELISM }>;
-
-/// **GHASH**: universal hash over GF(2^128) used by AES-GCM.
-///
-/// GHASH is a universal hash function used for message authentication in the AES-GCM authenticated
-/// encryption cipher.
-///
-/// Parameterized on a constant that determines how many blocks to process at once: higher numbers
-/// use more memory, and require more time to re-key, but process data significantly faster.
 #[derive(Clone)]
-pub struct GHashGeneric<const N: usize = { DEFAULT_PARALLELISM }>(PolyvalGeneric<N>);
+pub struct GHash(Polyval);
 
-impl<const N: usize> KeySizeUser for GHashGeneric<N> {
+impl KeySizeUser for GHash {
     type KeySize = U16;
 }
 
-impl<const N: usize> GHashGeneric<N> {
-    /// Initialize GHASH with the given `H` field element and initial block
+impl GHash {
+    /// Initialize GHASH with the given `H` field element as the key.
     #[inline]
-    pub fn new_with_init_block(h: &Key, init_block: u128) -> Self {
+    pub fn new(h: &Key) -> Self {
         let mut h = *h;
         h.reverse();
 
@@ -63,7 +52,7 @@ impl<const N: usize> GHashGeneric<N> {
         h.zeroize();
 
         #[allow(clippy::let_and_return)]
-        let result = GHashGeneric(PolyvalGeneric::new_with_init_block(&h_polyval, init_block));
+        let result = Self(Polyval::new(&h_polyval));
 
         #[cfg(feature = "zeroize")]
         h_polyval.zeroize();
@@ -72,25 +61,25 @@ impl<const N: usize> GHashGeneric<N> {
     }
 }
 
-impl<const N: usize> KeyInit for GHashGeneric<N> {
+impl KeyInit for GHash {
     /// Initialize GHASH with the given `H` field element
     #[inline]
     fn new(h: &Key) -> Self {
-        Self::new_with_init_block(h, 0)
+        Self::new(h)
     }
 }
 
-struct GHashGenericBackend<'b, B: UhfBackend>(&'b mut B);
+struct GHashBackend<'b, B: UhfBackend>(&'b mut B);
 
-impl<B: UhfBackend> BlockSizeUser for GHashGenericBackend<'_, B> {
+impl<B: UhfBackend> BlockSizeUser for GHashBackend<'_, B> {
     type BlockSize = B::BlockSize;
 }
 
-impl<B: UhfBackend> ParBlocksSizeUser for GHashGenericBackend<'_, B> {
+impl<B: UhfBackend> ParBlocksSizeUser for GHashBackend<'_, B> {
     type ParBlocksSize = B::ParBlocksSize;
 }
 
-impl<B: UhfBackend> UhfBackend for GHashGenericBackend<'_, B> {
+impl<B: UhfBackend> UhfBackend for GHashBackend<'_, B> {
     fn proc_block(&mut self, x: &universal_hash::Block<B>) {
         let mut x = x.clone();
         x.reverse();
@@ -98,29 +87,25 @@ impl<B: UhfBackend> UhfBackend for GHashGenericBackend<'_, B> {
     }
 }
 
-impl<const N: usize> BlockSizeUser for GHashGeneric<N> {
+impl BlockSizeUser for GHash {
     type BlockSize = U16;
 }
 
-impl<const N: usize> UniversalHash for GHashGeneric<N>
-where
-    U<N>: ArraySize,
-    Const<N>: ToUInt,
-{
+impl UniversalHash for GHash {
     fn update_with_backend(&mut self, f: impl UhfClosure<BlockSize = Self::BlockSize>) {
-        struct GHashGenericClosure<C: UhfClosure>(C);
+        struct GHashClosure<C: UhfClosure>(C);
 
-        impl<C: UhfClosure> BlockSizeUser for GHashGenericClosure<C> {
+        impl<C: UhfClosure> BlockSizeUser for GHashClosure<C> {
             type BlockSize = C::BlockSize;
         }
 
-        impl<C: UhfClosure> UhfClosure for GHashGenericClosure<C> {
+        impl<C: UhfClosure> UhfClosure for GHashClosure<C> {
             fn call<B: UhfBackend<BlockSize = Self::BlockSize>>(self, backend: &mut B) {
-                self.0.call(&mut GHashGenericBackend(backend));
+                self.0.call(&mut GHashBackend(backend));
             }
         }
 
-        self.0.update_with_backend(GHashGenericClosure(f));
+        self.0.update_with_backend(GHashClosure(f));
     }
 
     /// Get GHASH output
@@ -132,8 +117,8 @@ where
     }
 }
 
-impl<const N: usize> core::fmt::Debug for GHashGeneric<N> {
+impl core::fmt::Debug for GHash {
     fn fmt(&self, f: &mut core::fmt::Formatter) -> Result<(), core::fmt::Error> {
-        write!(f, "GHashGeneric<{}> {{ ... }}", N)
+        f.debug_tuple("GHash").finish_non_exhaustive()
     }
 }

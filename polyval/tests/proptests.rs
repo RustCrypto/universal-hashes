@@ -2,14 +2,13 @@
 
 #![cfg(all(any(unix, windows), feature = "hazmat"))]
 
-use polyval::{BLOCK_SIZE, Block, KEY_SIZE, hazmat::FieldElement, universal_hash::UniversalHash};
+use polyval::{
+    BLOCK_SIZE, Block, KEY_SIZE, Polyval, hazmat::FieldElement, universal_hash::UniversalHash,
+};
 use proptest::prelude::*;
 
 /// Number of blocks to compute in parallel
-const PARALLEL_BLOCKS: usize = 8;
-
-/// Ensure we're always parallel
-type ParallelPolyval = polyval::PolyvalGeneric<PARALLEL_BLOCKS>;
+const PARALLEL_BLOCKS: usize = 4;
 
 proptest! {
     /// Test explicitly parallel implementation for equivalence to the `soft` backend (which is what
@@ -19,7 +18,7 @@ proptest! {
         key in any::<[u8; KEY_SIZE]>(),
         data in any::<[u8; BLOCK_SIZE * PARALLEL_BLOCKS]>()
     ) {
-        let mut polyval = ParallelPolyval::new(&key.into());
+        let mut polyval = Polyval::new(&key.into());
         polyval.update_padded(&data);
         let actual = polyval.finalize();
 

@@ -1,10 +1,7 @@
 //! Longer test cases to ensure that long-input optimizations behave correctly.
 
 use hex_literal::hex;
-use polyval::{
-    BLOCK_SIZE, PolyvalGeneric,
-    universal_hash::{KeyInit, Reset, UniversalHash, common::KeySizeUser, typenum::U16},
-};
+use polyval::{BLOCK_SIZE, Polyval, universal_hash::UniversalHash};
 
 //
 // Test vectors for POLYVAL from RFC 8452 Appendix A
@@ -13,14 +10,14 @@ use polyval::{
 
 const H: [u8; BLOCK_SIZE] = hex!("25629347589242761d31f826ba4b757b");
 
-fn longer_test<Imp>()
-where
-    Imp: UniversalHash + KeyInit + Reset + Clone + KeySizeUser<KeySize = U16>,
-{
-    let inp = (1..=4096).map(|n| (n * 47) as u8).collect::<Vec<_>>();
+#[test]
+fn longer_test() {
+    let inp = (1u16..=4096)
+        .map(|n| ((n * 3) % 0xFF) as u8)
+        .collect::<Vec<u8>>();
 
     // Try computing polyval all at once.
-    let mut poly = Imp::new(&H.into());
+    let mut poly = Polyval::new(&H.into());
     poly.update_padded(&inp);
     let result1 = poly.finalize_reset();
 
@@ -32,21 +29,4 @@ where
 
     // Make sure the results are the same.
     assert_eq!(result1, result2);
-}
-
-#[test]
-fn longer_test_x1() {
-    longer_test::<PolyvalGeneric<1>>();
-}
-#[test]
-fn longer_test_x2() {
-    longer_test::<PolyvalGeneric<2>>();
-}
-#[test]
-fn longer_test_x4() {
-    longer_test::<PolyvalGeneric<4>>();
-}
-#[test]
-fn longer_test_x8() {
-    longer_test::<PolyvalGeneric<8>>();
 }
