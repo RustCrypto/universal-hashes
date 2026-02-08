@@ -149,8 +149,7 @@ impl Mul for FieldElement {
     /// Perform carryless multiplication within POLYVAL's field modulo its polynomial.
     #[inline]
     fn mul(self, rhs: Self) -> Self {
-        let v = mul::karatsuba(self, rhs);
-        mul::mont_reduce(v)
+        self.karatsuba_mul(rhs).mont_reduce()
     }
 }
 
@@ -168,7 +167,7 @@ impl Zeroize for FieldElement {
     }
 }
 
-/// Multiplication in GF(2)[X], implemented generically and wrapped as `bmul32` and `bmul64`.
+/// Multiplication in GF(2)[X], implemented generically for use with `u32` and `u64`.
 ///
 /// Uses "holes" (sequences of zeroes) to avoid carry spilling, as specified in the mask operand
 /// `m0` which should have a full-width value with the following bit pattern:
