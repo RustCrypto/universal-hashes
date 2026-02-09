@@ -8,7 +8,7 @@
 
 pub use polyval::universal_hash;
 
-use polyval::Polyval;
+use polyval::{Polyval, hazmat::FieldElement};
 use universal_hash::{
     KeyInit, UhfBackend, UhfClosure, UniversalHash,
     common::{BlockSizeUser, KeySizeUser, ParBlocksSizeUser},
@@ -42,21 +42,12 @@ impl GHash {
     /// Initialize GHASH with the given `H` field element as the key.
     #[inline]
     pub fn new(h: &Key) -> Self {
-        let mut h = *h;
-        h.reverse();
-
         #[allow(unused_mut)]
-        let mut h_polyval = polyval::mulx(&h);
-
-        #[cfg(feature = "zeroize")]
-        h.zeroize();
-
+        let mut h_polyval = FieldElement::from(*h).reverse().mulx();
         #[allow(clippy::let_and_return)]
-        let result = Self(Polyval::new(&h_polyval));
-
+        let result = Self(Polyval::new(&h_polyval.into()));
         #[cfg(feature = "zeroize")]
         h_polyval.zeroize();
-
         result
     }
 }
@@ -84,6 +75,14 @@ impl<B: UhfBackend> UhfBackend for GHashBackend<'_, B> {
         let mut x = x.clone();
         x.reverse();
         self.0.proc_block(&x);
+    }
+
+    fn proc_par_blocks(&mut self, par_blocks: &universal_hash::ParBlocks<B>) {
+        let mut par_blocks = par_blocks.clone();
+        for block in &mut par_blocks {
+            block.reverse();
+        }
+        self.0.proc_par_blocks(&par_blocks);
     }
 }
 
