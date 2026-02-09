@@ -30,6 +30,8 @@ cpubits::cpubits! {
     }
 }
 
+mod mulx;
+
 use crate::{BLOCK_SIZE, Block};
 use core::{
     fmt::{self, Debug},
@@ -60,8 +62,11 @@ impl FieldElement {
     /// Reverse this field element at a byte-level of granularity.
     ///
     /// This is useful when implementing GHASH in terms of POLYVAL.
-    pub fn reverse(&mut self) {
+    #[inline]
+    #[must_use]
+    pub fn reverse(mut self) -> Self {
         self.0.reverse();
+        self
     }
 }
 

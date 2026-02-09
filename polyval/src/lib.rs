@@ -11,9 +11,7 @@ pub mod hazmat;
 
 mod backend;
 mod field_element;
-mod mulx;
 
-pub use crate::mulx::mulx;
 pub use universal_hash;
 
 use crate::{

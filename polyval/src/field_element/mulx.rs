@@ -1,40 +1,41 @@
 //! The `mulX_POLYVAL()` function.
 
-use crate::Block;
+use super::FieldElement;
 
-/// The `mulX_POLYVAL()` function as defined in [RFC 8452 Appendix A][1].
-///
-/// Performs a doubling (a.k.a. "multiply by x") over GF(2^128).
-/// This is useful for implementing GHASH in terms of POLYVAL.
-///
-/// [1]: https://tools.ietf.org/html/rfc8452#appendix-A
-#[must_use]
-pub fn mulx(block: &Block) -> Block {
-    let mut v = u128::from_le_bytes((*block).into());
-    let v_hi = v >> 127;
+impl FieldElement {
+    /// The `mulX_POLYVAL()` function as defined in [RFC 8452 Appendix A][1].
+    ///
+    /// Performs a doubling (a.k.a. "multiply by x") over GF(2^128).
+    /// This is useful for implementing GHASH in terms of POLYVAL.
+    ///
+    /// [1]: https://tools.ietf.org/html/rfc8452#appendix-A
+    #[must_use]
+    pub fn mulx(self) -> Self {
+        let mut v = u128::from(self);
+        let v_hi = v >> 127;
 
-    v <<= 1;
-    v ^= v_hi ^ (v_hi << 127) ^ (v_hi << 126) ^ (v_hi << 121);
-    v.to_le_bytes().into()
+        v <<= 1;
+        v ^= v_hi ^ (v_hi << 127) ^ (v_hi << 126) ^ (v_hi << 121);
+        v.to_le_bytes().into()
+    }
 }
 
 #[cfg(test)]
 mod tests {
-    use super::{Block, mulx};
+    use super::FieldElement;
     use hex_literal::hex;
 
     /// Test vector given in RFC 8452 Appendix A.
     ///
-    /// NOTE: the vector in the RFC actually contains a typo which has been
-    /// reported (and accepted) as RFC errata, so we use the vector from the
-    /// errata instead:
+    /// NOTE: the vector in the RFC actually contains a typo which has been reported (and accepted)
+    /// as RFC errata, so we use the vector from the errata instead:
     ///
     /// <https://www.rfc-editor.org/errata_search.php?rfc=8452>
     #[test]
     fn rfc8452_vector() {
-        let input = Block::from(hex!("9c98c04df9387ded828175a92ba652d8"));
-        let expected_output = Block::from(hex!("3931819bf271fada0503eb52574ca572"));
-        let actual_output = mulx(&input);
+        let input = FieldElement::from(hex!("9c98c04df9387ded828175a92ba652d8"));
+        let expected_output = FieldElement::from(hex!("3931819bf271fada0503eb52574ca572"));
+        let actual_output = input.mulx();
         assert_eq!(expected_output, actual_output);
     }
 
@@ -43,11 +44,11 @@ mod tests {
     #[test]
     fn mulx_vectors() {
         // One
-        let mut r = Block::from(hex!("01000000000000000000000000000000"));
+        let mut r = FieldElement::from(hex!("01000000000000000000000000000000"));
 
         for vector in MULX_TEST_VECTORS {
-            r = mulx(&r);
-            assert_eq!(&r, vector);
+            r = r.mulx();
+            assert_eq!(FieldElement::from(*vector), r);
         }
     }
 
