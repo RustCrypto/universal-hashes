@@ -14,16 +14,16 @@ mod field_element;
 
 pub use universal_hash;
 
-use crate::{
-    backend::{InitToken, State},
-    field_element::FieldElement,
-};
+use crate::backend::State;
 use core::fmt::{self, Debug};
 use universal_hash::{
     KeyInit, Reset, UhfBackend, UhfClosure, UniversalHash,
     common::{BlockSizeUser, KeySizeUser, ParBlocksSizeUser},
     consts::{U4, U16},
 };
+
+#[cfg(feature = "zeroize")]
+use zeroize::Zeroize;
 
 /// Size of a POLYVAL block in bytes
 pub const BLOCK_SIZE: usize = 16;
@@ -45,23 +45,18 @@ pub type Tag = universal_hash::Block<Polyval>;
 
 /// **POLYVAL**: GHASH-like universal hash over GF(2^128), but optimized for little-endian
 /// architectures.
+#[derive(Clone)]
 pub struct Polyval {
-    /// Internal state of POLYVAL.
+    /// State of the internal hash being computed.
     state: State,
-
-    /// CPU feature detection result accessor.
-    has_intrinsics: InitToken,
 }
 
 impl Polyval {
     /// Initialize POLYVAL with the given `H` field element (i.e. hash key).
     #[must_use]
     pub fn new(h: &Key) -> Self {
-        let has_intrinsics = InitToken::init();
-        let state = State::new(FieldElement::from(h), has_intrinsics);
         Self {
-            state,
-            has_intrinsics,
+            state: State::new(h),
         }
     }
 }
@@ -90,32 +85,23 @@ impl UniversalHash for Polyval {
     }
 
     fn finalize(self) -> Tag {
-        self.state.finalize(self.has_intrinsics)
+        self.state.finalize()
     }
 }
 
 impl UhfBackend for Polyval {
     fn proc_block(&mut self, block: &Block) {
-        self.state.proc_block(block, self.has_intrinsics);
+        self.state.proc_block(block);
     }
 
     fn proc_par_blocks(&mut self, blocks: &ParBlocks) {
-        self.state.proc_par_blocks(blocks, self.has_intrinsics);
-    }
-}
-
-impl Clone for Polyval {
-    fn clone(&self) -> Self {
-        Self {
-            state: self.state.clone_with_intrinsics(self.has_intrinsics),
-            has_intrinsics: self.has_intrinsics,
-        }
+        self.state.proc_par_blocks(blocks);
     }
 }
 
 impl Reset for Polyval {
     fn reset(&mut self) {
-        self.state.reset(self.has_intrinsics);
+        self.state.reset();
     }
 }
 
@@ -128,7 +114,7 @@ impl Debug for Polyval {
 impl Drop for Polyval {
     fn drop(&mut self) {
         #[cfg(feature = "zeroize")]
-        self.state.zeroize(self.has_intrinsics);
+        self.state.zeroize();
     }
 }
 
