@@ -387,7 +387,7 @@ dependencies = [
 
 [[package]]
 name = "polyval"
-version = "0.7.0-rc.8"
+version = "0.7.0-rc.9"
 dependencies = [
  "cpubits",
  "cpufeatures",
