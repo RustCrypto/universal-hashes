@@ -53,6 +53,7 @@ impl State {
 
     pub(crate) fn proc_block(&mut self, block: &Block) {
         self.acc = if self.has_intrinsics() {
+            // SAFETY: we have just used CPU feature detection to ensure intrinsics are available
             unsafe { intrinsics_impl::proc_block(&self.expanded_key, self.acc, block) }
         } else {
             (self.acc + block.into()) * self.expanded_key.h1
@@ -61,6 +62,7 @@ impl State {
 
     pub(crate) fn proc_par_blocks(&mut self, par_blocks: &ParBlocks) {
         if self.has_intrinsics() {
+            // SAFETY: we have just used CPU feature detection to ensure intrinsics are available
             self.acc = unsafe {
                 intrinsics_impl::proc_par_blocks(&self.expanded_key, self.acc, par_blocks)
             };

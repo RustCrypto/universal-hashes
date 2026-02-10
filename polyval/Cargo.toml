@@ -1,6 +1,6 @@
 [package]
 name = "polyval"
-version = "0.7.0-rc.7"
+version = "0.7.0-rc.8"
 authors = ["RustCrypto Developers"]
 license = "Apache-2.0 OR MIT"
 description = """
@@ -83,7 +83,7 @@ trivially_copy_pass_by_ref = "warn"
 std_instead_of_alloc = "warn"
 std_instead_of_core = "warn"
 suspicious_arithmetic_impl = "allow" # POLYVAL arithmetic ops are atypical
-#undocumented_unsafe_blocks = "warn" TODO
+undocumented_unsafe_blocks = "warn"
 unnecessary_safety_comment = "warn"
 unwrap_in_result = "warn"
 unwrap_used = "warn"
