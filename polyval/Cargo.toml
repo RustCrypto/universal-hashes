@@ -30,13 +30,7 @@ cpufeatures = "0.3"
 hex-literal = "1"
 
 [target.'cfg(any(unix, windows))'.dev-dependencies]
-criterion = "0.7"
 proptest = "1.9"
-
-[[bench]]
-name = "polyval"
-path = "benches/polyval.rs"
-harness = false
 
 [lints.rust]
 missing_copy_implementations = "warn"

@@ -1,10 +1,10 @@
 [workspace]
+resolver = "3"
 members = [
     "ghash",
     "poly1305",
     "polyval"
 ]
-resolver = "2"
 
 [patch.crates-io]
 polyval = { path = "./polyval" }
