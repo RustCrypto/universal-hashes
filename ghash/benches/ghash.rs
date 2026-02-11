@@ -23,7 +23,7 @@ macro_rules! bench {
     };
 }
 
-bench!(bench1_10, 10);
-bench!(bench2_100, 100);
-bench!(bench3_1000, 1000);
-bench!(bench3_10000, 10000);
+bench!(bench_ghash_1_10, 10);
+bench!(bench_ghash_2_100, 100);
+bench!(bench_ghash_3_1000, 1000);
+bench!(bench_ghash_3_10000, 10000);
