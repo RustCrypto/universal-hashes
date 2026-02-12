@@ -9,7 +9,8 @@ use crate::{Block, Key, ParBlocks, Tag, field_element::FieldElement};
 use zeroize::Zeroize;
 
 /// State of a POLYVAL hash operation.
-#[derive(Clone, Copy)]
+#[derive(Clone)]
+#[allow(missing_copy_implementations)]
 pub(crate) struct State {
     /// Hash key: fixed element of GF(2^128) that parameterizes the POLYVAL universal hash function.
     ///
