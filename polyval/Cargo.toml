@@ -20,7 +20,7 @@ hazmat = []
 
 [dependencies]
 cpubits = "0.1"
-universal-hash = { version = "0.6.0-rc.10", default-features = false }
+universal-hash = "0.6"
 zeroize = { version = "1", optional = true, default-features = false }
 
 [target.'cfg(any(target_arch = "aarch64", target_arch = "x86", target_arch = "x86_64"))'.dependencies]
