@@ -2,15 +2,15 @@
 name = "poly1305"
 version = "0.9.0-rc.6"
 authors = ["RustCrypto Developers"]
-license = "Apache-2.0 OR MIT"
-description = "The Poly1305 universal hash function and message authentication code"
+edition = "2024"
+rust-version = "1.85"
 documentation = "https://docs.rs/poly1305"
+readme = "README.md"
 repository = "https://github.com/RustCrypto/universal-hashes"
+license = "Apache-2.0 OR MIT"
 keywords = ["crypto", "chacha20", "mac", "salsa20", "universal-hashing"]
 categories = ["cryptography", "no-std"]
-readme = "README.md"
-rust-version = "1.85"
-edition = "2024"
+description = "The Poly1305 universal hash function and message authentication code"
 
 [dependencies]
 universal-hash = "0.6"
