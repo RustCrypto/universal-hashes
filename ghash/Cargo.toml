@@ -16,7 +16,7 @@ as in the AES-GCM authenticated encryption cipher.
 """
 
 [dependencies]
-polyval = { version = "0.7.0-rc.8", features = ["hazmat"] }
+polyval = { version = "0.7", features = ["hazmat"] }
 
 # optional dependencies
 zeroize = { version = "1", optional = true, default-features = false }
