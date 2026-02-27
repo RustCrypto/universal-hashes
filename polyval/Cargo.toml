@@ -1,6 +1,6 @@
 [package]
 name = "polyval"
-version = "0.7.0-rc.9"
+version = "0.7.0"
 authors = ["RustCrypto Developers"]
 edition = "2024"
 rust-version = "1.85"
