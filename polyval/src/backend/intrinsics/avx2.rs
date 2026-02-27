@@ -31,7 +31,7 @@ use core::arch::x86_64::*;
 /// P1 polynomial: x^63 + x^62 + x^57 = 0xC200000000000000
 const P1: u64 = 0xC200000000000000;
 
-cpufeatures::new!(clmul, "pclmulqdq");
+cpufeatures::new!(clmul, "pclmulqdq", "avx2");
 pub(crate) use clmul::InitToken;
 
 /// Byte array which is the inner type of `FieldElement`
