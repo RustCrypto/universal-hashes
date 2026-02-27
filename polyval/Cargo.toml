@@ -2,18 +2,18 @@
 name = "polyval"
 version = "0.7.0-rc.9"
 authors = ["RustCrypto Developers"]
+edition = "2024"
+rust-version = "1.85"
+documentation = "https://docs.rs/polyval"
+readme = "README.md"
+repository = "https://github.com/RustCrypto/universal-hashes"
 license = "Apache-2.0 OR MIT"
+keywords = ["aes-gcm", "aes-gcm-siv", "crypto", "ghash", "universal-hashing"]
+categories = ["cryptography", "no-std"]
 description = """
 POLYVAL is a GHASH-like universal hash over GF(2^128) useful for constructing
 a Message Authentication Code (MAC)
 """
-documentation = "https://docs.rs/polyval"
-repository = "https://github.com/RustCrypto/universal-hashes"
-readme = "README.md"
-keywords = ["aes-gcm", "aes-gcm-siv", "crypto", "ghash", "universal-hashing"]
-categories = ["cryptography", "no-std"]
-rust-version = "1.85"
-edition = "2024"
 
 [features]
 hazmat = []
