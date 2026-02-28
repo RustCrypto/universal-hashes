@@ -1,5 +1,5 @@
-//! ARM NEON + PMULL optimized POLYVAL implementation using R/F Algorithm
-//! Adapted from the implementation in the Apache 2.0+MIT-licensed HPCrypt library
+//! ARMv8 NEON + PMULL optimized POLYVAL implementation using R/F Algorithm
+//! Adapted from the implementation in the Apache 2.0 + MIT-licensed HPCrypt library
 //! Copyright (c) 2024 HPCrypt Contributors
 //!
 //! This implementation uses the R/F (Reduction/Field) algorithm:

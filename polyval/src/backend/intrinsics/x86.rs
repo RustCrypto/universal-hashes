@@ -1,5 +1,5 @@
-//! AVX2 + PCLMULQDQ optimized POLYVAL implementation using R/F Algorithm
-//! Adapted from the implementation in the Apache 2.0+MIT-licensed HPCrypt library
+//! VPCLMULQDQ optimized POLYVAL implementation using R/F Algorithm
+//! Adapted from the implementation in the Apache 2.0 + MIT-licensed HPCrypt library
 //! Copyright (c) 2024 HPCrypt Contributors
 //!
 //! Uses the R/F algorithm from "Efficient GHASH Implementation Using CLMUL":

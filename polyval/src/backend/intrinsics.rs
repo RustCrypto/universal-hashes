@@ -2,10 +2,10 @@
 
 use crate::{Block, Key, ParBlocks, Tag, field_element::FieldElement};
 
-#[cfg_attr(target_arch = "aarch64", path = "intrinsics/neon.rs")]
+#[cfg_attr(target_arch = "aarch64", path = "intrinsics/armv8.rs")]
 #[cfg_attr(
-    any(target_arch = "x86_64", target_arch = "x86"),
-    path = "intrinsics/avx2.rs"
+    any(target_arch = "x86", target_arch = "x86_64"),
+    path = "intrinsics/x86.rs"
 )]
 mod intrinsics_impl;
 use intrinsics_impl::InitToken;
