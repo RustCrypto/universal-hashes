@@ -31,7 +31,7 @@ use core::arch::x86_64::*;
 /// P1 polynomial: x^63 + x^62 + x^57 = 0xC200000000000000
 const P1: u64 = 0xC200000000000000;
 
-cpufeatures::new!(clmul, "pclmulqdq", "avx2");
+cpufeatures::new!(clmul, "vpclmulqdq");
 pub(crate) use clmul::InitToken;
 
 /// Byte array which is the inner type of `FieldElement`
@@ -56,7 +56,7 @@ impl FieldElement {
 /// Convert 16 bytes into `__m128i`.
 ///
 /// # Safety
-/// Requires NEON and AES/PMULL support
+/// Requires SSE2 support
 #[target_feature(enable = "sse2")]
 #[inline]
 unsafe fn load_bytes(bytes: &ByteArray) -> __m128i {
@@ -66,8 +66,9 @@ unsafe fn load_bytes(bytes: &ByteArray) -> __m128i {
 /// Update with a single block (5 CLMULs)
 ///
 /// # Safety
-/// Requires AVX2 and PCLMULQDQ support
-#[target_feature(enable = "avx2", enable = "pclmulqdq")]
+/// Requires VPCLMULQDQ support
+// TODO(tarcieri): use `enable = "vpclmulqdq"` when MSRV 1.89+
+#[target_feature(enable = "avx", enable = "pclmulqdq")]
 #[inline]
 pub(super) unsafe fn proc_block(
     key: &ExpandedKey,
@@ -86,7 +87,7 @@ pub(super) unsafe fn proc_block(
 /// Process 4 blocks with R/F algorithm and aggregated reduction
 ///
 /// Uses 16 CLMULs for multiplication (4 per block) + 1 CLMUL for reduction = 17 CLMULs total
-#[target_feature(enable = "avx2", enable = "pclmulqdq")]
+#[target_feature(enable = "avx", enable = "pclmulqdq")]
 #[inline]
 pub(super) unsafe fn proc_par_blocks(
     key: &ExpandedKey,
@@ -119,8 +120,8 @@ pub(super) unsafe fn proc_par_blocks(
 /// Create a new POLYVAL key with R/F algorithm
 ///
 /// # Safety
-/// Requires AVX2 and PCLMULQDQ support
-#[target_feature(enable = "avx2", enable = "pclmulqdq")]
+/// Requires VPCLMULQDQ support
+#[target_feature(enable = "avx", enable = "pclmulqdq")]
 pub(super) unsafe fn expand_key(h: &[u8; 16]) -> ExpandedKey {
     let h1 = load_bytes(h);
     let d1 = compute_d(h1);
@@ -150,7 +151,7 @@ pub(super) unsafe fn expand_key(h: &[u8; 16]) -> ExpandedKey {
 /// Compute D from H using the R/F algorithm
 ///
 /// D = swap(H) ⊕ (H0 × P1)
-#[target_feature(enable = "pclmulqdq")]
+#[target_feature(enable = "avx", enable = "pclmulqdq")]
 #[inline]
 unsafe fn compute_d(h: __m128i) -> __m128i {
     // TODO(tarcieri): P1.cast_signed() when MSRV 1.87+
@@ -174,7 +175,7 @@ unsafe fn compute_d(h: __m128i) -> __m128i {
 /// - F = M0×D0 ⊕ M1×H0 (2 CLMULs)
 ///
 /// Returns (R, F) for later reduction
-#[target_feature(enable = "pclmulqdq")]
+#[target_feature(enable = "avx", enable = "pclmulqdq")]
 #[inline]
 unsafe fn rf_mul_unreduced(m: __m128i, h: __m128i, d: __m128i) -> (__m128i, __m128i) {
     // R = M0×D1 ⊕ M1×H1
@@ -193,7 +194,7 @@ unsafe fn rf_mul_unreduced(m: __m128i, h: __m128i, d: __m128i) -> (__m128i, __m1
 /// Reduction using Lemma 3: Result = R ⊕ F1 ⊕ (x^64×F0) ⊕ (P1×F0)
 ///
 /// Uses 1 CLMUL for reduction
-#[target_feature(enable = "pclmulqdq")]
+#[target_feature(enable = "avx", enable = "pclmulqdq")]
 #[inline]
 unsafe fn reduce_rf(r: __m128i, f: __m128i) -> __m128i {
     // TODO(tarcieri): P1.cast_signed() when MSRV 1.87+
@@ -216,7 +217,7 @@ unsafe fn reduce_rf(r: __m128i, f: __m128i) -> __m128i {
 }
 
 /// Complete R/F multiplication with reduction (5 CLMULs total)
-#[target_feature(enable = "pclmulqdq")]
+#[target_feature(enable = "avx", enable = "pclmulqdq")]
 #[inline]
 unsafe fn gf128_mul_rf(m: __m128i, h: __m128i, d: __m128i) -> __m128i {
     let (r, f) = rf_mul_unreduced(m, h, d);
