@@ -4,7 +4,6 @@
     html_logo_url = "https://raw.githubusercontent.com/RustCrypto/media/8f1a9894/logo.svg",
     html_favicon_url = "https://raw.githubusercontent.com/RustCrypto/media/8f1a9894/logo.svg"
 )]
-#![warn(missing_docs)]
 
 pub use universal_hash;
 
@@ -95,6 +94,7 @@ impl Poly1305 {
     /// Compute unpadded Poly1305 for the given input data.
     ///
     /// The main use case for this is XSalsa20Poly1305.
+    #[must_use]
     pub fn compute_unpadded(mut self, data: &[u8]) -> Tag {
         let (blocks, remaining) = Block::slice_as_chunks(data);
 

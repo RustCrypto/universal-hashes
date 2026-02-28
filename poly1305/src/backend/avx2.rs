@@ -113,7 +113,7 @@ impl State {
             // finalization).
             let (m, r4) = SpacedMultiplier4x130::new(self.r1, self.r2);
 
-            self.initialized = Some(Initialized { p, m, r4 })
+            self.initialized = Some(Initialized { p, m, r4 });
         }
     }
 

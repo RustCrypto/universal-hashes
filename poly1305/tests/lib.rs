@@ -1,9 +1,11 @@
+//! Poly1305 integration tests.
+
+use core::iter::repeat_n;
 use hex_literal::hex;
 use poly1305::{
     Block, KEY_SIZE, Poly1305,
     universal_hash::{KeyInit, UniversalHash},
 };
-use std::iter::repeat_n;
 
 #[test]
 fn test_nacl_vector() {

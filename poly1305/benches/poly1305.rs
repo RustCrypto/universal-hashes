@@ -1,3 +1,5 @@
+//! Poly1305 benchmarks.
+
 #![feature(test)]
 
 extern crate test;
