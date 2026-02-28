@@ -265,7 +265,7 @@ dependencies = [
 
 [[package]]
 name = "polyval"
-version = "0.7.0"
+version = "0.7.1"
 dependencies = [
  "cpubits",
  "cpufeatures",
