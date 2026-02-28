@@ -24,4 +24,7 @@ hex-literal = "1"
 
 [lints.rust.unexpected_cfgs]
 level = "warn"
-check-cfg = ["cfg(fuzzing)", "cfg(poly1305_force_soft)"]
+check-cfg = [
+    'cfg(fuzzing)',
+    'cfg(poly1305_backend, values("soft"))'
+]
