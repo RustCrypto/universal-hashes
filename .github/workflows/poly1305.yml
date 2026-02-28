@@ -108,7 +108,7 @@ jobs:
   # Tests for the portable software backend
   soft:
     env:
-      RUSTFLAGS: "-Dwarnings --cfg poly1305_force_soft"
+      RUSTFLAGS: '-Dwarnings --cfg poly1305_backend="soft"'
     runs-on: ubuntu-latest
     strategy:
       matrix:

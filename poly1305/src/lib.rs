@@ -19,7 +19,7 @@ mod backend;
 
 #[cfg(all(
     any(target_arch = "x86", target_arch = "x86_64"),
-    not(poly1305_force_soft),
+    not(poly1305_backend = "soft"),
     target_feature = "avx2", // Fuzz tests bypass AVX2 autodetection code
     any(fuzzing, test)
 ))]
@@ -27,13 +27,13 @@ mod fuzz;
 
 #[cfg(all(
     any(target_arch = "x86", target_arch = "x86_64"),
-    not(poly1305_force_soft)
+    not(poly1305_backend = "soft")
 ))]
 use crate::backend::autodetect::State;
 
 #[cfg(not(all(
     any(target_arch = "x86", target_arch = "x86_64"),
-    not(poly1305_force_soft)
+    not(poly1305_backend = "soft")
 )))]
 use crate::backend::soft::State;
 
@@ -121,7 +121,7 @@ impl Debug for Poly1305 {
 
 #[cfg(all(
     any(target_arch = "x86", target_arch = "x86_64"),
-    not(poly1305_force_soft),
+    not(poly1305_backend = "soft"),
     target_feature = "avx2", // Fuzz tests bypass AVX2 autodetection code
     any(fuzzing, test)
 ))]
