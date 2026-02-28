@@ -12,7 +12,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 [#317]: https://github.com/RustCrypto/universal-hashes/pull/317
 [#318]: https://github.com/RustCrypto/universal-hashes/pull/318
 
-## 0.7.0 (2026-02-27)
+## 0.7.0 (2026-02-27) [YANKED]
+
+NOTE: yanked due to SIGILL bug which was fixed in [#317].
+
 ### Added
 - `hazmat` feature that exposes `FieldElement` type ([#279])
 
