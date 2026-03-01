@@ -8,7 +8,7 @@ use core::mem::ManuallyDrop;
 
 cpufeatures::new!(avx2_cpuid, "avx2");
 
-pub struct State {
+pub(crate) struct State {
     inner: Inner,
     token: avx2_cpuid::InitToken,
 }
@@ -95,8 +95,8 @@ impl Clone for State {
 impl Drop for State {
     fn drop(&mut self) {
         use zeroize::Zeroize;
-        const SIZE: usize = core::mem::size_of::<State>();
-        let state = unsafe { &mut *(self as *mut State as *mut [u8; SIZE]) };
+        const SIZE: usize = size_of::<State>();
+        let state = unsafe { &mut *core::ptr::from_mut::<State>(self).cast::<[u8; SIZE]>() };
         state.zeroize();
     }
 }
