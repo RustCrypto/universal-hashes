@@ -24,17 +24,7 @@ mod backend;
 ))]
 mod fuzz;
 
-#[cfg(all(
-    any(target_arch = "x86", target_arch = "x86_64"),
-    not(poly1305_backend = "soft")
-))]
-use crate::backend::autodetect::State;
-
-#[cfg(not(all(
-    any(target_arch = "x86", target_arch = "x86_64"),
-    not(poly1305_backend = "soft")
-)))]
-use crate::backend::soft::State;
+use backend::State;
 
 /// Size of a Poly1305 key
 pub const KEY_SIZE: usize = 32;
@@ -85,8 +75,8 @@ impl UniversalHash for Poly1305 {
     }
 
     /// Get the hashed output
-    fn finalize(self) -> Tag {
-        self.state.finalize()
+    fn finalize(mut self) -> Tag {
+        unsafe { self.state.finalize() }
     }
 }
 
@@ -99,14 +89,18 @@ impl Poly1305 {
         let (blocks, remaining) = Block::slice_as_chunks(data);
 
         for block in blocks {
-            self.state.compute_block(block, false);
+            unsafe {
+                self.state.compute_block(block, false);
+            }
         }
 
         if !remaining.is_empty() {
             let mut block = Block::default();
             block[..remaining.len()].copy_from_slice(remaining);
             block[remaining.len()] = 1;
-            self.state.compute_block(&block, true);
+            unsafe {
+                self.state.compute_block(&block, true);
+            }
         }
 
         self.state.finalize()
