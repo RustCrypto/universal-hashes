@@ -1,5 +1,3 @@
-use universal_hash::UniversalHash;
-
 use crate::{Block, Key, backend};
 
 /// Helper function for fuzzing the AVX2 backend.
