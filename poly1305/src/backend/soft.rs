@@ -13,7 +13,7 @@
 // https://github.com/floodyberry/poly1305-donna
 
 use universal_hash::{
-    UhfBackend, UhfClosure, UniversalHash,
+    UhfBackend,
     common::{BlockSizeUser, ParBlocksSizeUser},
     consts::{U1, U16},
 };
@@ -140,7 +140,7 @@ impl State {
     }
 
     /// Finalize output producing a [`Tag`]
-    pub(crate) fn finalize_mut(&mut self) -> Tag {
+    pub(crate) fn finalize(&mut self) -> Tag {
         // fully carry h
         let mut h0 = self.h[0];
         let mut h1 = self.h[1];
@@ -232,16 +232,6 @@ impl State {
     }
 }
 
-#[cfg(feature = "zeroize")]
-impl Drop for State {
-    fn drop(&mut self) {
-        use zeroize::Zeroize;
-        self.r.zeroize();
-        self.h.zeroize();
-        self.pad.zeroize();
-    }
-}
-
 impl BlockSizeUser for State {
     type BlockSize = U16;
 }
@@ -253,16 +243,5 @@ impl ParBlocksSizeUser for State {
 impl UhfBackend for State {
     fn proc_block(&mut self, block: &Block) {
         self.compute_block(block, false);
-    }
-}
-
-impl UniversalHash for State {
-    fn update_with_backend(&mut self, f: impl UhfClosure<BlockSize = Self::BlockSize>) {
-        f.call(self);
-    }
-
-    /// Finalize output producing a [`Tag`]
-    fn finalize(mut self) -> Tag {
-        self.finalize_mut()
     }
 }

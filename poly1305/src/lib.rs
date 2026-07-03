@@ -85,7 +85,7 @@ impl UniversalHash for Poly1305 {
     }
 
     /// Get the hashed output
-    fn finalize(self) -> Tag {
+    fn finalize(mut self) -> Tag {
         self.state.finalize()
     }
 }
@@ -116,6 +116,16 @@ impl Poly1305 {
 impl Debug for Poly1305 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("Poly1305").finish_non_exhaustive()
+    }
+}
+
+impl Drop for Poly1305 {
+    fn drop(&mut self) {
+        // SAFETY: `Poly1305` satisfies the safety conditions of `zeroize_flat_type`
+        #[cfg(feature = "zeroize")]
+        unsafe {
+            zeroize::zeroize_flat_type(self);
+        }
     }
 }
 

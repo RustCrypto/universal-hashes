@@ -39,9 +39,6 @@ use core::{
     ops::{Add, BitAnd, BitOr, BitXor, Mul, MulAssign, Shl},
 };
 
-#[cfg(feature = "zeroize")]
-use zeroize::Zeroize;
-
 /// An element in POLYVAL's field.
 ///
 /// This type represents an element of the binary field GF(2^128) modulo the irreducible polynomial
@@ -162,13 +159,6 @@ impl MulAssign for FieldElement {
     #[inline]
     fn mul_assign(&mut self, rhs: Self) {
         *self = *self * rhs;
-    }
-}
-
-#[cfg(feature = "zeroize")]
-impl Zeroize for FieldElement {
-    fn zeroize(&mut self) {
-        self.0.zeroize();
     }
 }
 
