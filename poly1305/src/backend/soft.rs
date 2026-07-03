@@ -13,7 +13,7 @@
 // https://github.com/floodyberry/poly1305-donna
 
 use universal_hash::{
-    UhfBackend,
+    UhfBackend, UhfClosure,
     common::{BlockSizeUser, ParBlocksSizeUser},
     consts::{U1, U16},
 };
@@ -137,6 +137,11 @@ impl State {
         self.h[2] = h2;
         self.h[3] = h3;
         self.h[4] = h4;
+    }
+
+    #[allow(unused, reason = "this method is used by some targets")]
+    pub(crate) fn update_with_backend(&mut self, f: impl UhfClosure<BlockSize = U16>) {
+        f.call(self);
     }
 
     /// Finalize output producing a [`Tag`]
