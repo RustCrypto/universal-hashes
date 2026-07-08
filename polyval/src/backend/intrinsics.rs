@@ -10,9 +10,6 @@ use crate::{Block, Key, ParBlocks, Tag, field_element::FieldElement};
 mod intrinsics_impl;
 use intrinsics_impl::InitToken;
 
-#[cfg(feature = "zeroize")]
-use zeroize::Zeroize;
-
 /// State of a POLYVAL hash operation.
 #[derive(Clone)]
 pub(crate) struct State {
@@ -88,14 +85,6 @@ impl State {
     }
 }
 
-#[cfg(feature = "zeroize")]
-impl Zeroize for State {
-    fn zeroize(&mut self) {
-        self.expanded_key.zeroize();
-        self.acc.zeroize();
-    }
-}
-
 /// Precomputed key material for POLYVAL using R/F algorithm
 ///
 /// Stores H and D values for each power, where D = swap(H) ⊕ (H0 × P1)
@@ -117,18 +106,4 @@ pub(crate) struct ExpandedKey {
     h4: FieldElement,
     /// D^4
     d4: FieldElement,
-}
-
-#[cfg(feature = "zeroize")]
-impl Zeroize for ExpandedKey {
-    fn zeroize(&mut self) {
-        self.h1.zeroize();
-        self.d1.zeroize();
-        self.h2.zeroize();
-        self.d2.zeroize();
-        self.h3.zeroize();
-        self.d3.zeroize();
-        self.h4.zeroize();
-        self.d4.zeroize();
-    }
 }

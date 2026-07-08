@@ -15,9 +15,6 @@ use universal_hash::{
     consts::U16,
 };
 
-#[cfg(feature = "zeroize")]
-use zeroize::Zeroize;
-
 /// GHASH keys (16-bytes)
 pub type Key = universal_hash::Key<GHash>;
 
@@ -42,13 +39,8 @@ impl GHash {
     /// Initialize GHASH with the given `H` field element as the key.
     #[inline]
     pub fn new(h: &Key) -> Self {
-        #[allow(unused_mut)]
-        let mut h_polyval = FieldElement::from(*h).reverse().mulx();
-        #[allow(clippy::let_and_return)]
-        let result = Self(Polyval::new(&h_polyval.into()));
-        #[cfg(feature = "zeroize")]
-        h_polyval.zeroize();
-        result
+        let h_polyval = FieldElement::from(*h).reverse().mulx();
+        Self(Polyval::new(&h_polyval.into()))
     }
 }
 

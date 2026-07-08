@@ -22,9 +22,6 @@ use universal_hash::{
     consts::{U4, U16},
 };
 
-#[cfg(feature = "zeroize")]
-use zeroize::Zeroize;
-
 /// Size of a POLYVAL block in bytes
 pub const BLOCK_SIZE: usize = 16;
 
@@ -113,8 +110,11 @@ impl Debug for Polyval {
 
 impl Drop for Polyval {
     fn drop(&mut self) {
+        // SAFETY: `Polyval` satisfies the safety conditions of `zeroize_flat_type`
         #[cfg(feature = "zeroize")]
-        self.state.zeroize();
+        unsafe {
+            zeroize::zeroize_flat_type(self);
+        }
     }
 }
 

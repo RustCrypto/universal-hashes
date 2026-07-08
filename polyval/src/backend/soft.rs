@@ -5,9 +5,6 @@
 
 use crate::{Block, Key, ParBlocks, Tag, field_element::FieldElement};
 
-#[cfg(feature = "zeroize")]
-use zeroize::Zeroize;
-
 /// State of a POLYVAL hash operation.
 #[derive(Clone)]
 #[allow(missing_copy_implementations)]
@@ -47,13 +44,5 @@ impl State {
 
     pub(crate) fn reset(&mut self) {
         self.y = FieldElement::default();
-    }
-}
-
-#[cfg(feature = "zeroize")]
-impl Zeroize for State {
-    fn zeroize(&mut self) {
-        self.h.zeroize();
-        self.y.zeroize();
     }
 }
