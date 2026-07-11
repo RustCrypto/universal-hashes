@@ -31,7 +31,7 @@ use core::arch::x86_64::*;
 /// P1 polynomial: x^63 + x^62 + x^57 = 0xC200000000000000
 const P1: u64 = 0xC200000000000000;
 
-cpufeatures::new!(clmul, "vpclmulqdq");
+cpufeatures::new!(clmul, "avx", "pclmulqdq");
 pub(crate) use clmul::InitToken;
 
 /// Byte array which is the inner type of `FieldElement`
@@ -66,8 +66,7 @@ unsafe fn load_bytes(bytes: &ByteArray) -> __m128i {
 /// Update with a single block (5 CLMULs)
 ///
 /// # Safety
-/// Requires VPCLMULQDQ support
-// TODO(tarcieri): use `enable = "vpclmulqdq"` when MSRV 1.89+
+/// Requires PCLMULQDQ support with VEX operands.
 #[target_feature(enable = "avx", enable = "pclmulqdq")]
 #[inline]
 pub(super) unsafe fn proc_block(
@@ -120,7 +119,7 @@ pub(super) unsafe fn proc_par_blocks(
 /// Create a new POLYVAL key with R/F algorithm
 ///
 /// # Safety
-/// Requires VPCLMULQDQ support
+/// Requires PCLMULQDQ support with VEX operands.
 #[target_feature(enable = "avx", enable = "pclmulqdq")]
 pub(super) unsafe fn expand_key(h: &[u8; 16]) -> ExpandedKey {
     let h1 = load_bytes(h);
