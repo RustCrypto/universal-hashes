@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.7.2 (2026-07-11)
+### Fixed
+- Actually detect `avx`+`pclmulqdq` as [#317] actually was detecting 256-bit PCLMULQDQ ([#347])
+
+[#347]: https://github.com/RustCrypto/universal-hashes/pull/347
+
 ## 0.7.1 (2026-02-28)
 ### Fixed
 - Detect `avx`+`pclmulqdq` features on `x86`/`x86_64` targets ([#317], [#318])
