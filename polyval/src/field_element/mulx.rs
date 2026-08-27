@@ -5,7 +5,7 @@ use super::FieldElement;
 impl FieldElement {
     /// The `mulX_POLYVAL()` function as defined in [RFC 8452 Appendix A][1].
     ///
-    /// Performs a doubling (a.k.a. "multiply by x") over GF(2^128).
+    /// Performs a doubling (a.k.a. "multiply-by-x") over GF(2^128).
     /// This is useful for implementing GHASH in terms of POLYVAL.
     ///
     /// [1]: https://tools.ietf.org/html/rfc8452#appendix-A
@@ -16,7 +16,24 @@ impl FieldElement {
 
         v <<= 1;
         v ^= v_hi ^ (v_hi << 127) ^ (v_hi << 126) ^ (v_hi << 121);
-        v.to_le_bytes().into()
+        v.into()
+    }
+
+    /// Inverse of [`FieldElement::mulx`]: performs division-by-x over GF(2^128).
+    ///
+    /// This is useful for implementing GHASH in terms of POLYVAL, specifically converting elements
+    /// of the latter back to the former.
+    #[inline]
+    #[must_use]
+    pub fn divx(self) -> Self {
+        let mut v = u128::from(self);
+        let v_lo = v & 1;
+
+        v ^= v_lo ^ (v_lo << 127) ^ (v_lo << 126) ^ (v_lo << 121);
+        v >>= 1;
+        v |= v_lo << 127;
+
+        v.into()
     }
 }
 
@@ -50,6 +67,14 @@ mod tests {
             r = r.mulx();
             assert_eq!(FieldElement::from(*vector), r);
         }
+    }
+
+    /// Simple smoke test that `divx(mulx(1)) = 1`.
+    #[test]
+    fn divx_is_inverse_of_mulx() {
+        let one = FieldElement::from(1u128);
+        let x = one.mulx();
+        assert_eq!(x.divx(), one);
     }
 
     /// `mulX_POLYVAL()` test vectors.
