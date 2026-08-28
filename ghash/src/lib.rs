@@ -6,6 +6,12 @@
 )]
 #![warn(missing_docs)]
 
+#[cfg(feature = "hazmat")]
+pub mod hazmat;
+
+#[cfg(feature = "hazmat")]
+mod field_element;
+
 pub use polyval::universal_hash;
 
 use polyval::{Polyval, hazmat::FieldElement};

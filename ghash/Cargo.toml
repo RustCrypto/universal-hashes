@@ -17,9 +17,11 @@ as in the AES-GCM authenticated encryption cipher.
 
 [dependencies]
 polyval = { version = "0.7", features = ["hazmat"] }
+zeroize = { version = "1", optional = true, default-features = false }
 
 [features]
-zeroize = ["polyval/zeroize"]
+hazmat = []
+zeroize = ["dep:zeroize", "polyval/zeroize"]
 
 [dev-dependencies]
 hex-literal = "1"
