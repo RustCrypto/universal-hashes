@@ -37,6 +37,7 @@ use zeroize::Zeroize;
 ///
 /// [NIST SP 800-38D §6.3]: https://nvlpubs.nist.gov/nistpubs/Legacy/SP/nistspecialpublication800-38d.pdf
 #[derive(Clone, Copy, Default)]
+#[repr(transparent)]
 pub struct FieldElement(PolyvalElement);
 
 impl Debug for FieldElement {
