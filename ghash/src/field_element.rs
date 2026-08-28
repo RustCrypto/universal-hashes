@@ -39,21 +39,37 @@ use zeroize::Zeroize;
 #[derive(Clone, Copy, Default)]
 pub struct FieldElement(PolyvalElement);
 
-impl FieldElement {
-    /// Convert this field element back into GHASH's representation.
-    #[inline]
-    fn to_bytes(self) -> [u8; BLOCK_SIZE] {
-        self.0.divx().reverse().into()
+impl Debug for FieldElement {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        Debug::fmt(&self.0, f)
     }
 }
 
-impl Debug for FieldElement {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "FieldElement(")?;
-        for byte in self.to_bytes() {
-            write!(f, "{:02x}", byte)?;
-        }
-        write!(f, ")")
+impl From<Block> for FieldElement {
+    #[inline]
+    fn from(block: Block) -> Self {
+        Self::from(<[u8; BLOCK_SIZE]>::from(block))
+    }
+}
+
+impl From<&Block> for FieldElement {
+    #[inline]
+    fn from(block: &Block) -> Self {
+        Self::from(*block)
+    }
+}
+
+impl From<FieldElement> for Block {
+    #[inline]
+    fn from(fe: FieldElement) -> Self {
+        <[u8; BLOCK_SIZE]>::from(fe).into()
+    }
+}
+
+impl From<&FieldElement> for Block {
+    #[inline]
+    fn from(fe: &FieldElement) -> Self {
+        Self::from(*fe)
     }
 }
 
@@ -66,23 +82,24 @@ impl From<[u8; BLOCK_SIZE]> for FieldElement {
 }
 
 impl From<FieldElement> for [u8; BLOCK_SIZE] {
+    /// Convert a POLYVAL field element back into GHASH's representation.
     #[inline]
     fn from(fe: FieldElement) -> Self {
-        fe.to_bytes()
+        fe.0.divx().reverse().into()
     }
 }
 
-impl From<Block> for FieldElement {
+impl From<u128> for FieldElement {
     #[inline]
-    fn from(block: Block) -> Self {
-        Self::from(<[u8; BLOCK_SIZE]>::from(block))
+    fn from(x: u128) -> Self {
+        Self::from(x.to_be_bytes())
     }
 }
 
-impl From<FieldElement> for Block {
+impl From<FieldElement> for u128 {
     #[inline]
     fn from(fe: FieldElement) -> Self {
-        fe.to_bytes().into()
+        u128::from_be_bytes(fe.into())
     }
 }
 
@@ -123,7 +140,7 @@ impl Zeroize for FieldElement {
 #[cfg(test)]
 impl PartialEq for FieldElement {
     fn eq(&self, other: &Self) -> bool {
-        self.to_bytes() == other.to_bytes()
+        <[u8; BLOCK_SIZE]>::from(*self) == <[u8; BLOCK_SIZE]>::from(*other)
     }
 }
 
@@ -145,7 +162,7 @@ mod tests {
     /// Converting to POLYVAL's field and back is the identity.
     #[test]
     fn roundtrip() {
-        assert_eq!(FieldElement::from(H).to_bytes(), H);
+        assert_eq!(<[u8; 16]>::from(FieldElement::from(H)), H);
     }
 
     /// Addition is the XOR of the GHASH representations.
@@ -160,6 +177,6 @@ mod tests {
     fn fe_mul() {
         let h = FieldElement::from(H);
         let y = (FieldElement::from(X_1) * h + FieldElement::from(X_2)) * h;
-        assert_eq!(y.to_bytes(), GHASH_RESULT);
+        assert_eq!(<[u8; 16]>::from(y), GHASH_RESULT);
     }
 }
